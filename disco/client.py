@@ -1,5 +1,9 @@
 import logging
+import gevent
 
+from holster.emitter import Emitter
+
+from disco.state import State
 from disco.api.client import APIClient
 from disco.gateway.client import GatewayClient
 
@@ -12,6 +16,9 @@ class DiscoClient(object):
         self.token = token
         self.sharding = sharding or {'number': 0, 'total': 1}
 
+        self.events = Emitter(gevent.spawn)
+
+        self.state = State(self)
         self.api = APIClient(self)
         self.gw = GatewayClient(self)
 

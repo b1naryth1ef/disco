@@ -1,5 +1,7 @@
 import skema
 
+from disco.types.base import BaseType
 
-class VoiceState(skema.Model):
+
+class VoiceState(BaseType):
     id = skema.SnowflakeType()

@@ -2,7 +2,8 @@ import skema
 
 from holster.enum import Enum
 
-# from disco.types.guild import Guild
+from disco.util.cache import cached_property
+from disco.types.base import BaseType
 from disco.types.user import User
 
 
@@ -19,7 +20,7 @@ PermissionOverwriteType = Enum(
 )
 
 
-class PermissionOverwrite(skema.Model):
+class PermissionOverwrite(BaseType):
     id = skema.SnowflakeType()
     type = skema.StringType(choices=PermissionOverwriteType.ALL_VALUES)
 
@@ -27,8 +28,9 @@ class PermissionOverwrite(skema.Model):
     deny = skema.IntType()
 
 
-class Channel(skema.Model):
+class Channel(BaseType):
     id = skema.SnowflakeType()
+    guild_id = skema.SnowflakeType(required=False)
 
     name = skema.StringType()
     topic = skema.StringType()
@@ -40,3 +42,9 @@ class Channel(skema.Model):
     type = skema.IntType(choices=ChannelType.ALL_VALUES)
 
     permission_overwrites = skema.ListType(skema.ModelType(PermissionOverwrite))
+
+    @cached_property
+    def guild(self):
+        print self.guild_id
+        print self.client.state.guilds
+        return self.client.state.guilds.get(self.guild_id)

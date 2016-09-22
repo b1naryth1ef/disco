@@ -1,7 +1,9 @@
 import skema
 
+from disco.types.base import BaseType
 
-class User(skema.Model):
+
+class User(BaseType):
     id = skema.SnowflakeType()
 
     username = skema.StringType()

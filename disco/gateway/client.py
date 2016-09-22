@@ -3,11 +3,8 @@ import gevent
 import json
 import zlib
 
-from holster.emitter import Emitter
-# from holster.util import SimpleObject
-
 from disco.gateway.packets import OPCode, HeartbeatPacket, ResumePacket, IdentifyPacket
-from disco.gateway.events import GatewayEvent, Ready
+from disco.gateway.events import GatewayEvent
 from disco.util.logging import LoggingClass
 
 GATEWAY_VERSION = 6
@@ -28,9 +25,8 @@ class GatewayClient(LoggingClass):
     def __init__(self, client):
         super(GatewayClient, self).__init__()
         self.client = client
-        self.emitter = Emitter(gevent.spawn)
 
-        self.emitter.on(Ready, self.on_ready)
+        self.client.events.on('Ready', self.on_ready)
 
         # Websocket connection
         self.ws = None
@@ -60,9 +56,9 @@ class GatewayClient(LoggingClass):
             gevent.sleep(interval / 1000)
 
     def handle_dispatch(self, packet):
-        cls, obj = GatewayEvent.from_dispatch(packet)
-        self.log.info('Dispatching %s', cls)
-        self.emitter.emit(cls, obj)
+        obj = GatewayEvent.from_dispatch(self.client, packet)
+        self.log.info('Dispatching %s', obj.__class__.__name__)
+        self.client.events.emit(obj.__class__.__name__, obj)
 
     def handle_heartbeat(self, packet):
         pass

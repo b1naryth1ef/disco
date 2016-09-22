@@ -1,17 +1,25 @@
 import inflection
 import skema
 
+from disco.util import recursive_find_matching
+from disco.types.base import BaseType
 from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceState
 
 
 class GatewayEvent(skema.Model):
     @staticmethod
-    def from_dispatch(obj):
+    def from_dispatch(client, obj):
         cls = globals().get(inflection.camelize(obj['t'].lower()))
         if not cls:
             raise Exception('Could not find cls for {}'.format(obj['t']))
 
-        return cls, cls.create(obj['d'])
+        obj = cls.create(obj['d'])
+
+        # TODO: use skema info
+        for item in recursive_find_matching(obj, lambda v: isinstance(v, BaseType)):
+            item.client = client
+
+        return obj
 
     @classmethod
     def create(cls, obj):

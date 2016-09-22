@@ -3,14 +3,14 @@ import argparse
 
 from gevent import monkey
 
+monkey.patch_all()
 parser = argparse.ArgumentParser()
 parser.add_argument('--token', help='Bot Authentication Token', required=True)
 
 logging.basicConfig(level=logging.INFO)
 
 
-def main():
-    monkey.patch_all()
+def disco_main():
     args = parser.parse_args()
 
     from disco.util.token import is_valid_token
@@ -20,7 +20,7 @@ def main():
         return
 
     from disco.client import DiscoClient
-    DiscoClient(args.token).run_forever()
+    return DiscoClient(args.token)
 
 if __name__ == '__main__':
-    main()
+    disco_main().run_forever()
