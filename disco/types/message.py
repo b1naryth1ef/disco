@@ -64,7 +64,13 @@ class Message(BaseType):
         return {i.id: i for i in self.mentions}
 
     def reply(self, *args, **kwargs):
-        return self.client.api.channels_messages_send(self.channel_id, *args, **kwargs)
+        return self.channel.send_message(*args, **kwargs)
+
+    def edit(self, content):
+        return self.client.api.channels_messages_modify(self.channel_id, self.id, content)
+
+    def delete(self, content):
+        return self.client.api.channels_messages_delete(self.channel_id, self.id)
 
     def is_mentioned(self, entity):
         if isinstance(entity, User):

@@ -45,6 +45,7 @@ class Channel(BaseType):
 
     @cached_property
     def guild(self):
-        print self.guild_id
-        print self.client.state.guilds
         return self.client.state.guilds.get(self.guild_id)
+
+    def send_message(self, content, nonce=None, tts=False):
+        return self.client.api.channels_messages_create(self.id, content, nonce, tts)

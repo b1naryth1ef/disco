@@ -17,7 +17,7 @@ class BasicPlugin(Plugin):
         count = int(event.args[0])
 
         for i in range(count):
-            event.msg.reply(' '.join(event.args[1:]))
+            print event.msg.reply(' '.join(event.args[1:])).id
 
 if __name__ == '__main__':
     bot = Bot(disco_main())
