@@ -73,8 +73,9 @@ class Bot(object):
             return False
 
         for command in self.commands:
-            if command.compiled_regex.match(content):
-                command.execute(msg)
+            match = command.compiled_regex.match(content)
+            if match:
+                command.execute(msg, match)
 
         return False
 
