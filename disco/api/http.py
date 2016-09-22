@@ -2,6 +2,9 @@ import requests
 
 from holster.enum import Enum
 
+from disco.util.logging import LoggingClass
+from disco.api.ratelimit import RateLimiter
+
 HTTPMethod = Enum(
     GET='GET',
     POST='POST',
@@ -21,36 +24,57 @@ class Routes(object):
 
 
 class APIException(Exception):
-    def __init__(self, obj):
-        self.code = obj['code']
-        self.msg = obj['msg']
+    def __init__(self, msg, status_code=0, content=None):
+        super(APIException, self).__init__(msg)
+        self.status_code = status_code
+        self.content = content
 
-        super(APIException, self).__init__(self.msg)
 
-
-class HTTPClient(object):
+class HTTPClient(LoggingClass):
     BASE_URL = 'https://discordapp.com/api'
+    MAX_RETRIES = 5
 
     def __init__(self, token):
+        super(HTTPClient, self).__init__()
+
+        self.limiter = RateLimiter()
         self.headers = {
             'Authorization': 'Bot ' + token,
         }
 
     def __call__(self, route, *args, **kwargs):
-        method, url = route
+        retry = kwargs.pop('retry_number', 0)
 
-        kwargs['headers'] = self.headers
+        # Merge or set headers
+        if 'headers' in kwargs:
+            kwargs['headers'].update(self.headers)
+        else:
+            kwargs['headers'] = self.headers
 
-        r = requests.request(str(method), (self.BASE_URL + url).format(*args), **kwargs)
+        # Compile URL args
+        compiled = (str(route[0]), (self.BASE_URL) + route[1].format(*args))
 
-        try:
-            r.raise_for_status()
-        except:
-            print r.json()
-            raise
-            # TODO: rate limits
-            # TODO: check json
-            raise APIException(r.json())
+        # Possibly wait if we're rate limited
+        self.limiter.check(compiled)
 
-        # TODO: check json
-        return r.json()
+        # Make the actual request
+        r = requests.request(compiled[0], compiled[1], **kwargs)
+
+        # Update rate limiter
+        self.limiter.update(compiled, r)
+
+        # If we got a success status code, just return the data
+        if r.status_code < 400:
+            return r.json()
+        else:
+            if r.status_code == 429:
+                self.log.warning('Request responded w/ 429, retrying (but this should not happen, check your clock sync')
+
+            # If we hit the max retries, throw an error
+            retry += 1
+            if retry > self.MAX_RETRIES:
+                self.log.error('Failing request, hit max retries')
+                raise APIException('Request failed after {} attempts'.format(self.MAX_RETRIES), r.status_code, r.content)
+
+            # Otherwise just recurse and try again
+            return self(route, retry_number=retry, *args, **kwargs)

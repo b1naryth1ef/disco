@@ -44,7 +44,6 @@ class Bot(object):
 
     def compute_command_matches_re(self):
         re_str = '|'.join(command.regex for command in self.commands)
-        print re_str
         if re_str:
             self.command_matches_re = re.compile(re_str)
         else:

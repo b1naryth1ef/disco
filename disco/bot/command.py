@@ -9,7 +9,7 @@ class CommandEvent(object):
     def __init__(self, msg, match):
         self.msg = msg
         self.match = match
-        self.args = self.match.group(1).split(' ')
+        self.args = self.match.group(1).strip().split(' ')
 
 
 class Command(object):

@@ -11,7 +11,13 @@ class BasicPlugin(Plugin):
     @Plugin.command('test')
     def on_test_command(self, event):
         event.msg.reply('HELLO WORLD')
-        print 'wtf'
+
+    @Plugin.command('spam')
+    def on_spam_command(self, event):
+        count = int(event.args[0])
+
+        for i in range(count):
+            event.msg.reply(' '.join(event.args[1:]))
 
 if __name__ == '__main__':
     bot = Bot(disco_main())
