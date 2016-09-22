@@ -17,6 +17,8 @@ class Routes(object):
 
     GATEWAY_GET = (HTTPMethod.GET, '/gateway')
 
+    CHANNELS_MESSAGES_POST = (HTTPMethod.POST, '/channels/{}/messages')
+
 
 class APIException(Exception):
     def __init__(self, obj):
@@ -37,11 +39,15 @@ class HTTPClient(object):
     def __call__(self, route, *args, **kwargs):
         method, url = route
 
-        r = requests.request(str(method), self.BASE_URL + url, *args, **kwargs)
+        kwargs['headers'] = self.headers
+
+        r = requests.request(str(method), (self.BASE_URL + url).format(*args), **kwargs)
 
         try:
             r.raise_for_status()
         except:
+            print r.json()
+            raise
             # TODO: rate limits
             # TODO: check json
             raise APIException(r.json())

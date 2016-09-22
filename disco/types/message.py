@@ -53,7 +53,6 @@ class Message(BaseType):
 
     @cached_property
     def channel(self):
-        print self.client.state.channels
         return self.client.state.channels.get(self.channel_id)
 
     @cached_property
@@ -63,6 +62,9 @@ class Message(BaseType):
     @cached_property
     def mention_users_dict(self):
         return {i.id: i for i in self.mentions}
+
+    def reply(self, *args, **kwargs):
+        return self.client.api.channels_messages_send(self.channel_id, *args, **kwargs)
 
     def is_mentioned(self, entity):
         if isinstance(entity, User):

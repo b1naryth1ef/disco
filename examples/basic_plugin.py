@@ -10,6 +10,7 @@ class BasicPlugin(Plugin):
 
     @Plugin.command('test')
     def on_test_command(self, event):
+        event.msg.reply('HELLO WORLD')
         print 'wtf'
 
 if __name__ == '__main__':
