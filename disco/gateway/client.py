@@ -1,10 +1,13 @@
 import websocket
 import gevent
 import json
+import zlib
 
-from disco.gateway.packets import (
-    Packet, DispatchPacket, HeartbeatPacket, ReconnectPacket, InvalidSessionPacket, HelloPacket, HeartbeatAckPacket,
-    ResumePacket, IdentifyPacket)
+from holster.emitter import Emitter
+# from holster.util import SimpleObject
+
+from disco.gateway.packets import OPCode, HeartbeatPacket, ResumePacket, IdentifyPacket
+from disco.gateway.events import GatewayEvent
 from disco.util.logging import LoggingClass
 
 GATEWAY_VERSION = 6
@@ -24,6 +27,7 @@ class GatewayClient(LoggingClass):
     def __init__(self, client):
         super(GatewayClient, self).__init__()
         self.client = client
+        self.emitter = Emitter(gevent.spawn)
 
         # Websocket connection
         self.ws = None
@@ -51,9 +55,25 @@ class GatewayClient(LoggingClass):
             self.send(HeartbeatPacket(data=self.seq))
             gevent.sleep(interval / 1000)
 
+    def handle_dispatch(self, packet):
+        obj = GatewayEvent.from_dispatch(packet)
+        self.log.info('Got dispatch for %s', obj.user.id)
+
+    def handle_heartbeat(self, packet):
+        pass
+
+    def handle_reconnect(self, packet):
+        pass
+
+    def handle_invalid_session(self, packet):
+        pass
+
     def handle_hello(self, packet):
         self.log.info('Recieved HELLO, starting heartbeater...')
-        self._heartbeat_task = gevent.spawn(self.heartbeat_task, packet.heartbeat_interval)
+        self._heartbeat_task = gevent.spawn(self.heartbeat_task, packet['d']['heartbeat_interval'])
+
+    def handle_heartbeat_ack(self, packet):
+        pass
 
     def connect(self):
         if not self._cached_gateway_url:
@@ -69,30 +89,35 @@ class GatewayClient(LoggingClass):
         )
 
     def on_message(self, ws, msg):
-        # TODO: ZLIB
+        # Check if we're JSON
+        if msg[0] != '{':
+            print 'zlib'
+            msg = zlib.decompress(msg)
 
         try:
-            packet = Packet.load_json(json.loads(msg))
-            if packet.seq and packet.seq > self.seq:
-                self.seq = packet.seq
+            data = json.loads(msg)
         except:
             self.log.exception('Failed to load dispatch:')
             return
 
-        if isinstance(packet, DispatchPacket):
-            self.handle_dispatch(packet)
-        elif isinstance(packet, HeartbeatPacket):
-            self.handle_heartbeat(packet)
-        elif isinstance(packet, ReconnectPacket):
-            self.handle_reconnect(packet)
-        elif isinstance(packet, InvalidSessionPacket):
-            self.handle_invalid_session(packet)
-        elif isinstance(packet, HelloPacket):
-            self.handle_hello(packet)
-        elif isinstance(packet, HeartbeatAckPacket):
-            self.handle_heartbeat_ack(packet)
+        # Update sequence
+        if data['s'] and data['s'] > self.seq:
+            self.seq = data['s']
+
+        if data['op'] == OPCode.DISPATCH:
+            self.handle_dispatch(data)
+        elif data['op'] == OPCode.HEARTBEAT:
+            self.handle_heartbeat(data)
+        elif data['op'] == OPCode.RECONNECT:
+            self.handle_reconnect(data)
+        elif data['op'] == OPCode.INVALID_SESSION:
+            self.handle_invalid_session(data)
+        elif data['op'] == OPCode.HELLO:
+            self.handle_hello(data)
+        elif data['op'] == OPCode.HEARTBEAT_ACK:
+            self.handle_heartbeat_ack(data)
         else:
-            raise Exception('Unknown packet: {}'.format(packet))
+            raise Exception('Unknown packet: {}'.format(data['op']))
 
     def on_error(self, ws, error):
         print 'error', error

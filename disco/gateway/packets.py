@@ -20,21 +20,7 @@ OPCode = Enum(
 
 
 class Packet(TypedClass):
-    @classmethod
-    def load_json(cls, obj):
-        if not obj['op']:
-            raise Exception('Packet struct missing op key: {}'.format(obj))
-
-        cls = PACKETS.get(obj['op'])
-
-        if not cls:
-            raise Exception('Unknown OPCode: {}'.format(obj['op']))
-
-        obj.update(obj['d'])
-        del obj['d']
-        inst = cls.from_dict(obj)
-        inst.seq = obj['s']
-        return inst
+    pass
 
 
 class DispatchPacket(Packet):
