@@ -7,10 +7,11 @@ from holster.emitter import Emitter
 # from holster.util import SimpleObject
 
 from disco.gateway.packets import OPCode, HeartbeatPacket, ResumePacket, IdentifyPacket
-from disco.gateway.events import GatewayEvent
+from disco.gateway.events import GatewayEvent, Ready
 from disco.util.logging import LoggingClass
 
 GATEWAY_VERSION = 6
+TEN_MEGABYTES = 10490000
 
 
 def log_error(log, msg, w):
@@ -29,12 +30,15 @@ class GatewayClient(LoggingClass):
         self.client = client
         self.emitter = Emitter(gevent.spawn)
 
+        self.emitter.on(Ready, self.on_ready)
+
         # Websocket connection
         self.ws = None
 
         # State
         self.seq = 0
         self.session_id = None
+        self.reconnects = 0
 
         # Cached gateway URL
         self._cached_gateway_url = None
@@ -56,8 +60,9 @@ class GatewayClient(LoggingClass):
             gevent.sleep(interval / 1000)
 
     def handle_dispatch(self, packet):
-        obj = GatewayEvent.from_dispatch(packet)
-        self.log.info('Got dispatch for %s', obj.user.id)
+        cls, obj = GatewayEvent.from_dispatch(packet)
+        self.log.info('Dispatching %s', cls)
+        self.emitter.emit(cls, obj)
 
     def handle_heartbeat(self, packet):
         pass
@@ -75,6 +80,11 @@ class GatewayClient(LoggingClass):
     def handle_heartbeat_ack(self, packet):
         pass
 
+    def on_ready(self, ready):
+        self.log.info('Recieved READY')
+        self.session_id = ready.session_id
+        self.reconnects = 0
+
     def connect(self):
         if not self._cached_gateway_url:
             self._cached_gateway_url = self.client.api.gateway(version=GATEWAY_VERSION, encoding='json')
@@ -89,10 +99,9 @@ class GatewayClient(LoggingClass):
         )
 
     def on_message(self, ws, msg):
-        # Check if we're JSON
+        # Detect zlib and decompress
         if msg[0] != '{':
-            print 'zlib'
-            msg = zlib.decompress(msg)
+            msg = zlib.decompress(msg, 15, TEN_MEGABYTES)
 
         try:
             data = json.loads(msg)
