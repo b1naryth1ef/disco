@@ -31,8 +31,7 @@ class State(object):
             self.channels[channel.id] = channel
 
     def on_guild_update(self, event):
-        # TODO
-        pass
+        self.guilds[event.guild.id] = event.guild
 
     def on_guild_delete(self, event):
         if event.guild_id in self.guilds:
@@ -44,8 +43,7 @@ class State(object):
         self.channels[event.channel.id] = event.channel
 
     def on_channel_update(self, event):
-        # TODO
-        pass
+        self.channels[event.channel.id] = event.channel
 
     def on_channel_delete(self, event):
         if event.channel.id in self.channels:

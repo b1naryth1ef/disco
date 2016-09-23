@@ -1,7 +1,15 @@
 import re
 
+from disco.client import DiscoClient
+
 
 class BotConfig(object):
+    # Authentication token
+    token = None
+
+    # Whether to enable command parsing
+    commands_enabled = True
+
     # Whether the bot must be mentioned to respond to a command
     command_require_mention = True
 
@@ -19,16 +27,23 @@ class BotConfig(object):
     # Whether an edited message can trigger a command
     command_allow_edit = True
 
+    # Function that when given a plugin name, returns its configuration
+    plugin_config_provider = None
+
 
 class Bot(object):
-    def __init__(self, client, config=None):
-        self.client = client
+    def __init__(self, client=None, config=None):
+        self.client = client or DiscoClient(config.token)
         self.config = config or BotConfig()
 
         self.plugins = {}
 
-        self.client.events.on('MessageCreate', self.on_message_create)
-        self.client.events.on('MessageUpdate', self.on_message_update)
+        # Only bind event listeners if we're going to parse commands
+        if self.config.commands_enabled:
+            self.client.events.on('MessageCreate', self.on_message_create)
+
+            if self.config.command_allow_edit:
+                self.client.events.on('MessageUpdate', self.on_message_update)
 
         # Stores the last message for every single channel
         self.last_message_cache = {}
@@ -49,7 +64,7 @@ class Bot(object):
         else:
             self.command_matches_re = None
 
-    def handle_message(self, msg):
+    def get_commands_for_message(self, msg):
         content = msg.content
 
         if self.config.command_require_mention:
@@ -61,20 +76,28 @@ class Bot(object):
                 ))))
 
             if not match:
-                return False
+                raise StopIteration
 
             content = msg.without_mentions.strip()
 
         if self.config.command_prefix and not content.startswith(self.config.command_prefix):
-            return False
+            raise StopIteration
+        else:
+            content = content[len(self.config.command_prefix):]
 
         if not self.command_matches_re or not self.command_matches_re.match(content):
-            return False
+            raise StopIteration
 
         for command in self.commands:
             match = command.compiled_regex.match(content)
             if match:
-                command.execute(msg, match)
+                yield (command, match)
+
+    def handle_message(self, msg):
+        commands = list(self.get_commands_for_message(msg))
+
+        if len(commands):
+            return any((command.execute(msg, match) for command, match in commands))
 
         return False
 
@@ -99,7 +122,9 @@ class Bot(object):
         if cls.__name__ in self.plugins:
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
 
-        self.plugins[cls.__name__] = cls(self)
+        config = self.config.plugin_config_provider(cls.__name__) if self.config.plugin_config_provider else {}
+
+        self.plugins[cls.__name__] = cls(self, config)
         self.plugins[cls.__name__].load()
         self.compute_command_matches_re()
 

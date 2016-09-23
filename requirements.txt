@@ -6,7 +6,7 @@ enum34==1.1.6
 Flask==0.11.1
 gevent==1.1.2
 greenlet==0.4.10
-holster==0.0.7
+# holster==0.0.7
 idna==2.1
 inflection==0.3.1
 ipaddress==1.0.17
@@ -19,7 +19,7 @@ pycparser==2.14
 pyOpenSSL==16.1.0
 requests==2.11.1
 six==1.10.0
-skema==0.0.1
+# skema==0.0.1
 websocket-client==0.37.0
 Werkzeug==0.11.11
 wheel==0.24.0

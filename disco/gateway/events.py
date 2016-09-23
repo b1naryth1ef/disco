@@ -152,10 +152,15 @@ class MessageDeleteBulk(GatewayEvent):
 
 
 class PresenceUpdate(GatewayEvent):
+    class Game(skema.Model):
+        type = skema.IntType()
+        name = skema.StringType()
+        url = skema.StringType(required=False)
+
     user = skema.ModelType(User)
     guild_id = skema.SnowflakeType()
     roles = skema.ListType(skema.SnowflakeType())
-    game = skema.StringType()
+    game = skema.ModelType(Game)
     status = skema.StringType()
 
 

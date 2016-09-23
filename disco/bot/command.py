@@ -13,7 +13,8 @@ class CommandEvent(object):
 
 
 class Command(object):
-    def __init__(self, func, trigger, aliases=None, group=None, is_regex=False):
+    def __init__(self, plugin, func, trigger, aliases=None, group=None, is_regex=False):
+        self.plugin = plugin
         self.func = func
         self.triggers = [trigger] + (aliases or [])
 
@@ -21,7 +22,8 @@ class Command(object):
         self.is_regex = is_regex
 
     def execute(self, msg, match):
-        self.func(CommandEvent(msg, match))
+        event = CommandEvent(msg, match)
+        return self.func(event)
 
     @cached_property
     def compiled_regex(self):

@@ -2,6 +2,7 @@
 
 def cached_property(f):
     def deco(self, *args, **kwargs):
-        self.__dict__[f.__name__] = f(self, *args, **kwargs)
-        return self.__dict__[f.__name__]
+        if not hasattr(self, '__' + f.__name__):
+            setattr(self, '__' + f.__name__, f(self, *args, **kwargs))
+        return getattr(self, '__' + f.__name__)
     return property(deco)

@@ -3,6 +3,7 @@ import gevent
 import json
 import zlib
 import six
+import ssl
 
 from disco.gateway.packets import OPCode, HeartbeatPacket, ResumePacket, IdentifyPacket
 from disco.gateway.events import GatewayEvent
@@ -37,6 +38,7 @@ class GatewayClient(LoggingClass):
         self.seq = 0
         self.session_id = None
         self.reconnects = 0
+        self.shutting_down = False
 
         # Cached gateway URL
         self._cached_gateway_url = None
@@ -85,7 +87,7 @@ class GatewayClient(LoggingClass):
         self.session_id = ready.session_id
         self.reconnects = 0
 
-    def connect(self):
+    def connect_and_run(self):
         if not self._cached_gateway_url:
             self._cached_gateway_url = self.client.api.gateway(version=GATEWAY_VERSION, encoding='json')
 
@@ -98,6 +100,7 @@ class GatewayClient(LoggingClass):
             on_close=self.log_on_error('Error in on_close:', self.on_close),
         )
         self.ws._get_close_args = websocket_get_close_args_override
+        self.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
 
     def on_message(self, ws, msg):
         # Detect zlib and decompress
@@ -130,6 +133,8 @@ class GatewayClient(LoggingClass):
             raise Exception('Unknown packet: {}'.format(data['op']))
 
     def on_error(self, ws, error):
+        if isinstance(error, KeyboardInterrupt):
+            self.shutting_down = True
         raise Exception('WS recieved error: %s', error)
 
     def on_open(self, ws):
@@ -145,6 +150,10 @@ class GatewayClient(LoggingClass):
                 shard=[self.client.sharding['number'], self.client.sharding['total']]))
 
     def on_close(self, ws, code, reason):
+        if self.shutting_down:
+            self.log.info('WS Closed: shutting down')
+            return
+
         self.reconnects += 1
         self.log.info('WS Closed: [%s] %s (%s)', code, reason, self.reconnects)
 
@@ -152,19 +161,15 @@ class GatewayClient(LoggingClass):
             raise Exception('Failed to reconect after {} attempts, giving up'.format(self.MAX_RECONNECTS))
 
         # Don't resume for these error codes
-        if 4000 <= code <= 4010:
+        if code and 4000 <= code <= 4010:
             self.session_id = None
-            self.log.info('Attempting fresh reconnect')
-        else:
-            self.log.info('Attempting resume')
 
         wait_time = self.reconnects * 5
-        self.log.info('Will attempt to {} after {} seconds', 'resume' if self.session_id else 'reconnect', wait_time)
+        self.log.info('Will attempt to %s after %s seconds', 'resume' if self.session_id else 'reconnect', wait_time)
         gevent.sleep(wait_time)
 
         # Reconnect
-        self.connect()
+        self.connect_and_run()
 
     def run(self):
-        self.connect()
-        self.ws.run_forever()
+        self.connect_and_run()
