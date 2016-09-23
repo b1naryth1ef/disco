@@ -23,7 +23,7 @@ class DiscoClient(object):
         self.gw = GatewayClient(self)
 
     def run(self):
-        return self.gw.run()
+        return gevent.spawn(self.gw.run)
 
     def run_forever(self):
-        return self.gw.run().join()
+        return self.gw.run()
