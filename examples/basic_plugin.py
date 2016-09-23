@@ -12,8 +12,8 @@ class BasicPlugin(Plugin):
     def on_test_command(self, event):
         event.msg.reply('HELLO WORLD')
 
-    @Plugin.command('spam')
-    def on_spam_command(self, event):
+    @Plugin.command('spam', '<count:int> <content:str...>')
+    def on_spam_command(self, event, count, content):
         count = int(event.args[0])
 
         for i in range(count):

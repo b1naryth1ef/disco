@@ -1,29 +1,49 @@
 import re
 
+from disco.bot.parser import parse_arguments, ArgumentError
 from disco.util.cache import cached_property
 
+REGEX_FMT = '({})'
 ARGS_REGEX = '( (.*)$|$)'
 
 
 class CommandEvent(object):
-    def __init__(self, msg, match):
+    def __init__(self, command, msg, match):
+        self.command = command
         self.msg = msg
         self.match = match
-        self.args = self.match.group(1).strip().split(' ')
+        self.name = self.match.group(1)
+        self.args = self.match.group(2).strip().split(' ')
+
+
+class CommandError(Exception):
+    pass
 
 
 class Command(object):
-    def __init__(self, plugin, func, trigger, aliases=None, group=None, is_regex=False):
+    def __init__(self, plugin, func, trigger, args=None, aliases=None, group=None, is_regex=False):
         self.plugin = plugin
         self.func = func
         self.triggers = [trigger] + (aliases or [])
 
+        self.args = parse_arguments(args or '')
         self.group = group
         self.is_regex = is_regex
 
-    def execute(self, msg, match):
-        event = CommandEvent(msg, match)
-        return self.func(event)
+    def execute(self, event):
+        if len(event.args) < self.args.required_length:
+            raise CommandError('{} requires {} arguments (passed {})'.format(
+                event.name,
+                self.args.required_length,
+                len(event.args)
+            ))
+
+        try:
+            args = self.args.parse(event.args)
+        except ArgumentError as e:
+            raise CommandError(e.message)
+
+        return self.func(event, *args)
 
     @cached_property
     def compiled_regex(self):
@@ -32,7 +52,7 @@ class Command(object):
     @property
     def regex(self):
         if self.is_regex:
-            return '|'.join(self.triggers)
+            return REGEX_FMT.format('|'.join(self.triggers))
         else:
             group = self.group + ' ' if self.group else ''
-            return '|'.join(['^' + group + trigger for trigger in self.triggers]) + ARGS_REGEX
+            return REGEX_FMT.format('|'.join(['^' + group + trigger for trigger in self.triggers]) + ARGS_REGEX)

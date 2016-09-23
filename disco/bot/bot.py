@@ -1,6 +1,7 @@
 import re
 
 from disco.client import DiscoClient
+from disco.bot.command import CommandEvent
 
 
 class BotConfig(object):
@@ -97,7 +98,10 @@ class Bot(object):
         commands = list(self.get_commands_for_message(msg))
 
         if len(commands):
-            return any((command.execute(msg, match) for command, match in commands))
+            return any([
+                command.plugin.execute(CommandEvent(command, msg, match))
+                for command, match in commands
+            ])
 
         return False
 

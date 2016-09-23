@@ -1,7 +1,7 @@
 import inspect
 import functools
 
-from disco.bot.command import Command
+from disco.bot.command import Command, CommandError
 
 
 class PluginDeco(object):
@@ -78,20 +78,27 @@ class Plugin(PluginDeco):
                         when, typ = meta['type'].split('_', 1)
                         self.register_trigger(typ, when, member)
 
+    def execute(self, event):
+        try:
+            return event.command.execute(event)
+        except CommandError as e:
+            event.msg.reply(e.message)
+            return False
+
     def register_trigger(self, typ, when, func):
         getattr(self, '_' + when)[typ].append(func)
 
-    def _dispatch(self, typ, func, event):
+    def _dispatch(self, typ, func, event, *args, **kwargs):
         for pre in self._pre[typ]:
-            event = pre(event)
+            event = pre(event, args, kwargs)
 
         if event is None:
             return False
 
-        result = func(event)
+        result = func(event, *args, **kwargs)
 
         for post in self._post[typ]:
-            post(event, result)
+            post(event, args, kwargs, result)
 
         return True
 
