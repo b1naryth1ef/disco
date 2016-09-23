@@ -1,6 +1,7 @@
 import inspect
 import functools
 
+from disco.util.logging import LoggingClass
 from disco.bot.command import Command, CommandError
 
 
@@ -56,8 +57,9 @@ class PluginDeco(object):
         })
 
 
-class Plugin(PluginDeco):
+class Plugin(LoggingClass, PluginDeco):
     def __init__(self, bot, config):
+        super(Plugin, self).__init__()
         self.bot = bot
         self.config = config
 

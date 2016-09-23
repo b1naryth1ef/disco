@@ -88,6 +88,12 @@ class ArgumentSet(object):
                             r, ', '.join(arg.types)
                         ))
 
+            if arg.true_count == 1:
+                raw = raw[0]
+
+            if not arg.types or arg.types == ['str'] and isinstance(raw, list):
+                raw = ' '.join(raw)
+
             parsed.append(raw)
 
         return parsed

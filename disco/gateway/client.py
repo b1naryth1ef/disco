@@ -59,7 +59,7 @@ class GatewayClient(LoggingClass):
 
     def handle_dispatch(self, packet):
         obj = GatewayEvent.from_dispatch(self.client, packet)
-        self.log.info('Dispatching %s', obj.__class__.__name__)
+        self.log.debug('Dispatching %s', obj.__class__.__name__)
         self.client.events.emit(obj.__class__.__name__, obj)
 
     def handle_heartbeat(self, packet):
