@@ -1,12 +1,15 @@
 from disco.api.http import Routes, HTTPClient
 from disco.util.logging import LoggingClass
 
+from disco.types.user import User
 from disco.types.message import Message
+from disco.types.guild import Guild, GuildMember, Role
 from disco.types.channel import Channel
+from disco.types.invite import Invite
 
 
 def optional(**kwargs):
-    return {k: v for k, v in kwargs if v is not None}
+    return {k: v for k, v in kwargs.items() if v is not None}
 
 
 class APIClient(LoggingClass):
@@ -21,34 +24,33 @@ class APIClient(LoggingClass):
         return data['url'] + '?v={}&encoding={}'.format(version, encoding)
 
     def channels_get(self, channel):
-        r = self.http(Routes.CHANNELS_GET, channel)
+        r = self.http(Routes.CHANNELS_GET, dict(channel=channel))
         return Channel.create(self.client, r.json())
 
     def channels_modify(self, channel, **kwargs):
-        r = self.http(Routes.CHANNELS_MODIFY, channel, json=kwargs)
+        r = self.http(Routes.CHANNELS_MODIFY, dict(channel=channel), json=kwargs)
         return Channel.create(self.client, r.json())
 
     def channels_delete(self, channel):
-        r = self.http(Routes.CHANNELS_DELETE, channel)
+        r = self.http(Routes.CHANNELS_DELETE, dict(channel=channel))
         return Channel.create(self.client, r.json())
 
     def channels_messages_list(self, channel, around=None, before=None, after=None, limit=50):
-        r = self.http(Routes.CHANNELS_MESSAGES_LIST, channel, json=optional(
-            channel=channel,
+        r = self.http(Routes.CHANNELS_MESSAGES_LIST, dict(channel=channel), params=optional(
             around=around,
             before=before,
             after=after,
             limit=limit
         ))
 
-        return [Message.create(self.client, i) for i in r.json()]
+        return Message.create_map(self.client, r.json())
 
     def channels_messages_get(self, channel, message):
-        r = self.http(Routes.CHANNELS_MESSAGES_GET, channel, message)
+        r = self.http(Routes.CHANNELS_MESSAGES_GET, dict(channel=channel, message=message))
         return Message.create(self.client, r.json())
 
     def channels_messages_create(self, channel, content, nonce=None, tts=False):
-        r = self.http(Routes.CHANNELS_MESSAGES_CREATE, channel, json={
+        r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), json={
             'content': content,
             'nonce': nonce,
             'tts': tts,
@@ -57,11 +59,117 @@ class APIClient(LoggingClass):
         return Message.create(self.client, r.json())
 
     def channels_messages_modify(self, channel, message, content):
-        r = self.http(Routes.CHANNELS_MESSAGES_MODIFY, channel, message, json={'content': content})
+        r = self.http(Routes.CHANNELS_MESSAGES_MODIFY,
+                dict(channel=channel, message=message),
+                json={'content': content})
         return Message.create(self.client, r.json())
 
     def channels_messages_delete(self, channel, message):
-        self.http(Routes.CHANNELS_MESSAGES_DELETE, channel, message)
+        self.http(Routes.CHANNELS_MESSAGES_DELETE, dict(channel=channel, message=message))
 
     def channels_messages_delete_bulk(self, channel, messages):
-        self.http(Routes.CHANNELS_MESSAGES_DELETE_BULK, channel, json={'messages': messages})
+        self.http(Routes.CHANNELS_MESSAGES_DELETE_BULK, dict(channel=channel), json={'messages': messages})
+
+    def channels_permissions_modify(self, channel, permission, allow, deny, typ):
+        self.http(Routes.CHANNELS_PERMISSIONS_MODIFY, dict(channel=channel, permission=permission), json={
+            'allow': allow,
+            'deny': deny,
+            'type': typ,
+        })
+
+    def channels_permissions_delete(self, channel, permission):
+        self.http(Routes.CHANNELS_PERMISSIONS_DELETE, dict(channel=channel, permission=permission))
+
+    def channels_invites_list(self, channel):
+        r = self.http(Routes.CHANNELS_INVITES_LIST, dict(channel=channel))
+        return Invite.create_map(self.client, r.json())
+
+    def channels_invites_create(self, channel, max_age=86400, max_uses=0, temporary=False, unique=False):
+        r = self.http(Routes.CHANNELS_INVITES_CREATE, dict(channel=channel), json={
+            'max_age': max_age,
+            'max_uses': max_uses,
+            'temporary': temporary,
+            'unique': unique
+        })
+        return Invite.create(self.client, r.json())
+
+    def channels_pins_list(self, channel):
+        r = self.http(Routes.CHANNELS_PINS_LIST, dict(channel=channel))
+        return Message.create_map(self.client, r.json())
+
+    def channels_pins_create(self, channel, message):
+        self.http(Routes.CHANNELS_PINS_CREATE, dict(channel=channel, message=message))
+
+    def channels_pins_delete(self, channel, message):
+        self.http(Routes.CHANNELS_PINS_DELETE, dict(channel=channel, message=message))
+
+    def guilds_get(self, guild):
+        r = self.http(Routes.GUILDS_GET, dict(guild=guild))
+        return Guild.create(self.client, r.json())
+
+    def guilds_modify(self, guild, **kwargs):
+        r = self.http(Routes.GUILDS_MODIFY, dict(guild=guild), json=kwargs)
+        return Guild.create(self.client, r.json())
+
+    def guilds_delete(self, guild):
+        r = self.http(Routes.GUILDS_DELETE, dict(guild=guild))
+        return Guild.create(self.client, r.json())
+
+    def guilds_channels_list(self, guild):
+        r = self.http(Routes.GUILDS_CHANNELS_LIST, dict(guild=guild))
+        return Channel.create_map(self.client, r.json())
+
+    def guilds_channels_create(self, guild, **kwargs):
+        r = self.http(Routes.GUILDS_CHANNELS_CREATE, dict(guild=guild), json=kwargs)
+        return Channel.create(self.client, r.json())
+
+    def guilds_channels_modify(self, guild, channel, position):
+        self.http(Routes.GUILDS_CHANNELS_MODIFY, dict(guild=guild), json={
+            'id': channel,
+            'position': position,
+        })
+
+    def guilds_members_list(self, guild):
+        r = self.http(Routes.GUILDS_MEMBERS_LIST, dict(guild=guild))
+        return GuildMember.create_map(self.client, r.json())
+
+    def guilds_members_get(self, guild, member):
+        r = self.http(Routes.GUILD_MEMBERS_GET, dict(guild=guild, member=member))
+        return GuildMember.create(self.client, r.json())
+
+    def guilds_members_modify(self, guild, member, **kwargs):
+        self.http(Routes.GUILD_MEMBERS_MODIFY, dict(guild=guild, member=member), json=kwargs)
+
+    def guilds_members_kick(self, guild, member):
+        self.http(Routes.GUILD_MEMBERS_KICK, dict(guild=guild, member=member))
+
+    def guilds_bans_list(self, guild):
+        r = self.http(Routes.GUILD_BANS_LIST, dict(guild=guild))
+        return User.create_map(self.client, r.json())
+
+    def guilds_bans_create(self, guild, user, delete_message_days):
+        self.http(Routes.GUILDS_BANS_CREATE, dict(guild=guild, user=user), params={
+            'delete-message-days': delete_message_days,
+        })
+
+    def guilds_bans_delete(self, guild, user):
+        self.http(Routes.GUILDS_BANS_DELETE, dict(guild=guild, user=user))
+
+    def guilds_roles_list(self, guild):
+        r = self.http(Routes.GUILDS_ROLES_LIST, dict(guild=guild))
+        return Role.create_map(self.client, r.json())
+
+    def guilds_roles_create(self, guild):
+        r = self.http(Routes.GUILDS_ROLES_CREATE, dict(guild=guild))
+        return Role.create(self.client, r.json())
+
+    def guilds_roles_modify_batch(self, guild, roles):
+        r = self.http(Routes.GUILDS_ROLES_MODIFY_BATCH, dict(guild=guild), json=roles)
+        return Role.create_map(self.client, r.json())
+
+    def guilds_roles_modify(self, guild, role, **kwargs):
+        r = self.http(Routes.GUILDS_ROLES_MODIFY, dict(guild=guild, role=role), json=kwargs)
+        return Role.create(self.client, r.json())
+
+    def guilds_roles_delete(self, guild, role):
+        self.http(Routes.GUILDS_ROLES_DELETE, dict(guild=guild, role=role))

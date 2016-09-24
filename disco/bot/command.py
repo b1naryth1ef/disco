@@ -15,6 +15,18 @@ class CommandEvent(object):
         self.name = self.match.group(1)
         self.args = self.match.group(2).strip().split(' ')
 
+    @property
+    def channel(self):
+        return self.msg.channel
+
+    @property
+    def guild(self):
+        return self.msg.guild
+
+    @property
+    def actor(self):
+        return self.msg.author
+
 
 class CommandError(Exception):
     pass

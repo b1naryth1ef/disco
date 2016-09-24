@@ -2,7 +2,7 @@ import re
 import skema
 
 from disco.util.cache import cached_property
-from disco.util.types import PreHookType
+from disco.util.types import PreHookType, ListToDictType
 from disco.types.base import BaseType
 from disco.types.user import User
 from disco.types.guild import Role
@@ -41,11 +41,11 @@ class Message(BaseType):
 
     pinned = skema.BooleanType(required=False)
 
-    mentions = skema.ListType(skema.ModelType(User))
+    mentions = ListToDictType('id', skema.ModelType(User))
     mention_roles = skema.ListType(skema.SnowflakeType())
 
     embeds = skema.ListType(skema.ModelType(MessageEmbed))
-    attachment = skema.ListType(skema.ModelType(MessageAttachment))
+    attachments = ListToDictType('id', skema.ModelType(MessageAttachment))
 
     @cached_property
     def guild(self):
@@ -54,14 +54,6 @@ class Message(BaseType):
     @cached_property
     def channel(self):
         return self.client.state.channels.get(self.channel_id)
-
-    @cached_property
-    def mention_users(self):
-        return [i.id for i in self.mentions]
-
-    @cached_property
-    def mention_users_dict(self):
-        return {i.id: i for i in self.mentions}
 
     def reply(self, *args, **kwargs):
         return self.channel.send_message(*args, **kwargs)
@@ -74,11 +66,13 @@ class Message(BaseType):
 
     def is_mentioned(self, entity):
         if isinstance(entity, User):
-            return entity.id in self.mention_users
+            return entity.id in self.mentions
         elif isinstance(entity, Role):
             return entity.id in self.mention_roles
+        elif isinstance(entity, long):
+            return entity in self.mentions or entity in self.mention_roles
         else:
-            raise Exception('Unknown entity: {}'.format(entity))
+            raise Exception('Unknown entity: {} ({})'.format(entity, type(entity)))
 
     @cached_property
     def without_mentions(self):
@@ -95,6 +89,6 @@ class Message(BaseType):
             if id in self.mention_roles:
                 return role_replace(id)
             else:
-                return user_replace(self.mention_users_dict.get(id))
+                return user_replace(self.mentions.get(id))
 
         return re.sub('<@!?([0-9]+)>', replace, self.content)

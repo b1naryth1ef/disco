@@ -1,18 +1,36 @@
+import skema
 
 
-def recursive_find_matching(base, match_clause):
+def _recurse(typ, field, value):
     result = []
 
-    if hasattr(base, '__dict__'):
-        values = base.__dict__.values()
-    else:
-        values = list(base)
+    if isinstance(field, skema.ModelType):
+        result += skema_find_recursive_by_type(value, typ)
 
-    for v in values:
-        if match_clause(v):
+    if isinstance(field, (skema.ListType, skema.SetType, skema.DictType)):
+        if isinstance(field, skema.DictType):
+            value = value.values()
+
+        for item in value:
+            if isinstance(field.field, typ):
+                result.append(item)
+            result += _recurse(typ, field.field, item)
+
+    return result
+
+
+def skema_find_recursive_by_type(base, typ):
+    result = []
+
+    for name, field in base._fields_by_stored_name.items():
+        v = getattr(base, name, None)
+
+        if not v:
+            continue
+
+        if isinstance(field, typ):
             result.append(v)
 
-        if hasattr(v, '__dict__') or hasattr(v, '__iter__'):
-            result += recursive_find_matching(v, match_clause)
+        result += _recurse(typ, field, v)
 
     return result

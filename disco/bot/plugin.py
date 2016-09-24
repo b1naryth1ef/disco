@@ -61,6 +61,8 @@ class Plugin(LoggingClass, PluginDeco):
     def __init__(self, bot, config):
         super(Plugin, self).__init__()
         self.bot = bot
+        self.client = bot.client
+        self.state = bot.client.state
         self.config = config
 
         self.listeners = []

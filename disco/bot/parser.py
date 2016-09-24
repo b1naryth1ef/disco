@@ -77,7 +77,10 @@ class ArgumentSet(object):
             if not arg.required and index + arg.true_count <= len(rawargs):
                 continue
 
-            raw = rawargs[index:index + arg.true_count]
+            if arg.count == 0:
+                raw = rawargs[index:]
+            else:
+                raw = rawargs[index:index + arg.true_count]
 
             if arg.types:
                 for idx, r in enumerate(raw):
@@ -88,7 +91,7 @@ class ArgumentSet(object):
                             r, ', '.join(arg.types)
                         ))
 
-            if arg.true_count == 1:
+            if arg.count == 1:
                 raw = raw[0]
 
             if not arg.types or arg.types == ['str'] and isinstance(raw, list):

@@ -1,8 +1,7 @@
 import skema
 
-from disco.util.cache import cached_property
 from disco.types.base import BaseType
-from disco.util.types import PreHookType
+from disco.util.types import PreHookType, ListToDictType
 from disco.types.user import User
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
@@ -33,6 +32,10 @@ class GuildMember(BaseType):
     joined_at = PreHookType(lambda k: k[:-6], skema.DateTimeType())
     roles = skema.ListType(skema.SnowflakeType())
 
+    @property
+    def id(self):
+        return self.user.id
+
 
 class Guild(BaseType):
     id = skema.SnowflakeType()
@@ -53,20 +56,16 @@ class Guild(BaseType):
 
     features = skema.ListType(skema.StringType())
 
-    members = skema.ListType(skema.ModelType(GuildMember))
-    voice_states = skema.ListType(skema.ModelType(VoiceState))
-    channels = skema.ListType(skema.ModelType(Channel))
-    roles = skema.ListType(skema.ModelType(Role))
-    emojis = skema.ListType(skema.ModelType(Emoji))
-
-    @cached_property
-    def members_dict(self):
-        return {i.user.id: i for i in self.members}
+    members = ListToDictType('id', skema.ModelType(GuildMember))
+    channels = ListToDictType('id', skema.ModelType(Channel))
+    roles = ListToDictType('id', skema.ModelType(Role))
+    emojis = ListToDictType('id', skema.ModelType(Emoji))
+    voice_states = ListToDictType('id', skema.ModelType(VoiceState))
 
     def get_member(self, user):
-        return self.members_dict.get(user.id)
+        return self.members.get(user.id)
 
     def validate_channels(self, ctx):
         if self.channels:
-            for channel in self.channels:
+            for channel in self.channels.values():
                 channel.guild_id = self.id

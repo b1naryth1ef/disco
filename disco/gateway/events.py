@@ -1,8 +1,7 @@
 import inflection
 import skema
 
-from disco.util import recursive_find_matching
-from disco.types.base import BaseType
+from disco.util import skema_find_recursive_by_type
 from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceState
 
 
@@ -15,8 +14,7 @@ class GatewayEvent(skema.Model):
 
         obj = cls.create(obj['d'])
 
-        # TODO: use skema info
-        for item in recursive_find_matching(obj, lambda v: isinstance(v, BaseType)):
+        for item in skema_find_recursive_by_type(obj, skema.ModelType):
             item.client = client
 
         return obj
@@ -68,13 +66,17 @@ class GuildDelete(GatewayEvent):
 class ChannelCreate(Sub('channel')):
     channel = skema.ModelType(Channel)
 
+    @property
+    def guild(self):
+        return self.channel.guild
 
-class ChannelUpdate(Sub('channel')):
-    channel = skema.ModelType(Channel)
+
+class ChannelUpdate(ChannelCreate):
+    pass
 
 
-class ChannelDelete(Sub('channel')):
-    channel = skema.ModelType(Channel)
+class ChannelDelete(ChannelCreate):
+    pass
 
 
 class ChannelPinsUpdate(GatewayEvent):
@@ -136,8 +138,12 @@ class GuildRoleDelete(GatewayEvent):
 class MessageCreate(Sub('message')):
     message = skema.ModelType(Message)
 
+    @property
+    def channel(self):
+        return self.message.channel
 
-class MessageUpdate(Sub('message')):
+
+class MessageUpdate(MessageCreate):
     message = skema.ModelType(Message)
 
 

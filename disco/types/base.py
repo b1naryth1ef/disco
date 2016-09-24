@@ -1,6 +1,7 @@
 import skema
+import functools
 
-from disco.util import recursive_find_matching
+from disco.util import skema_find_recursive_by_type
 
 
 class BaseType(skema.Model):
@@ -11,9 +12,12 @@ class BaseType(skema.Model):
         # Valdiate
         obj.validate()
 
-        # TODO: this can be smarter using skema metadata
-        for item in recursive_find_matching(obj, lambda v: isinstance(v, BaseType)):
+        for item in skema_find_recursive_by_type(obj, skema.ModelType):
             item.client = client
 
         obj.client = client
         return obj
+
+    @classmethod
+    def create_map(cls, client, data):
+        return map(functools.partial(cls.create, client), data)
