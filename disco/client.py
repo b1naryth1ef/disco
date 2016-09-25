@@ -17,6 +17,7 @@ class DiscoClient(object):
         self.sharding = sharding or {'number': 0, 'total': 1}
 
         self.events = Emitter(gevent.spawn)
+        self.packets = Emitter(gevent.spawn)
 
         self.state = State(self)
         self.api = APIClient(self)

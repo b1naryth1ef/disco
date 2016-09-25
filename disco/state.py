@@ -23,10 +23,11 @@ class State(object):
         self.dms = {}
         self.guilds = {}
         self.channels = WeakValueDictionary()
+        self.users = WeakValueDictionary()
 
         self.client.events.on('Ready', self.on_ready)
 
-        self.messages_stack = defaultdict(lambda: deque(maxlen=self.config.track_messages_size))
+        self.messages = defaultdict(lambda: deque(maxlen=self.config.track_messages_size))
         if self.config.track_messages:
             self.client.events.on('MessageCreate', self.on_message_create)
             self.client.events.on('MessageDelete', self.on_message_delete)
@@ -45,15 +46,15 @@ class State(object):
         self.me = event.user
 
     def on_message_create(self, event):
-        self.messages_stack[event.message.channel_id].append(
+        self.messages[event.message.channel_id].append(
             StackMessage(event.message.id, event.message.channel_id, event.message.author.id))
 
     def on_message_update(self, event):
         message, cid = event.message, event.message.channel_id
-        if cid not in self.messages_stack:
+        if cid not in self.messages:
             return
 
-        sm = next((i for i in self.messages_stack[cid] if i.id == message.id), None)
+        sm = next((i for i in self.messages[cid] if i.id == message.id), None)
         if not sm:
             return
 
@@ -62,21 +63,21 @@ class State(object):
         sm.author_id = message.author.id
 
     def on_message_delete(self, event):
-        if event.channel_id not in self.messages_stack:
+        if event.channel_id not in self.messages:
             return
 
-        sm = next((i for i in self.messages_stack[event.channel_id] if i.id == event.id), None)
+        sm = next((i for i in self.messages[event.channel_id] if i.id == event.id), None)
         if not sm:
             return
 
-        self.messages_stack[event.channel_id].remove(sm)
+        self.messages[event.channel_id].remove(sm)
 
     def on_guild_create(self, event):
         self.guilds[event.guild.id] = event.guild
         self.channels.update(event.guild.channels)
 
     def on_guild_update(self, event):
-        self.guilds[event.guild.id] = event.guild
+        self.guilds[event.guild.id].update(event.guild)
 
     def on_guild_delete(self, event):
         if event.guild_id in self.guilds:
@@ -92,12 +93,8 @@ class State(object):
             self.channels[event.channel.id] = event.channel
 
     def on_channel_update(self, event):
-        if event.channel.is_guild and event.channel.guild_id in self.guilds:
-            self.guilds[event.channel.id] = event.channel
-            self.channels[event.channel.id] = event.channel
-        elif event.channel.is_dm:
-            self.dms[event.channel.id] = event.channel
-            self.channels[event.channel.id] = event.channel
+        if event.channel.id in self.channels:
+            self.channels[event.channel.id].update(event.channel)
 
     def on_channel_delete(self, event):
         if event.channel.is_guild and event.channel.guild_id in self.guilds:

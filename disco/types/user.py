@@ -12,3 +12,6 @@ class User(BaseType):
 
     verified = skema.BooleanType(required=False)
     email = skema.EmailType(required=False)
+
+    def on_create(self):
+        self.client.state.users[self.id] = self

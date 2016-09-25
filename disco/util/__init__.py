@@ -1,6 +1,17 @@
 import skema
 
 
+def to_snowflake(i):
+    if isinstance(i, long):
+        return i
+    elif isinstance(i, str):
+        return long(i)
+    elif hasattr(i, 'id'):
+        return i.id
+
+    raise Exception('{} ({}) is not convertable to a snowflake'.format(type(i), i))
+
+
 def _recurse(typ, field, value):
     result = []
 

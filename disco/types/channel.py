@@ -6,6 +6,7 @@ from disco.util.cache import cached_property
 from disco.util.types import ListToDictType
 from disco.types.base import BaseType
 from disco.types.user import User
+from disco.voice.client import VoiceClient
 
 
 ChannelType = Enum(
@@ -53,10 +54,14 @@ class Channel(BaseType):
         return self.type in (ChannelType.DM, ChannelType.GROUP_DM)
 
     @property
+    def is_voice(self):
+        return self.type in (ChannelType.GUILD_VOICE, ChannelType.GROUP_DM)
+
+    @property
     def last_message_id(self):
-        if self.id not in self.client.state.messages_stack:
+        if self.id not in self.client.state.messages:
             return self._last_message_id
-        return self.client.state.messages_stack[self.id][-1].id
+        return self.client.state.messages[self.id][-1].id
 
     @property
     def messages(self):
@@ -77,6 +82,11 @@ class Channel(BaseType):
 
     def send_message(self, content, nonce=None, tts=False):
         return self.client.api.channels_messages_create(self.id, content, nonce, tts)
+
+    def connect(self, *args, **kwargs):
+        vc = VoiceClient(self)
+        vc.connect(*args, **kwargs)
+        return vc
 
 
 class MessageIterator(object):

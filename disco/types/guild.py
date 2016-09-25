@@ -1,5 +1,7 @@
 import skema
 
+from disco.api.http import APIException
+from disco.util import to_snowflake
 from disco.types.base import BaseType
 from disco.util.types import PreHookType, ListToDictType
 from disco.types.user import User
@@ -32,6 +34,15 @@ class GuildMember(BaseType):
     joined_at = PreHookType(lambda k: k[:-6], skema.DateTimeType())
     roles = skema.ListType(skema.SnowflakeType())
 
+    def get_voice_state(self):
+        return self.guild.get_voice_state(self)
+
+    def kick(self):
+        self.client.api.guilds_members_kick(self.guild.id, self.user.id)
+
+    def ban(self, delete_message_days=0):
+        self.client.api.guilds_bans_create(self.guild.id, self.user.id, delete_message_days)
+
     @property
     def id(self):
         return self.user.id
@@ -60,12 +71,33 @@ class Guild(BaseType):
     channels = ListToDictType('id', skema.ModelType(Channel))
     roles = ListToDictType('id', skema.ModelType(Role))
     emojis = ListToDictType('id', skema.ModelType(Emoji))
-    voice_states = ListToDictType('id', skema.ModelType(VoiceState))
+    voice_states = ListToDictType('session_id', skema.ModelType(VoiceState))
+
+    def get_voice_state(self, user):
+        user = to_snowflake(user)
+
+        for state in self.voice_states.values():
+            if state.user_id == user:
+                return state
 
     def get_member(self, user):
-        return self.members.get(user.id)
+        user = to_snowflake(user)
+
+        if user not in self.members:
+            try:
+                self.members[user] = self.client.api.guilds_members_get(self.id, user)
+            except APIException:
+                pass
+
+        return self.members.get(user)
+
+    def validate_members(self, ctx):
+        if self.members:
+            for member in self.members.values():
+                member.guild = self
 
     def validate_channels(self, ctx):
         if self.channels:
             for channel in self.channels.values():
                 channel.guild_id = self.id
+                channel.guild = self

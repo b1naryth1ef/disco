@@ -5,6 +5,12 @@ from disco.util import skema_find_recursive_by_type
 
 
 class BaseType(skema.Model):
+    def on_create(self):
+        pass
+
+    def update(self, other):
+        self.__dict__.update(other.__dict__)
+
     @classmethod
     def create(cls, client, data):
         obj = cls(data)
@@ -16,6 +22,7 @@ class BaseType(skema.Model):
             item.client = client
 
         obj.client = client
+        obj.on_create()
         return obj
 
     @classmethod

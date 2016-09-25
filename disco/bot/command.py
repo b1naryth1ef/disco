@@ -15,6 +15,10 @@ class CommandEvent(object):
         self.name = self.match.group(1)
         self.args = self.match.group(2).strip().split(' ')
 
+    @cached_property
+    def member(self):
+        return self.guild.get_member(self.actor)
+
     @property
     def channel(self):
         return self.msg.channel

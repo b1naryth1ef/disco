@@ -49,6 +49,17 @@ class BasicPlugin(Plugin):
             '\n'.join([str(i.id) for i in self.state.messages[event.channel.id]])
         ))
 
+    @Plugin.command('airhorn')
+    def on_airhorn(self, event):
+        vs = event.member.get_voice_state()
+        if not vs:
+            event.msg.reply('You are not connected to voice')
+            return
+
+        print vs.channel
+        print vs.channel_id
+        print vs.channel.connect()
+
 if __name__ == '__main__':
     bot = Bot(disco_main())
     bot.add_plugin(BasicPlugin)
