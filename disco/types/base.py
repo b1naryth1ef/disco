@@ -9,7 +9,10 @@ class BaseType(skema.Model):
         pass
 
     def update(self, other):
-        self.__dict__.update(other.__dict__)
+        for name, field in other.__class__._fields.items():
+            value = getattr(other, name)
+            if value:
+                setattr(self, name, value)
 
     @classmethod
     def create(cls, client, data):

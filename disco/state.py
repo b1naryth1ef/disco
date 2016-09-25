@@ -24,6 +24,7 @@ class State(object):
         self.guilds = {}
         self.channels = WeakValueDictionary()
         self.users = WeakValueDictionary()
+        self.voice_states = WeakValueDictionary()
 
         self.client.events.on('Ready', self.on_ready)
 
@@ -41,6 +42,9 @@ class State(object):
         self.client.events.on('ChannelCreate', self.on_channel_create)
         self.client.events.on('ChannelUpdate', self.on_channel_update)
         self.client.events.on('ChannelDelete', self.on_channel_delete)
+
+        # Voice states
+        self.client.events.on('VoiceStateUpdate', self.on_voice_state_update)
 
     def on_ready(self, event):
         self.me = event.user
@@ -101,3 +105,15 @@ class State(object):
             del self.guilds[event.channel.id]
         elif event.channel.is_dm:
             del self.pms[event.channel.id]
+
+    def on_voice_state_update(self, event):
+        # Happy path: we have the voice state and want to update/delete it
+        guild = self.guilds.get(event.state.guild_id)
+
+        if event.state.session_id in guild.voice_states:
+            if event.state.channel_id:
+                guild.voice_states[event.state.session_id].update(event.state)
+            else:
+                del guild.voice_states[event.state.session_id]
+        elif event.state.channel_id:
+            guild.voice_states[event.state.session_id] = event.state
