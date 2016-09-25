@@ -6,7 +6,7 @@ enum34==1.1.6
 Flask==0.11.1
 gevent==1.1.2
 greenlet==0.4.10
-# holster==0.0.7
+holster==1.0.0
 idna==2.1
 inflection==0.3.1
 ipaddress==1.0.17

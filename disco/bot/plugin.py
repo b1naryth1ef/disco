@@ -66,7 +66,7 @@ class Plugin(LoggingClass, PluginDeco):
         self.config = config
 
         self.listeners = []
-        self.commands = []
+        self.commands = {}
 
         self._pre = {'command': [], 'listener': []}
         self._post = {'command': [], 'listener': []}
@@ -111,8 +111,8 @@ class Plugin(LoggingClass, PluginDeco):
         self.listeners.append(self.bot.client.events.on(name, func))
 
     def register_command(self, func, *args, **kwargs):
-        func = functools.partial(self._dispatch, 'command', func)
-        self.commands.append(Command(self, func, *args, **kwargs))
+        wrapped = functools.partial(self._dispatch, 'command', func)
+        self.commands[func.__name__] = Command(self, func, *args, **kwargs)
 
     def destroy(self):
         map(lambda k: k.remove(), self._events)

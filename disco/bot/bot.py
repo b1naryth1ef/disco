@@ -55,7 +55,7 @@ class Bot(object):
     @property
     def commands(self):
         for plugin in self.plugins.values():
-            for command in plugin.commands:
+            for command in plugin.commands.values():
                 yield command
 
     def compute_command_matches_re(self):

@@ -1,5 +1,7 @@
 import gevent
+import sys
 
+from disco import VERSION
 from disco.cli import disco_main
 from disco.bot import Bot
 from disco.bot.plugin import Plugin
@@ -11,6 +13,24 @@ class BasicPlugin(Plugin):
         self.log.info('Message created: <{}>: {}'.format(
             event.message.author.username,
             event.message.content))
+
+    @Plugin.command('status', '[component]')
+    def on_status_command(self, event, component=None):
+        if component == 'state':
+            parts = []
+            parts.append('Guilds: {}'.format(len(self.state.guilds)))
+            parts.append('Channels: {}'.format(len(self.state.channels)))
+            parts.append('Users: {}'.format(len(self.state.users)))
+
+            event.msg.reply('State Information: ```\n{}\n```'.format('\n'.join(parts)))
+            return
+
+        event.msg.reply('Disco v{} running on Python {}.{}.{}'.format(
+            VERSION,
+            sys.version_info.major,
+            sys.version_info.minor,
+            sys.version_info.micro,
+        ))
 
     @Plugin.command('echo', '<content:str...>')
     def on_test_command(self, event, content):
@@ -38,7 +58,6 @@ class BasicPlugin(Plugin):
         pin_count = len(event.channel.get_pins())
         msg_count = 0
 
-        print event.channel.messages_iter(bulk=True)
         for msgs in event.channel.messages_iter(bulk=True):
             msg_count += len(msgs)
 

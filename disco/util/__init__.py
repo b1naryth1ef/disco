@@ -1,11 +1,12 @@
+import six
 import skema
 
 
 def to_snowflake(i):
-    if isinstance(i, long):
+    if isinstance(i, six.integer_types):
         return i
     elif isinstance(i, str):
-        return long(i)
+        return int(i)
     elif hasattr(i, 'id'):
         return i.id
 

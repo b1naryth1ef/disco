@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import logging
 import argparse
 
@@ -16,7 +18,7 @@ def disco_main():
     from disco.util.token import is_valid_token
 
     if not is_valid_token(args.token):
-        print 'Invalid token passed'
+        print('Invalid token passed')
         return
 
     from disco.client import DiscoClient

@@ -38,6 +38,9 @@ class State(object):
         self.client.events.on('GuildUpdate', self.on_guild_update)
         self.client.events.on('GuildDelete', self.on_guild_delete)
 
+        # TODO: guild members
+        # TODO: guild roles
+
         # Channels
         self.client.events.on('ChannelCreate', self.on_channel_create)
         self.client.events.on('ChannelUpdate', self.on_channel_update)
@@ -79,6 +82,9 @@ class State(object):
     def on_guild_create(self, event):
         self.guilds[event.guild.id] = event.guild
         self.channels.update(event.guild.channels)
+
+        for member in event.guild.members.values():
+            self.users[member.user.id] = member.user
 
     def on_guild_update(self, event):
         self.guilds[event.guild.id].update(event.guild)

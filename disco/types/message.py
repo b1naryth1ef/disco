@@ -1,11 +1,11 @@
 import re
 import skema
 
+from disco.util import to_snowflake
 from disco.util.cache import cached_property
 from disco.util.types import PreHookType, ListToDictType
 from disco.types.base import BaseType
 from disco.types.user import User
-from disco.types.guild import Role
 
 
 class MessageEmbed(BaseType):
@@ -65,14 +65,8 @@ class Message(BaseType):
         return self.client.api.channels_messages_delete(self.channel_id, self.id)
 
     def is_mentioned(self, entity):
-        if isinstance(entity, User):
-            return entity.id in self.mentions
-        elif isinstance(entity, Role):
-            return entity.id in self.mention_roles
-        elif isinstance(entity, long):
-            return entity in self.mentions or entity in self.mention_roles
-        else:
-            raise Exception('Unknown entity: {} ({})'.format(entity, type(entity)))
+        id = to_snowflake(entity)
+        return id in self.mentions or id in self.mention_roles
 
     @cached_property
     def without_mentions(self):

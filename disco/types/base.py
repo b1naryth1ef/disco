@@ -5,9 +5,6 @@ from disco.util import skema_find_recursive_by_type
 
 
 class BaseType(skema.Model):
-    def on_create(self):
-        pass
-
     def update(self, other):
         for name, field in other.__class__._fields.items():
             value = getattr(other, name)
@@ -25,7 +22,6 @@ class BaseType(skema.Model):
             item.client = client
 
         obj.client = client
-        obj.on_create()
         return obj
 
     @classmethod

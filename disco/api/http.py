@@ -124,7 +124,6 @@ class HTTPClient(LoggingClass):
 
         # Make the actual request
         url = self.BASE_URL + route[1].format(**args)
-        print route[0].value, url, kwargs
         r = requests.request(route[0].value, url, **kwargs)
 
         # Update rate limiter

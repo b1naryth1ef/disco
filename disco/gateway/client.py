@@ -106,7 +106,7 @@ class GatewayClient(LoggingClass):
     def on_message(self, ws, msg):
         # Detect zlib and decompress
         if msg[0] != '{':
-            msg = zlib.decompress(msg, 15, TEN_MEGABYTES)
+            msg = zlib.decompress(msg, 15, TEN_MEGABYTES).decode("utf-8")
 
         try:
             data = loads(msg)

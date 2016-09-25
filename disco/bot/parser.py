@@ -74,7 +74,7 @@ class ArgumentSet(object):
         parsed = []
 
         for index, arg in enumerate(self.args):
-            if not arg.required and index + arg.true_count <= len(rawargs):
+            if not arg.required and index + arg.true_count > len(rawargs):
                 continue
 
             if arg.count == 0:
@@ -94,7 +94,7 @@ class ArgumentSet(object):
             if arg.count == 1:
                 raw = raw[0]
 
-            if not arg.types or arg.types == ['str'] and isinstance(raw, list):
+            if (not arg.types or arg.types == ['str']) and isinstance(raw, list):
                 raw = ' '.join(raw)
 
             parsed.append(raw)
