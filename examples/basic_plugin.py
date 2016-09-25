@@ -1,3 +1,5 @@
+import gevent
+
 from disco.cli import disco_main
 from disco.bot import Bot
 from disco.bot.plugin import Plugin
@@ -56,9 +58,9 @@ class BasicPlugin(Plugin):
             event.msg.reply('You are not connected to voice')
             return
 
-        print vs.channel
-        print vs.channel_id
-        print vs.channel.connect()
+        vc = vs.channel.connect()
+        gevent.sleep(1)
+        vc.disconnect()
 
 if __name__ == '__main__':
     bot = Bot(disco_main())
