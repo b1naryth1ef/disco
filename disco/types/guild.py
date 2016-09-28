@@ -29,6 +29,7 @@ class Role(BaseType):
 
 class GuildMember(BaseType):
     user = skema.ModelType(User)
+    guild = skema.ModelType(Guild)
     mute = skema.BooleanType()
     deaf = skema.BooleanType()
     joined_at = PreHookType(lambda k: k[:-6], skema.DateTimeType())

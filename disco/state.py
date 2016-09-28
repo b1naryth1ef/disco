@@ -38,8 +38,15 @@ class State(object):
         self.client.events.on('GuildUpdate', self.on_guild_update)
         self.client.events.on('GuildDelete', self.on_guild_delete)
 
-        # TODO: guild members
-        # TODO: guild roles
+        # Guild members
+        self.client.events.on('GuildMemberAdd', self.on_guild_member_add)
+        self.client.events.on('GuildMemberRemove', self.on_guild_member_remove)
+        self.client.events.on('GuildMemberUpdate', self.on_guild_member_update)
+
+        # Guild roles
+        self.client.events.on('GuildRoleCreate', self.on_guild_role_create)
+        self.client.events.on('GuildRoleUpdate', self.on_guild_role_update)
+        self.client.events.on('GuildROleDelete', self.on_guild_role_delete)
 
         # Channels
         self.client.events.on('ChannelCreate', self.on_channel_create)
@@ -123,3 +130,41 @@ class State(object):
                 del guild.voice_states[event.state.session_id]
         elif event.state.channel_id:
             guild.voice_states[event.state.session_id] = event.state
+
+    def on_guild_member_add(self, event):
+        if event.member.user.id not in self.users:
+            self.users[event.member.user.id] = event.member.user
+        else:
+            event.member.user = self.users[event.member.user.id]
+
+        if event.member.guild.id not in self.guilds:
+            return
+
+        self.guilds[event.member.guild.id].members[event.member.id] = event.member
+
+    def on_guild_member_update(self, event):
+        if event.member.guild.id not in self.guilds:
+            return
+
+        # Ensure the reference is correct
+        assert(event.member.user.id in self.users)
+        event.member.user = self.users[event.member.user.id]
+        self.guilds[event.member.guild.id].members[event.member.id] = event.member
+
+    def on_guild_member_remove(self, event):
+        if event.member.guild.id not in self.guilds:
+            return
+
+        if event.member.id not in self.guilds[event.member.guild.id].members:
+            return
+
+        del self.guilds[event.member.guild.id].members[event.member.id]
+
+    def on_guild_role_create(self, event):
+        pass
+
+    def on_guild_role_update(self, event):
+        pass
+
+    def on_guild_role_delete(self, event):
+        pass
