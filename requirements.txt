@@ -5,6 +5,7 @@ cryptography==1.5
 enum34==1.1.6
 Flask==0.11.1
 gevent==1.1.2
+gipc==0.6.0
 greenlet==0.4.10
 holster==1.0.0
 idna==2.1

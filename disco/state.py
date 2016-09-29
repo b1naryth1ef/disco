@@ -1,3 +1,5 @@
+import inflection
+
 from collections import defaultdict, deque, namedtuple
 from weakref import WeakValueDictionary
 
@@ -15,9 +17,16 @@ class StateConfig(object):
 
 
 class State(object):
+    EVENTS = [
+        'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
+        'GuildMemberUpdate', 'GuildMemberChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
+        'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate'
+    ]
+
     def __init__(self, client, config=None):
         self.client = client
         self.config = config or StateConfig()
+        self.listeners = []
 
         self.me = None
 
@@ -27,36 +36,20 @@ class State(object):
         self.users = WeakValueDictionary()
         self.voice_states = WeakValueDictionary()
 
-        self.client.events.on('Ready', self.on_ready)
-
         self.messages = defaultdict(lambda: deque(maxlen=self.config.track_messages_size))
         if self.config.track_messages:
-            self.client.events.on('MessageCreate', self.on_message_create)
-            self.client.events.on('MessageDelete', self.on_message_delete)
+            self.EVENTS += ['MessageCreate', 'MessageDelete']
 
-        # Guilds
-        self.client.events.on('GuildCreate', self.on_guild_create)
-        self.client.events.on('GuildUpdate', self.on_guild_update)
-        self.client.events.on('GuildDelete', self.on_guild_delete)
+        self.bind()
 
-        # Guild members
-        self.client.events.on('GuildMemberAdd', self.on_guild_member_add)
-        self.client.events.on('GuildMemberRemove', self.on_guild_member_remove)
-        self.client.events.on('GuildMemberUpdate', self.on_guild_member_update)
-        self.client.events.on('GuildMemberChunk', self.on_guild_member_chunk)
+    def unbind(self):
+        map(lambda k: k.unbind(), self.listeners)
+        self.listeners = []
 
-        # Guild roles
-        self.client.events.on('GuildRoleCreate', self.on_guild_role_create)
-        self.client.events.on('GuildRoleUpdate', self.on_guild_role_update)
-        self.client.events.on('GuildROleDelete', self.on_guild_role_delete)
-
-        # Channels
-        self.client.events.on('ChannelCreate', self.on_channel_create)
-        self.client.events.on('ChannelUpdate', self.on_channel_update)
-        self.client.events.on('ChannelDelete', self.on_channel_delete)
-
-        # Voice states
-        self.client.events.on('VoiceStateUpdate', self.on_voice_state_update)
+    def bind(self):
+        for event in self.EVENTS:
+            func = 'on_' + inflection.underscore(event)
+            self.listeners.append(self.client.events.on(event, getattr(self, func)))
 
     def on_ready(self, event):
         self.me = event.user
