@@ -5,6 +5,7 @@ from disco.util import skema_find_recursive_by_type
 from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceState
 
 
+# TODO: clean this... use BaseType, etc
 class GatewayEvent(skema.Model):
     @staticmethod
     def from_dispatch(client, data):

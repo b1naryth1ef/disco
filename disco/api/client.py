@@ -9,10 +9,20 @@ from disco.types.invite import Invite
 
 
 def optional(**kwargs):
+    """
+    Takes a set of keyword arguments, creating a dictionary with only the non-
+    null values.
+
+    :returns: dict
+    """
     return {k: v for k, v in kwargs.items() if v is not None}
 
 
 class APIClient(LoggingClass):
+    """
+    An abstraction over the :class:`HTTPClient` that composes requests, and fits
+    the models with the returned data.
+    """
     def __init__(self, client):
         super(APIClient, self).__init__()
 

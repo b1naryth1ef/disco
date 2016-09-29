@@ -19,8 +19,8 @@ class BaseType(skema.Model):
         # Valdiate
         obj.validate()
 
-        for item in skema_find_recursive_by_type(obj, skema.ModelType):
-            item.client = client
+        for field, value in skema_find_recursive_by_type(obj, skema.ModelType):
+            value.client = client
 
         obj.client = client
         return obj

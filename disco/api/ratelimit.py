@@ -47,17 +47,23 @@ class RateLimiter(object):
         self.states = {}
 
     def check(self, route, timeout=None):
+        return self._check(None, timeout) and self._check(route, timeout)
+
+    def _check(self, route, timeout=None):
         if route in self.states:
             # If we're current waiting, join the club
             if self.states[route].chilled:
                 return self.states[route].wait(timeout)
 
             if self.states[route].next_will_ratelimit():
-                self.states[route].cooldown()
+                gevent.spawn(self.states[route].cooldown).wait(timeout)
 
         return True
 
     def update(self, route, request):
+        if 'X-RateLimit-Global' in request.headers:
+            route = None
+
         if route in self.states:
             self.states[route].update(request)
         else:

@@ -112,7 +112,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     def register_command(self, func, *args, **kwargs):
         wrapped = functools.partial(self._dispatch, 'command', func)
-        self.commands[func.__name__] = Command(self, func, *args, **kwargs)
+        self.commands[func.__name__] = Command(self, wrapped, *args, **kwargs)
 
     def destroy(self):
         map(lambda k: k.remove(), self._events)
