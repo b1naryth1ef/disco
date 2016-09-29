@@ -25,7 +25,7 @@ def _recurse(typ, field, value):
 
         for item in value:
             if isinstance(field.field, typ):
-                result.append(item)
+                result.append((field.field, item))
             result += _recurse(typ, field.field, item)
 
     return result
@@ -41,7 +41,7 @@ def skema_find_recursive_by_type(base, typ):
             continue
 
         if isinstance(field, typ):
-            result.append(v)
+            result.append((field, v))
 
         result += _recurse(typ, field, v)
 

@@ -1,4 +1,5 @@
 import skema
+import copy
 
 from disco.api.http import APIException
 from disco.util import to_snowflake
@@ -29,7 +30,7 @@ class Role(BaseType):
 
 class GuildMember(BaseType):
     user = skema.ModelType(User)
-    guild = skema.ModelType(Guild)
+    guild_id = skema.SnowflakeType(required=False)
     mute = skema.BooleanType()
     deaf = skema.BooleanType()
     joined_at = PreHookType(lambda k: k[:-6], skema.DateTimeType())
@@ -68,7 +69,7 @@ class Guild(BaseType):
 
     features = skema.ListType(skema.StringType())
 
-    members = ListToDictType('id', skema.ModelType(GuildMember))
+    members = ListToDictType('id', skema.ModelType(copy.deepcopy(GuildMember)))
     channels = ListToDictType('id', skema.ModelType(Channel))
     roles = ListToDictType('id', skema.ModelType(Role))
     emojis = ListToDictType('id', skema.ModelType(Emoji))
@@ -96,6 +97,7 @@ class Guild(BaseType):
         if self.members:
             for member in self.members.values():
                 member.guild = self
+                member.guild_id = self.id
 
     def validate_channels(self, ctx):
         if self.channels:

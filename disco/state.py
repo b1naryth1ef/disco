@@ -1,6 +1,7 @@
 from collections import defaultdict, deque, namedtuple
 from weakref import WeakValueDictionary
 
+from disco.gateway.packets import OPCode
 
 StackMessage = namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])
 
@@ -42,6 +43,7 @@ class State(object):
         self.client.events.on('GuildMemberAdd', self.on_guild_member_add)
         self.client.events.on('GuildMemberRemove', self.on_guild_member_remove)
         self.client.events.on('GuildMemberUpdate', self.on_guild_member_update)
+        self.client.events.on('GuildMemberChunk', self.on_guild_member_chunk)
 
         # Guild roles
         self.client.events.on('GuildRoleCreate', self.on_guild_role_create)
@@ -93,6 +95,13 @@ class State(object):
         for member in event.guild.members.values():
             self.users[member.user.id] = member.user
 
+        # Request full member list
+        self.client.gw.send(OPCode.REQUEST_GUILD_MEMBERS, {
+            'guild_id': event.guild.id,
+            'query': '',
+            'limit': 0,
+        })
+
     def on_guild_update(self, event):
         self.guilds[event.guild.id].update(event.guild)
 
@@ -137,34 +146,52 @@ class State(object):
         else:
             event.member.user = self.users[event.member.user.id]
 
-        if event.member.guild.id not in self.guilds:
+        if event.member.guild_id not in self.guilds:
             return
 
-        self.guilds[event.member.guild.id].members[event.member.id] = event.member
+        event.member.guild = self.guilds[event.member.guild_id]
+        self.guilds[event.member.guild_id].members[event.member.id] = event.member
 
     def on_guild_member_update(self, event):
-        if event.member.guild.id not in self.guilds:
+        if event.guild_id not in self.guilds:
             return
 
-        # Ensure the reference is correct
-        assert(event.member.user.id in self.users)
-        event.member.user = self.users[event.member.user.id]
-        self.guilds[event.member.guild.id].members[event.member.id] = event.member
+        self.guilds[event.guild_id].members[event.user.id].roles = event.roles
+        self.guilds[event.guild_id].members[event.user.id].user.update(event.user)
 
     def on_guild_member_remove(self, event):
-        if event.member.guild.id not in self.guilds:
+        if event.guild_id not in self.guilds:
             return
 
-        if event.member.id not in self.guilds[event.member.guild.id].members:
+        if event.user.id not in self.guilds[event.guild_id].members:
             return
 
-        del self.guilds[event.member.guild.id].members[event.member.id]
+        del self.guilds[event.guild_id].members[event.user.id]
+
+    def on_guild_member_chunk(self, event):
+        if event.guild_id not in self.guilds:
+            return
+
+        guild = self.guilds[event.guild_id]
+        for member in event.members:
+            member.guild = guild
+            member.guild_id = guild.id
+            guild.members[member.id] = member
 
     def on_guild_role_create(self, event):
-        pass
+        if event.guild_id not in self.guilds:
+            return
+
+        self.guilds[event.guild_id].roles[event.role.id] = event.role
 
     def on_guild_role_update(self, event):
-        pass
+        if event.guild_id not in self.guilds:
+            return
+
+        self.guilds[event.guild_id].roles[event.role.id].update(event.role)
 
     def on_guild_role_delete(self, event):
-        pass
+        if event.guild_id not in self.guilds:
+            return
+
+        del self.guilds[event.guild_id].roles[event.role.id]

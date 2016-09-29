@@ -72,7 +72,7 @@ class UDPVoiceClient(LoggingClass):
             return (None, None)
 
         # Read IP and port
-        ip = data[4:].split('\x00', 1)[0]
+        ip = str(data[4:]).split('\x00', 1)[0]
         port = struct.unpack('<H', data[-2:])[0]
 
         # Spawn read thread so we don't max buffers

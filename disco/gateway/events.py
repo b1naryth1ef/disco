@@ -7,15 +7,15 @@ from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceS
 
 class GatewayEvent(skema.Model):
     @staticmethod
-    def from_dispatch(client, obj):
-        cls = globals().get(inflection.camelize(obj['t'].lower()))
+    def from_dispatch(client, data):
+        cls = globals().get(inflection.camelize(data['t'].lower()))
         if not cls:
-            raise Exception('Could not find cls for {}'.format(obj['t']))
+            raise Exception('Could not find cls for {}'.format(data['t']))
 
-        obj = cls.create(obj['d'])
+        obj = cls.create(data['d'])
 
-        for item in skema_find_recursive_by_type(obj, skema.ModelType):
-            item.client = client
+        for field, value in skema_find_recursive_by_type(obj, skema.ModelType):
+            value.client = client
 
         return obj
 

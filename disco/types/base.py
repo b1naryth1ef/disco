@@ -2,6 +2,7 @@ import skema
 import functools
 
 from disco.util import skema_find_recursive_by_type
+# from disco.util.types import DeferredModel
 
 
 class BaseType(skema.Model):

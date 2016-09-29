@@ -1,11 +1,10 @@
 import gevent
 import zlib
-import ssl
 
 from disco.gateway.packets import OPCode
 from disco.gateway.events import GatewayEvent
 from disco.util.json import loads, dumps
-from disco.util.websocket import Websocket
+from disco.util.websocket import WebsocketProcessProxy
 from disco.util.logging import LoggingClass
 
 GATEWAY_VERSION = 6
@@ -94,16 +93,15 @@ class GatewayClient(LoggingClass):
             self._cached_gateway_url = self.client.api.gateway(version=GATEWAY_VERSION, encoding='json')
 
         self.log.info('Opening websocket connection to URL `%s`', self._cached_gateway_url)
-        self.ws = Websocket(
-            self._cached_gateway_url,
-            on_message=self.on_message,
-            on_error=self.on_error,
-            on_open=self.on_open,
-            on_close=self.on_close,
-        )
-        self.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+        self.ws = WebsocketProcessProxy(self._cached_gateway_url)
+        self.ws.emitter.on('on_open', self.on_open)
+        self.ws.emitter.on('on_error', self.on_error)
+        self.ws.emitter.on('on_close', self.on_close)
+        self.ws.emitter.on('on_message', self.on_message)
 
-    def on_message(self, ws, msg):
+        self.ws.run_forever()
+
+    def on_message(self, msg):
         # Detect zlib and decompress
         if msg[0] != '{':
             msg = zlib.decompress(msg, 15, TEN_MEGABYTES).decode("utf-8")
@@ -121,12 +119,12 @@ class GatewayClient(LoggingClass):
         # Emit packet
         self.packets.emit(OPCode[data['op']], data)
 
-    def on_error(self, ws, error):
+    def on_error(self, error):
         if isinstance(error, KeyboardInterrupt):
             self.shutting_down = True
         raise Exception('WS recieved error: %s', error)
 
-    def on_open(self, ws):
+    def on_open(self):
         if self.seq and self.session_id:
             self.log.info('WS Opened: attempting resume w/ SID: %s SEQ: %s', self.session_id, self.seq)
             self.send(OPCode.RESUME, {
@@ -149,7 +147,7 @@ class GatewayClient(LoggingClass):
                 }
             })
 
-    def on_close(self, ws, code, reason):
+    def on_close(self, code, reason):
         if self.shutting_down:
             self.log.info('WS Closed: shutting down')
             return
