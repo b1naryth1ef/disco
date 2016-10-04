@@ -7,6 +7,7 @@ from disco.types.base import BaseType
 from disco.util.types import PreHookType, ListToDictType
 from disco.types.user import User
 from disco.types.voice import VoiceState
+from disco.types.permissions import PermissionType
 from disco.types.channel import Channel
 
 
@@ -24,7 +25,7 @@ class Role(BaseType):
     hoist = skema.BooleanType()
     managed = skema.BooleanType()
     color = skema.IntType()
-    permissions = skema.IntType()
+    permissions = PermissionType()
     position = skema.IntType()
 
 

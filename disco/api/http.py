@@ -88,9 +88,14 @@ class Routes(object):
 
 class APIException(Exception):
     def __init__(self, msg, status_code=0, content=None):
-        super(APIException, self).__init__(msg)
         self.status_code = status_code
         self.content = content
+        self.msg = msg
+
+        if self.status_code:
+            self.msg += ' code: {}'.format(status_code)
+
+        super(APIException, self).__init__(self.msg)
 
 
 class HTTPClient(LoggingClass):
@@ -132,6 +137,8 @@ class HTTPClient(LoggingClass):
         # If we got a success status code, just return the data
         if r.status_code < 400:
             return r
+        elif 400 < r.status_code < 500:
+            raise APIException('Request failed', r.status_code, r.content)
         else:
             if r.status_code == 429:
                 self.log.warning('Request responded w/ 429, retrying (but this should not happen, check your clock sync')

@@ -6,6 +6,7 @@ from disco.util.cache import cached_property
 from disco.util.types import ListToDictType
 from disco.types.base import BaseType
 from disco.types.user import User
+from disco.types.permissions import *
 from disco.voice.client import VoiceClient
 
 
@@ -26,8 +27,8 @@ class PermissionOverwrite(BaseType):
     id = skema.SnowflakeType()
     type = skema.StringType(choices=PermissionOverwriteType.ALL_VALUES)
 
-    allow = skema.IntType()
-    deny = skema.IntType()
+    allow = PermissionType()
+    deny = PermissionType()
 
 
 class Channel(BaseType):

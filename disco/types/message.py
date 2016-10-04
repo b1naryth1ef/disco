@@ -47,6 +47,9 @@ class Message(BaseType):
     embeds = skema.ListType(skema.ModelType(MessageEmbed))
     attachments = ListToDictType('id', skema.ModelType(MessageAttachment))
 
+    def __str__(self):
+        return '<Message {} ({})>'.format(self.id, self.channel_id)
+
     @cached_property
     def guild(self):
         return self.channel.guild
@@ -61,7 +64,7 @@ class Message(BaseType):
     def edit(self, content):
         return self.client.api.channels_messages_modify(self.channel_id, self.id, content)
 
-    def delete(self, content):
+    def delete(self):
         return self.client.api.channels_messages_delete(self.channel_id, self.id)
 
     def is_mentioned(self, entity):

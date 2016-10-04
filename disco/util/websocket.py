@@ -66,7 +66,6 @@ class WebsocketProcessProxy(object):
         self.emitter = Emitter(gevent.spawn)
 
         gevent.signal(signal.SIGINT, self.handle_signal)
-        gevent.signal(signal.SIGQUIT, self.handle_signal)
         gevent.signal(signal.SIGTERM, self.handle_signal)
 
     def handle_signal(self, *args):

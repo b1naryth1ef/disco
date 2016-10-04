@@ -126,7 +126,7 @@ class Bot(object):
         if cls.__name__ in self.plugins:
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
 
-        config = self.config.plugin_config_provider(cls.__name__) if self.config.plugin_config_provider else {}
+        config = self.config.plugin_config_provider(cls.__name__) if self.config.plugin_config_provider else None
 
         self.plugins[cls.__name__] = cls(self, config)
         self.plugins[cls.__name__].load()

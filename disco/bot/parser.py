@@ -1,4 +1,6 @@
 import re
+import copy
+
 
 PARTS_RE = re.compile('(\<|\[)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\])')
 
@@ -26,15 +28,6 @@ class Argument(object):
     def true_count(self):
         return self.count or 1
 
-    def convert(self, obj):
-        for typ in self.types:
-            typ = TYPE_MAP.get(typ)
-            try:
-                return typ(obj)
-            except Exception as e:
-                continue
-        raise e
-
     def parse(self, raw):
         prefix, part = raw
 
@@ -58,8 +51,23 @@ class Argument(object):
 
 
 class ArgumentSet(object):
-    def __init__(self, args=None):
+    def __init__(self, args=None, custom_types=None):
         self.args = args or []
+        self.types = copy.copy(TYPE_MAP)
+        self.types.update(custom_types)
+
+    def convert(self, types, value):
+        for typ_name in types:
+            typ = self.types.get(typ_name)
+            if not typ:
+                raise Exception('Unknown type {}'.format(typ_name))
+
+            try:
+                return typ(value)
+            except Exception as e:
+                continue
+
+        raise e
 
     def append(self, arg):
         if self.args and not self.args[-1].required and arg.required:
@@ -85,7 +93,7 @@ class ArgumentSet(object):
             if arg.types:
                 for idx, r in enumerate(raw):
                     try:
-                        raw[idx] = arg.convert(r)
+                        raw[idx] = self.convert(arg.types, r)
                     except:
                         raise ArgumentError('cannot convert `{}` to `{}`'.format(
                             r, ', '.join(arg.types)
@@ -110,8 +118,8 @@ class ArgumentSet(object):
         return sum([i.true_count for i in self.args if i.required])
 
 
-def parse_arguments(line):
-    args = ArgumentSet()
+def parse_arguments(line, custom_types=None):
+    args = ArgumentSet(custom_types=custom_types)
 
     data = PARTS_RE.findall(line)
     if len(data):
