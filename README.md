@@ -12,6 +12,7 @@ Disco is a simple and extendable library for the [Discord API](https://discordap
 Disco was built to run both as a generic-use library, and a standalone bot toolkit. Installing disco is as easy as running `pip install disco`, however some extra packages are recommended for power-users, namely:
 
 |Name|Reason|
+|----|------|
 |requests[security]|adds packages for a proper SSL implementation|
 |rapidjson|provides a Python implementation of the C rapidjson library, improves performance|
 
