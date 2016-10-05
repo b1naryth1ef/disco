@@ -7,6 +7,7 @@ from holster.enum import Enum
 from disco.util.logging import LoggingClass
 from disco.api.ratelimit import RateLimiter
 
+# Enum of all HTTP methods used
 HTTPMethod = Enum(
     GET='GET',
     POST='POST',
@@ -17,6 +18,10 @@ HTTPMethod = Enum(
 
 
 class Routes(object):
+    """
+    Simple Python object-enum of all method/url route combinations available to
+    this client.
+    """
     # Gateway
     GATEWAY_GET = (HTTPMethod.GET, '/gateway')
 
@@ -87,6 +92,10 @@ class Routes(object):
 
 
 class APIException(Exception):
+    """
+    Exception thrown when an HTTP-client level error occurs. Usually this will
+    be a non-success status-code, or a transient network issue.
+    """
     def __init__(self, msg, status_code=0, content=None):
         self.status_code = status_code
         self.content = content
@@ -99,6 +108,10 @@ class APIException(Exception):
 
 
 class HTTPClient(LoggingClass):
+    """
+    A simple HTTP client which wraps the requests library, adding support for
+    Discords rate-limit headers, authorization, and request/response validation.
+    """
     BASE_URL = 'https://discordapp.com/api/v6'
     MAX_RETRIES = 5
 
@@ -111,6 +124,15 @@ class HTTPClient(LoggingClass):
         }
 
     def __call__(self, route, args=None, **kwargs):
+        """
+        Makes a request to the given route (as specified in
+        :class:`disco.api.http.Routes`) with a set of URL arguments, and keyword
+        arguments passed to requests.
+
+        :param route: the method/url route combination to call
+        :param args: url major arguments (used for Discord rate limits)
+        :param kwargs: any keyword arguments to be passed along to requests
+        """
         args = args or {}
         retry = kwargs.pop('retry_number', 0)
 
@@ -158,5 +180,12 @@ class HTTPClient(LoggingClass):
 
     @staticmethod
     def random_backoff():
-        # 500 milliseconds to 5 seconds)
+        """
+        Returns a random backoff (in milliseconds) to be used for any error the
+        client suspects is transient. Will always return a value between 500 and
+        5000 milliseconds.
+
+        :returns: a random backoff in milliseconds
+        :rtype: float
+        """
         return random.randint(500, 5000) / 1000.0

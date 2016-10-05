@@ -2,8 +2,10 @@ import re
 import copy
 
 
+# Regex which splits out argument parts
 PARTS_RE = re.compile('(\<|\[)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\])')
 
+# Mapping of types
 TYPE_MAP = {
     'str': str,
     'int': int,
@@ -13,10 +15,21 @@ TYPE_MAP = {
 
 
 class ArgumentError(Exception):
-    pass
+    """
+    An error thrown when passed in arguments cannot be conformed/casted to the
+    argument specification.
+    """
 
 
 class Argument(object):
+    """
+    A single argument, which is normally the member of a :class:`ArgumentSet`.
+
+    :ivar str name: name of this argument
+    :ivar int count: the number of actual raw arguments which compose this argument
+    :ivar bool required: whether this argument is required
+    :ivar list types: the types that this argument can be
+    """
     def __init__(self, raw):
         self.name = None
         self.count = 1
@@ -26,9 +39,15 @@ class Argument(object):
 
     @property
     def true_count(self):
+        """
+        The true number of raw arguments this argument takes
+        """
         return self.count or 1
 
     def parse(self, raw):
+        """
+        Attempts to parse arguments from their raw form
+        """
         prefix, part = raw
 
         if prefix == '<':
@@ -51,12 +70,40 @@ class Argument(object):
 
 
 class ArgumentSet(object):
+    """
+    A set of :class:`Argument` instances which forms a larger argument specification
+
+    :ivar list args: list of :class:`Argument` instances for this set
+    :ivar dict types: dict of all possible types
+    """
     def __init__(self, args=None, custom_types=None):
         self.args = args or []
         self.types = copy.copy(TYPE_MAP)
         self.types.update(custom_types or {})
 
+    @classmethod
+    def from_string(cls, line, custom_types=None):
+        """
+        Creates a new :class:`ArgumentSet` from a given argument string specification
+        """
+        args = cls(custom_types=custom_types)
+
+        data = PARTS_RE.findall(line)
+        if len(data):
+            for item in data:
+                args.append(Argument(item))
+
+        return args
+
     def convert(self, types, value):
+        """
+        Attempts to convert a value to one or more types.
+
+        :param types: ordered list of types to try conversion to
+        :param value: the value to attempt conversion on
+        :type types: list
+        :param value: string
+        """
         for typ_name in types:
             typ = self.types.get(typ_name)
             if not typ:
@@ -70,6 +117,9 @@ class ArgumentSet(object):
         raise e
 
     def append(self, arg):
+        """
+        Add a new :class:`Argument` to this argument specification/set
+        """
         if self.args and not self.args[-1].required and arg.required:
             raise Exception('Required argument cannot come after an optional argument')
 
@@ -79,6 +129,9 @@ class ArgumentSet(object):
         self.args.append(arg)
 
     def parse(self, rawargs):
+        """
+        Parse a string of raw arguments into this argument specification.
+        """
         parsed = []
 
         for index, arg in enumerate(self.args):
@@ -111,19 +164,14 @@ class ArgumentSet(object):
 
     @property
     def length(self):
+        """
+        The number of arguments in this set/specification
+        """
         return len(self.args)
 
     @property
     def required_length(self):
+        """
+        The number of required arguments to compile this set/specificaiton
+        """
         return sum([i.true_count for i in self.args if i.required])
-
-
-def parse_arguments(line, custom_types=None):
-    args = ArgumentSet(custom_types=custom_types)
-
-    data = PARTS_RE.findall(line)
-    if len(data):
-        for item in data:
-            args.append(Argument(item))
-
-    return args

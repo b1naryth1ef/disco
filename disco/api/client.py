@@ -20,7 +20,7 @@ def optional(**kwargs):
 
 class APIClient(LoggingClass):
     """
-    An abstraction over the :class:`HTTPClient` that composes requests, and fits
+    An abstraction over the :class:`disco.api.http.HTTPClient` that composes requests, and fits
     the models with the returned data.
     """
     def __init__(self, client):
