@@ -56,7 +56,7 @@ class RateLimiter(object):
                 return self.states[route].wait(timeout)
 
             if self.states[route].next_will_ratelimit():
-                gevent.spawn(self.states[route].cooldown).wait(timeout)
+                gevent.spawn(self.states[route].cooldown).get(True, timeout)
 
         return True
 

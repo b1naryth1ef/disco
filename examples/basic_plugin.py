@@ -1,10 +1,12 @@
 import gevent
 import sys
+import json
 
 from disco import VERSION
 from disco.cli import disco_main
 from disco.bot import Bot
 from disco.bot.plugin import Plugin
+from disco.types.permissions import Permissions
 
 
 class BasicPlugin(Plugin):
@@ -80,6 +82,17 @@ class BasicPlugin(Plugin):
         vc = vs.channel.connect()
         gevent.sleep(1)
         vc.disconnect()
+
+    @Plugin.command('lol')
+    def on_lol(self, event):
+        event.msg.reply("{}".format(event.channel.can(event.msg.author, Permissions.MANAGE_EMOJIS)))
+
+    @Plugin.command('perms')
+    def on_perms(self, event):
+        perms = event.channel.get_permissions(event.msg.author)
+        event.msg.reply('```json\n{}\n```'.format(
+            json.dumps(perms.to_dict(), sort_keys=True, indent=2, separators=(',', ': '))
+        ))
 
 if __name__ == '__main__':
     bot = Bot(disco_main())

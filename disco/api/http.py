@@ -137,7 +137,7 @@ class HTTPClient(LoggingClass):
         # If we got a success status code, just return the data
         if r.status_code < 400:
             return r
-        elif 400 < r.status_code < 500:
+        elif r.status_code != 429 and 400 < r.status_code < 500:
             raise APIException('Request failed', r.status_code, r.content)
         else:
             if r.status_code == 429:

@@ -6,7 +6,7 @@ from disco.util.cache import cached_property
 from disco.util.types import ListToDictType
 from disco.types.base import BaseType
 from disco.types.user import User
-from disco.types.permissions import *
+from disco.types.permissions import PermissionType, Permissions, Permissible
 from disco.voice.client import VoiceClient
 
 
@@ -31,7 +31,7 @@ class PermissionOverwrite(BaseType):
     deny = PermissionType()
 
 
-class Channel(BaseType):
+class Channel(BaseType, Permissible):
     id = skema.SnowflakeType()
     guild_id = skema.SnowflakeType(required=False)
 
@@ -45,6 +45,22 @@ class Channel(BaseType):
     type = skema.IntType(choices=ChannelType.ALL_VALUES)
 
     overwrites = ListToDictType('id', skema.ModelType(PermissionOverwrite), stored_name='permission_overwrites')
+
+    def get_permissions(self, user):
+        if not self.guild_id:
+            return Permissions.ADMINISTRATOR
+
+        member = self.guild.members.get(user.id)
+        base = self.guild.get_permissions(user)
+
+        for ow in self.overwrites.values():
+            if ow.id != user.id and ow.id not in member.roles:
+                continue
+
+            base -= ow.deny
+            base += ow.allow
+
+        return base
 
     @property
     def is_guild(self):

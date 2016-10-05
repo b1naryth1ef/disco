@@ -54,7 +54,7 @@ class ArgumentSet(object):
     def __init__(self, args=None, custom_types=None):
         self.args = args or []
         self.types = copy.copy(TYPE_MAP)
-        self.types.update(custom_types)
+        self.types.update(custom_types or {})
 
     def convert(self, types, value):
         for typ_name in types:

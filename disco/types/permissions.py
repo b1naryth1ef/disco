@@ -1,9 +1,8 @@
 from skema import NumberType
 
-from holster.enum import Enum
+from holster.enum import Enum, EnumAttr
 
 Permissions = Enum(
-    NONE=0,
     CREATE_INSTANT_INVITE=1 << 0,
     KICK_MEMBERS=1 << 1,
     BAN_MEMBERS=1 << 2,
@@ -34,8 +33,47 @@ Permissions = Enum(
 
 
 class PermissionValue(object):
-    def __init__(self, value):
+    def __init__(self, value=0):
+        if isinstance(value, EnumAttr) or isinstance(value, PermissionValue):
+            value = value.value
+
         self.value = value
+
+    def can(self, *perms):
+        for perm in perms:
+            if isinstance(perm, EnumAttr):
+                perm = perm.value
+            if not (self.value & perm) == perm:
+                return False
+        return True
+
+    def add(self, other):
+        if isinstance(other, PermissionValue):
+            self.value |= other.value
+        elif isinstance(other, int):
+            self.value |= other
+        elif isinstance(other, EnumAttr):
+            setattr(self, other.name, True)
+        else:
+            raise TypeError('Cannot PermissionValue.add from type {}'.format(type(other)))
+        return self
+
+    def sub(self, other):
+        if isinstance(other, PermissionValue):
+            self.value &= ~other.value
+        elif isinstance(other, int):
+            self.value &= other
+        elif isinstance(other, EnumAttr):
+            setattr(self, other.name, False)
+        else:
+            raise TypeError('Cannot PermissionValue.sub from type {}'.format(type(other)))
+        return self
+
+    def __iadd__(self, other):
+        return self.add(other)
+
+    def __isub__(self, other):
+        return self.sub(other)
 
     def __getattribute__(self, name):
         if name in Permissions.attrs:
@@ -69,3 +107,9 @@ class PermissionValue(object):
 class PermissionType(NumberType):
     def __init__(self, *args, **kwargs):
         super(PermissionType, self).__init__(number_class=PermissionValue, number_type='PermissionValue', *args, **kwargs)
+
+
+class Permissible(object):
+    def can(self, user, *args):
+        perms = self.get_permissions(user)
+        return perms.administrator or perms.can(*args)

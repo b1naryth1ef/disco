@@ -3,11 +3,11 @@ import copy
 
 from disco.api.http import APIException
 from disco.util import to_snowflake
-from disco.types.base import BaseType
 from disco.util.types import PreHookType, ListToDictType
+from disco.types.base import BaseType
 from disco.types.user import User
 from disco.types.voice import VoiceState
-from disco.types.permissions import PermissionType
+from disco.types.permissions import PermissionType, PermissionValue, Permissions, Permissible
 from disco.types.channel import Channel
 
 
@@ -51,7 +51,7 @@ class GuildMember(BaseType):
         return self.user.id
 
 
-class Guild(BaseType):
+class Guild(BaseType, Permissible):
     id = skema.SnowflakeType()
 
     owner_id = skema.SnowflakeType()
@@ -75,6 +75,18 @@ class Guild(BaseType):
     roles = ListToDictType('id', skema.ModelType(Role))
     emojis = ListToDictType('id', skema.ModelType(Emoji))
     voice_states = ListToDictType('session_id', skema.ModelType(VoiceState))
+
+    def get_permissions(self, user):
+        if self.owner_id == user.id:
+            return PermissionValue(Permissions.ADMINISTRATOR)
+
+        member = self.get_member(user)
+        value = PermissionValue(self.roles.get(self.id).permissions)
+
+        for role in map(self.roles.get, member.roles):
+            value += role.permissions
+
+        return value
 
     def get_voice_state(self, user):
         user = to_snowflake(user)
