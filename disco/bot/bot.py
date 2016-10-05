@@ -52,6 +52,16 @@ class Bot(object):
         # Stores a giant regex matcher for all commands
         self.command_matches_re = None
 
+    @classmethod
+    def from_cli(cls, *plugins):
+        from disco.cli import disco_main
+        inst = cls(disco_main())
+
+        for plugin in plugins:
+            inst.add_plugin(plugin)
+
+        return inst
+
     @property
     def commands(self):
         for plugin in self.plugins.values():
@@ -113,14 +123,16 @@ class Bot(object):
 
     def on_message_update(self, event):
         if self.config.command_allow_edit:
-            msg = self.last_message_cache.get(event.message.channel_id)
-            if msg and event.message.id == msg[0].id:
-                triggered = msg[1]
+            obj = self.last_message_cache.get(event.message.channel_id)
+            if not obj:
+                return
 
-                if not triggered:
-                    triggered = self.handle_message(event.message)
+            msg, triggered = obj
+            if msg.id == event.message.id and not triggered:
+                msg.update(event.message)
+                triggered = self.handle_message(msg)
 
-                self.last_message_cache[event.message.channel_id] = (event.message, triggered)
+                self.last_message_cache[msg.channel_id] = (msg, triggered)
 
     def add_plugin(self, cls):
         if cls.__name__ in self.plugins:

@@ -23,6 +23,18 @@ class DiscoClient(object):
         self.api = APIClient(self)
         self.gw = GatewayClient(self)
 
+    @classmethod
+    def from_cli(cls, args):
+        inst = cls(args.token)
+        inst.set_shard(args.shard_id, args.shard_count)
+        return inst
+
+    def set_shard(self, shard_number, shard_count):
+        self.sharding = {
+            'number': shard_number,
+            'total': shard_count,
+        }
+
     def run(self):
         return gevent.spawn(self.gw.run)
 

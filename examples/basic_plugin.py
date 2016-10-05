@@ -4,8 +4,7 @@ import json
 
 from disco import VERSION
 from disco.cli import disco_main
-from disco.bot import Bot
-from disco.bot.plugin import Plugin
+from disco.bot import Bot, Plugin
 from disco.types.permissions import Permissions
 
 

@@ -19,7 +19,7 @@ class StateConfig(object):
 class State(object):
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
-        'GuildMemberUpdate', 'GuildMemberChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
+        'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
         'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate'
     ]
 
@@ -161,7 +161,7 @@ class State(object):
 
         del self.guilds[event.guild_id].members[event.user.id]
 
-    def on_guild_member_chunk(self, event):
+    def on_guild_members_chunk(self, event):
         if event.guild_id not in self.guilds:
             return
 
