@@ -7,11 +7,11 @@ from disco.util.json import loads, dumps
 from disco.util.websocket import WebsocketProcessProxy
 from disco.util.logging import LoggingClass
 
-GATEWAY_VERSION = 6
 TEN_MEGABYTES = 10490000
 
 
 class GatewayClient(LoggingClass):
+    GATEWAY_VERSION = 6
     MAX_RECONNECTS = 5
 
     def __init__(self, client):
@@ -90,7 +90,7 @@ class GatewayClient(LoggingClass):
 
     def connect_and_run(self):
         if not self._cached_gateway_url:
-            self._cached_gateway_url = self.client.api.gateway(version=GATEWAY_VERSION, encoding='json')
+            self._cached_gateway_url = self.client.api.gateway(version=self.GATEWAY_VERSION, encoding='json')
 
         self.log.info('Opening websocket connection to URL `%s`', self._cached_gateway_url)
         self.ws = WebsocketProcessProxy(self._cached_gateway_url)

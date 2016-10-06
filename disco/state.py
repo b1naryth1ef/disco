@@ -5,18 +5,77 @@ from weakref import WeakValueDictionary
 
 from disco.gateway.packets import OPCode
 
-StackMessage = namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])
+
+class StackMessage(namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])):
+    """
+    A message stored on a stack inside of the state object, used for tracking
+    previously sent messages in channels.
+
+    Attributes
+    ---------
+    id : snowflake
+        the id of the message
+    channel_id : snowflake
+        the id of the channel this message was sent in
+    author_id : snowflake
+        the id of the author of this message
+    """
 
 
 class StateConfig(object):
-    # Whether to keep a buffer of messages
-    track_messages = True
+    """
+    A configuration object for determining how the State tracking behaves.
 
-    # The number maximum number of messages to store
+    Attributes
+    ----------
+    track_messages : bool
+        Whether the state store should keep a buffer of previously sent messages.
+        Message tracking allows for multiple higher-level shortcuts and can be
+        highly useful when developing bots that need to delete their own messages.
+
+        Message tracking is implemented using a deque and a namedtuple, meaning
+        it should generally not have a high impact on memory, however users who
+        find they do not need and may be experiencing memory pressure can disable
+        this feature entirely using this attribute.
+    track_messages_size : int
+        The size of the deque for each channel. Using this you can calculate the
+        total number of possible :class:`StackMessage` objects kept in memory,
+        using: `total_mesages_size * total_channels`. This can be tweaked based
+        on usage to help prevent memory pressure.
+    """
+    track_messages = True
     track_messages_size = 100
 
 
 class State(object):
+    """
+    The State class is used to track global state based on events emitted from
+    the :class:`GatewayClient`. State tracking is a core component of the Disco
+    client, providing the mechanism for most of the higher-level utility functions.
+
+    Attributes
+    ----------
+    EVENTS : list(str)
+        A list of all events the State object binds too.
+    client : :class:`disco.client.DiscoClient`
+        The DiscoClient instance this state is attached too
+    config : :class:`StateConfig`
+        The configuration for this state instance
+    me : :class:`disco.types.user.User`
+        The currently logged in user
+    dms : dict(snowflake, :class:`disco.types.channel.Channel`)
+        Mapping of all known DM Channels
+    guilds : dict(snowflake, :class:`disco.types.guild.Guild`)
+        Mapping of all known/loaded Guilds
+    channels : dict(snowflake, :class:`disco.types.channel.Channel`)
+        Weak mapping of all known/loaded Channels
+    users : dict(snowflake, :class:`disco.types.user.User`)
+        Weak mapping of all known/loaded Users
+    voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
+        Weak mapping of all known/active Voice States
+    messages : Optional[dict(snowflake, :class:`deque`)]
+        Mapping of channel ids to deques containing :class:`StackMessage` objects
+    """
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
         'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
@@ -26,27 +85,37 @@ class State(object):
     def __init__(self, client, config=None):
         self.client = client
         self.config = config or StateConfig()
-        self.listeners = []
 
         self.me = None
-
         self.dms = {}
         self.guilds = {}
         self.channels = WeakValueDictionary()
         self.users = WeakValueDictionary()
         self.voice_states = WeakValueDictionary()
 
-        self.messages = defaultdict(lambda: deque(maxlen=self.config.track_messages_size))
+        # If message tracking is enabled, listen to those events
         if self.config.track_messages:
+            self.messages = defaultdict(lambda: deque(maxlen=self.config.track_messages_size))
             self.EVENTS += ['MessageCreate', 'MessageDelete']
 
+        # The bound listener objects
+        self.listeners = []
         self.bind()
 
     def unbind(self):
+        """
+        Unbinds all bound event listeners for this state object
+        """
         map(lambda k: k.unbind(), self.listeners)
         self.listeners = []
 
     def bind(self):
+        """
+        Binds all events for this state object, storing the listeners for later
+        unbinding.
+        """
+        assert not len(self.listeners), 'Binding while already bound is dangerous'
+
         for event in self.EVENTS:
             func = 'on_' + inflection.underscore(event)
             self.listeners.append(self.client.events.on(event, getattr(self, func)))

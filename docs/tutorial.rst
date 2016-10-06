@@ -1,0 +1,5 @@
+.. currentmodule:: disco
+
+Tutorial
+========
+

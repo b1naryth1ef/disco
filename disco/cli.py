@@ -1,3 +1,7 @@
+"""
+The CLI module is a small utility that can be used as an easy entry point for
+creating and running bots/clients.
+"""
 from __future__ import print_function
 
 import logging
@@ -15,6 +19,15 @@ logging.basicConfig(level=logging.INFO)
 
 
 def disco_main():
+    """
+    Creates an argument parser and parses a standard set of command line arguments,
+    creating a new :class:`DiscoClient`.
+
+    Returns
+    -------
+    :class:`DiscoClient`
+        A new DiscoClient from the provided command line arguments
+    """
     args = parser.parse_args()
 
     from disco.util.token import is_valid_token

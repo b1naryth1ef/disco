@@ -86,7 +86,7 @@ class VoiceClient(LoggingClass):
     def __init__(self, channel):
         super(VoiceClient, self).__init__()
 
-        assert(channel.is_voice)
+        assert channel.is_voice, 'Cannot spawn a VoiceClient for a non-voice channel'
         self.channel = channel
         self.client = self.channel.client
 

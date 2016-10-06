@@ -83,13 +83,23 @@ class Plugin(LoggingClass, PluginDeco):
     """
     A plugin is a set of listeners/commands which can be loaded/unloaded by a bot.
 
-    :param disco.bot.Bot bot: the bot this plugin is loaded under
-    :param config: a untyped object containing configuration for this plugin
+    Parameters
+    ----------
+    bot : :class:`disco.bot.Bot`
+        The bot this plugin is a member of.
+    config : any
+        The configuration data for this plugin.
 
-    :ivar disco.client.DiscoClient client: an alias to the client
-    :ivar disco.state.State state: an alias to the client state
-    :ivar list listeners: all bound listeners for this plugin
-    :ivar dict commands: all bound commands for this plugin
+    Attributes
+    ----------
+    client : :class:`disco.client.DiscoClient`
+        An alias to the client the bot is running with.
+    state : :class:`disco.state.State`
+        An alias to the state object for the client.
+    listeners : list
+        List of all bound listeners this plugin owns.
+    commands : list(:class:`disco.bot.command.Command`)
+        List of all commands this plugin owns.
     """
     def __init__(self, bot, config):
         super(Plugin, self).__init__()
@@ -149,8 +159,12 @@ class Plugin(LoggingClass, PluginDeco):
         """
         Registers a listener
 
-        :param func: function to be called
-        :param name: name of event to listen for
+        Parameters
+        ----------
+        func : function
+            The function to be registered.
+        name : string
+            Name of event to listen for.
         """
         func = functools.partial(self._dispatch, 'listener', func)
         self.listeners.append(self.bot.client.events.on(name, func))
@@ -159,9 +173,15 @@ class Plugin(LoggingClass, PluginDeco):
         """
         Registers a command
 
-        :param func: function to be called
-        :param args: args to be passed to the :class:`Command` object
-        :param kwargs: kwargs to be passed to the :class:`Command` object
+        Parameters
+        ----------
+        func : function
+            The function to be registered.
+        args
+            Arguments to pass onto the :class:`disco.bot.command.Command` object.
+        kwargs
+            Keyword arguments to pass onto the :class:`disco.bot.command.Command`
+            object.
         """
         wrapped = functools.partial(self._dispatch, 'command', func)
         self.commands[func.__name__] = Command(self, wrapped, *args, **kwargs)

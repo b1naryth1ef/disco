@@ -124,14 +124,37 @@ class HTTPClient(LoggingClass):
         }
 
     def __call__(self, route, args=None, **kwargs):
+        return self.call(route, args, **kwargs)
+
+    def call(self, route, args=None, **kwargs):
         """
         Makes a request to the given route (as specified in
         :class:`disco.api.http.Routes`) with a set of URL arguments, and keyword
         arguments passed to requests.
 
-        :param route: the method/url route combination to call
-        :param args: url major arguments (used for Discord rate limits)
-        :param kwargs: any keyword arguments to be passed along to requests
+        Parameters
+        ----------
+        route : tuple(:class:`HTTPMethod`, str)
+            The method.URL combination that when compiled with URL arguments
+            creates a requestable route which the HTTPClient will make the
+            request too.
+        args : dict(str, str)
+            A dictionary of URL arguments that will be compiled with the raw URL
+            to create the requestable route. The HTTPClient uses this to track
+            rate limits as well.
+        kwargs : dict
+            Keyword arguments that will be passed along to the requests library
+
+        Raises
+        ------
+        APIException
+            Raised when an unrecoverable error occurs, or when we've exhausted
+            the number of retries.
+
+        Returns
+        -------
+        :class:`requests.Response`
+            The response object for the request
         """
         args = args or {}
         retry = kwargs.pop('retry_number', 0)

@@ -25,10 +25,16 @@ class Argument(object):
     """
     A single argument, which is normally the member of a :class:`ArgumentSet`.
 
-    :ivar str name: name of this argument
-    :ivar int count: the number of actual raw arguments which compose this argument
-    :ivar bool required: whether this argument is required
-    :ivar list types: the types that this argument can be
+    Attributes
+    ----------
+    name : str
+        The name of this argument.
+    count : int
+        The number of raw arguments that compose this argument.
+    required : bool
+        Whether this is a required argument.
+    types : list(type)
+        Types this argument supports.
     """
     def __init__(self, raw):
         self.name = None
@@ -73,8 +79,12 @@ class ArgumentSet(object):
     """
     A set of :class:`Argument` instances which forms a larger argument specification
 
-    :ivar list args: list of :class:`Argument` instances for this set
-    :ivar dict types: dict of all possible types
+    Attributes
+    ----------
+    args : list(:class:`Argument`)
+        All arguments that are a member of this set.
+    types : dict(str, type)
+        All types supported by this ArgumentSet.
     """
     def __init__(self, args=None, custom_types=None):
         self.args = args or []
@@ -99,10 +109,12 @@ class ArgumentSet(object):
         """
         Attempts to convert a value to one or more types.
 
-        :param types: ordered list of types to try conversion to
-        :param value: the value to attempt conversion on
-        :type types: list
-        :param value: string
+        Parameters
+        ----------
+        types : list(type)
+            List of types to attempt conversion with.
+        value : str
+            The string value to attempt conversion on.
         """
         for typ_name in types:
             typ = self.types.get(typ_name)

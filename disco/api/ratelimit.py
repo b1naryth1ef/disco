@@ -7,10 +7,26 @@ class RouteState(object):
     An object which stores ratelimit state for a given method/url route
     combination (as specified in :class:`disco.api.http.Routes`).
 
-    :ivar route: the route this state pertains too
-    :ivar remaining: the number of requests remaining before the rate limit is hit
-    :ivar reset_time: unix timestamp (in seconds) when this rate limit is reset
-    :ivar event: a :class:`gevent.event.Event` used for ratelimit cooldowns
+    Parameters
+    ----------
+    route : tuple(HTTPMethod, str)
+        The route which this RouteState is for.
+    response : :class:`requests.Response`
+        The response object for the last request made to the route, should contain
+        the standard rate limit headers.
+
+    Attributes
+    ---------
+    route : tuple(HTTPMethod, str)
+        The route which this RouteState is for.
+    remaining : int
+        The number of remaining requests to the route before the rate limit will
+        be hit, triggering a 429 response.
+    reset_time : int
+        A unix epoch timestamp (in seconds) after which this rate limit is reset
+    event : :class:`gevent.event.Event`
+        An event that is used to block all requests while a route is in the
+        cooldown stage.
     """
     def __init__(self, route, response):
         self.route = route
@@ -55,9 +71,18 @@ class RouteState(object):
         """
         Waits until this route is no longer under a cooldown
 
-        :param timeout: timeout after which waiting will be given up
+        Parameters
+        ----------
+        timeout : Optional[int]
+            A timeout (in seconds) after which we will give up waiting
+
+
+        Returns
+        -------
+        bool
+            False if the timeout period expired before the cooldown was finished
         """
-        self.event.wait(timeout)
+        return self.event.wait(timeout)
 
     def cooldown(self):
         """
@@ -76,7 +101,11 @@ class RateLimiter(object):
     """
     A in-memory store of ratelimit states for all routes we've ever called.
 
-    :ivar states: a Route -> RouteState mapping
+    Attributes
+    ----------
+    states : dict(tuple(HTTPMethod, str), :class:`RouteState`)
+        Contains a :class:`RouteState` for each route the RateLimiter is currently
+        tracking.
     """
     def __init__(self):
         self.states = {}
@@ -89,9 +118,19 @@ class RateLimiter(object):
         the route is finished being cooled down. This function should be called
         before making a request to the specified route.
 
-        :param route: route to be checked
-        :param timeout: an optional timeout after which we'll stop waiting for
-            the cooldown to complete.
+        Parameters
+        ----------
+        route : tuple(HTTPMethod, str)
+            The route that will be checked.
+        timeout : Optional[int]
+            A timeout after which we'll give up waiting for a routes cooldown
+            to expire, and immedietly return.
+
+        Returns
+        -------
+        bool
+            False if the timeout period expired before the route finished cooling
+            down.
         """
         return self._check(None, timeout) and self._check(route, timeout)
 
@@ -111,8 +150,13 @@ class RateLimiter(object):
         Updates the given routes state with the rate-limit headers inside the
         response from a previous call to the route.
 
-        :param route: route to update
-        :param response: requests response to update the route with
+        Parameters
+        ---------
+        route : tuple(HTTPMethod, str)
+            The route that will be updated.
+        response : :class:`requests.Response`
+            The response object for the last request to the route, whose headers
+            will be used to update the routes rate limit state.
         """
         if 'X-RateLimit-Global' in response.headers:
             route = None

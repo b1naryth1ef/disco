@@ -6,36 +6,50 @@ from disco.bot.command import CommandEvent
 
 class BotConfig(object):
     """
-    An object which specifies the runtime configuration for a Bot.
+    An object which is used to configure and define the runtime configuration for
+    a bot.
 
-    :ivar str token: Authentication token
-    :ivar bool commands_enabled: whether to enable the command parsing functionality
-        of the bot
-    :ivar bool command_require_mention: whether commands require a mention to be
-        triggered
-    :ivar dict command_mention_rules: a dictionary of rules about what types of
-        mentions will trigger a command. A string/bool mapping containing 'here',
-        'everyone', 'role', and 'user'. If set to false, the mention type will
-        not trigger commands.
-    :ivar str command_prefix: prefix required to trigger a command
-    :ivar bool command_allow_edit: whether editing the last-sent message in a channel,
-        which did not previously trigger a command, will cause the bot to recheck
-        the message contents and possibly trigger a command.
-    :ivar function plugin_config_provider: an optional function which when called
-        with a plugin name, returns relevant configuration for it.
+    Attributes
+    ----------
+    token : str
+        The authentication token for this bot. This is passed on to the
+        :class:`disco.client.DiscoClient` without any validation.
+    commands_enabled : bool
+        Whether this bot instance should utilize command parsing. Generally this
+        should be true, unless your bot is only handling events and has no user
+        interaction.
+    commands_require_mention : bool
+        Whether messages must mention the bot to be considered for command parsing.
+    commands_mention_rules : dict(str, bool)
+        A dictionary describing what mention types can be considered a mention
+        of the bot when using :attr:`commands_require_mention`. This dictionary
+        can contain the following keys: `here`, `everyone`, `role`, `user`. When
+        a keys value is set to true, the mention type will be considered for
+        command parsing.
+    commands_prefix : str
+        A string prefix that is required for a message to be considered for
+        command parsing.
+    commands_allow_edit : bool
+        If true, the bot will reparse an edited message if it was the last sent
+        message in a channel, and did not previously trigger a command. This is
+        helpful for allowing edits to typod commands.
+    plugin_config_provider : Optional[function]
+        If set, this function will be called before loading a plugin, with the
+        plugins name. Its expected to return a type of configuration object the
+        plugin understands.
     """
     token = None
 
     commands_enabled = True
-    command_require_mention = True
-    command_mention_rules = {
+    commands_require_mention = True
+    commands_mention_rules = {
         # 'here': False,
         'everyone': False,
         'role': True,
         'user': True,
     }
-    command_prefix = ''
-    command_allow_edit = True
+    commands_prefix = ''
+    commands_allow_edit = True
 
     plugin_config_provider = None
 
@@ -45,11 +59,24 @@ class Bot(object):
     Disco's implementation of a simple but extendable Discord bot. Bots consist
     of a set of plugins, and a Disco client.
 
-    :param client: the client this bot should use for its Discord connection
-    :param config: a :class:`BotConfig` instance
+    Parameters
+    ----------
+    client : Optional[:class:`disco.client.DiscoClient`]
+        The client this bot should utilize for its connection. If not provided,
+        will create a new :class:`disco.client.DiscoClient` with the token inside
+        the bot config (:class:`BotConfig`)
+    config : Optional[:class:`BotConfig`]
+        The configuration to use for this bot. If not provided will use the defaults
+        inside of :class:`BotConfig`.
 
-    :ivar dict plugins: string -> :class:`disco.bot.plugin.Plugin` mapping of
-        all loaded plugins
+    Attributes
+    ----------
+    client : `disco.client.DiscoClient`
+        The client instance for this bot.
+    config : `BotConfig`
+        The bot configuration instance for this bot.
+    plugins : dict(str, :class:`disco.bot.plugin.Plugin`)
+        Any plugins this bot has loaded
     """
     def __init__(self, client=None, config=None):
         self.client = client or DiscoClient(config.token)
@@ -61,7 +88,7 @@ class Bot(object):
         if self.config.commands_enabled:
             self.client.events.on('MessageCreate', self.on_message_create)
 
-            if self.config.command_allow_edit:
+            if self.config.commands_allow_edit:
                 self.client.events.on('MessageUpdate', self.on_message_update)
 
         # Stores the last message for every single channel
@@ -73,10 +100,15 @@ class Bot(object):
     @classmethod
     def from_cli(cls, *plugins):
         """
-        Creates a new instance of the bot using the Disco-CLI utility, and a set
-        of passed-in plugin classes.
+        Creates a new instance of the bot using the utilities inside of the
+        :mod:`disco.cli` module. Allows passing in a set of uninitialized
+        plugin classes to load.
 
-        :param plugins: plugins to load after creaing the Bot instance
+        Parameters
+        ---------
+        plugins : Optional[list(:class:`disco.bot.plugin.Plugin`)]
+            Any plugins to load after creating the new bot instance
+
         """
         from disco.cli import disco_main
         inst = cls(disco_main())
@@ -107,15 +139,26 @@ class Bot(object):
 
     def get_commands_for_message(self, msg):
         """
-        Generator of all commands a given message triggers.
+        Generator of all commands that a given message object triggers, based on
+        the bots plugins and configuration.
+
+        Parameters
+        ---------
+        msg : :class:`disco.types.message.Message`
+            The message object to parse and find matching commands for
+
+        Yields
+        -------
+        tuple(:class:`disco.bot.command.Command`, `re.MatchObject`)
+            All commands the message triggers
         """
         content = msg.content
 
-        if self.config.command_require_mention:
+        if self.config.commands_require_mention:
             match = any((
-                self.config.command_mention_rules['user'] and msg.is_mentioned(self.client.state.me),
-                self.config.command_mention_rules['everyone'] and msg.mention_everyone,
-                self.config.command_mention_rules['role'] and any(map(msg.is_mentioned,
+                self.config.commands_mention_rules['user'] and msg.is_mentioned(self.client.state.me),
+                self.config.commands_mention_rules['everyone'] and msg.mention_everyone,
+                self.config.commands_mention_rules['role'] and any(map(msg.is_mentioned,
                     msg.guild.get_member(self.client.state.me).roles
                 ))))
 
@@ -124,10 +167,10 @@ class Bot(object):
 
             content = msg.without_mentions.strip()
 
-        if self.config.command_prefix and not content.startswith(self.config.command_prefix):
+        if self.config.commands_prefix and not content.startswith(self.config.commands_prefix):
             raise StopIteration
         else:
-            content = content[len(self.config.command_prefix):]
+            content = content[len(self.config.commands_prefix):]
 
         if not self.command_matches_re or not self.command_matches_re.match(content):
             raise StopIteration
@@ -139,11 +182,18 @@ class Bot(object):
 
     def handle_message(self, msg):
         """
-        Attempts to handle a newely created or edited message in the context of
+        Attempts to handle a newly created or edited message in the context of
         command parsing/triggering. Calls all relevant commands the message triggers.
 
-        :returns: whether any commands where successfully triggered
-        :rtype: bool
+        Parameters
+        ---------
+        msg : :class:`disco.types.message.Message`
+            The newly created or updated message object to parse/handle.
+
+        Returns
+        -------
+        bool
+            whether any commands where successfully triggered by the message
         """
         commands = list(self.get_commands_for_message(msg))
 
@@ -156,13 +206,13 @@ class Bot(object):
         return False
 
     def on_message_create(self, event):
-        if self.config.command_allow_edit:
+        if self.config.commands_allow_edit:
             self.last_message_cache[event.message.channel_id] = (event.message, False)
 
         self.handle_message(event.message)
 
     def on_message_update(self, event):
-        if self.config.command_allow_edit:
+        if self.config.commands_allow_edit:
             obj = self.last_message_cache.get(event.message.channel_id)
             if not obj:
                 return
@@ -176,8 +226,12 @@ class Bot(object):
 
     def add_plugin(self, cls):
         """
-        Adds and loads a given plugin, based on its class (which must be a subclass
-        of :class:`disco.bot.plugin.Plugin`).
+        Adds and loads a plugin, based on its class.
+
+        Parameters
+        ----------
+        cls : subclass of :class:`disco.bot.plugin.Plugin`
+            Plugin class to initialize and load.
         """
         if cls.__name__ in self.plugins:
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
@@ -190,8 +244,12 @@ class Bot(object):
 
     def rmv_plugin(self, cls):
         """
-        Unloads and removes a given plugin, based on its class (which must be a
-        sub class of :class:`disco.bot.plugin.Plugin`).
+        Unloads and removes a plugin based on its class.
+
+        Parameters
+        ----------
+        cls : subclass of :class:`disco.bot.plugin.Plugin`
+            Plugin class to unload and remove.
         """
         if cls.__name__ not in self.plugins:
             raise Exception('Cannot remove non-existant plugin: {}'.format(cls.__name__))
@@ -203,6 +261,6 @@ class Bot(object):
 
     def run_forever(self):
         """
-        Runs this bot forever
+        Runs this bots core loop forever
         """
         self.client.run_forever()

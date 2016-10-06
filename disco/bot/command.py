@@ -13,12 +13,20 @@ class CommandEvent(object):
     about the message, command, and parsed arguments (along with shortcuts to
     message information).
 
-    :ivar Command command: the command this event was created for (e.g. triggered command)
-    :ivar Message msg: the message object which triggered the command
-    :ivar re.MatchObject match: the regex match object for the command
-    :ivar string name: the name of the command (or alias) which was triggered
-    :ivar list args: any arguments passed to the command
+    Attributes
+    ---------
+    command : :class:`Command`
+        The command this event was created for (aka the triggered command).
+    msg : :class:`disco.types.message.Message`
+        The message object which triggered this command.
+    match : :class:`re.MatchObject`
+        The regex match object for the command.
+    name : str
+        The command name (or alias) which was triggered by the command
+    args : list(str)
+        Arguments passed to the command
     """
+
     def __init__(self, command, msg, match):
         self.command = command
         self.msg = msg
@@ -67,13 +75,22 @@ class Command(object):
     An object which defines and handles the triggering of a function based on
     user input (aka a command).
 
-    :ivar disco.bot.plugin.Plugin plugin: the plugin this command is part of
-    :ivar function func: the function this command is attached too
-    :ivar str trigger: the primary trigger (aka name) of this command
-    :ivar str args: argument specification for this command
-    :ivar list aliases: aliases this command also responds too
-    :ivar str group: grouping this command is under
-    :ivar bool is_regex: whether this command is triggered as a regex
+    Attributes
+    ----------
+    plugin : :class:`disco.bot.plugin.Plugin`
+        The plugin this command is a member of.
+    func : function
+        The function which is called when this command is triggered.
+    trigger : str
+        The primary trigger (aka name).
+    args : Optional[str]
+        The argument format specification.
+    aliases : Optional[list(str)]
+        List of trigger aliases.
+    group : Optional[str]
+        The group this command is a member of.
+    is_regex : Optional[bool]
+        Whether the triggers for this command should be treated as raw regex.
     """
     def __init__(self, plugin, func, trigger, args=None, aliases=None, group=None, is_regex=False):
         self.plugin = plugin
@@ -107,8 +124,10 @@ class Command(object):
         Handles the execution of this command given a :class:`CommandEvent`
         object.
 
-        :returns: whether this command was successful
-        :rtype: bool
+        Returns
+        -------
+        bool
+            Whether this command was sucessful
         """
         if len(event.args) < self.args.required_length:
             raise CommandError('{} requires {} arguments (passed {})'.format(
