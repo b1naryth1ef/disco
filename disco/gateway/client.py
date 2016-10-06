@@ -73,7 +73,7 @@ class GatewayClient(LoggingClass):
 
     def handle_invalid_session(self, packet):
         self.log.warning('Recieved INVALID_SESSIOIN, forcing a fresh reconnect')
-        self.sesion_id = None
+        self.session_id = None
         self.ws.close()
 
     def handle_hello(self, packet):
