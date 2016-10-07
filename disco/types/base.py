@@ -4,6 +4,11 @@ import functools
 
 from datetime import datetime as real_datetime
 
+DATETIME_FORMATS = [
+    '%Y-%m-%dT%H:%M:%S.%f',
+    '%Y-%m-%dT%H:%M:%S'
+]
+
 
 def _make(typ, data, client):
     args, _, _, _ = inspect.getargspec(typ)
@@ -50,7 +55,16 @@ def alias(typ, name):
 
 
 def datetime(data):
-    return real_datetime.strptime(data.rsplit('+', 1)[0], '%Y-%m-%dT%H:%M:%S.%f') if data else None
+    if not data:
+        return None
+
+    for fmt in DATETIME_FORMATS:
+        try:
+            return real_datetime.strptime(data.rsplit('+', 1)[0], fmt)
+        except (ValueError, TypeError):
+            continue
+
+    raise ValueError('Failed to conver `{}` to datetime'.format(data))
 
 
 def text(obj):
@@ -112,9 +126,9 @@ class Model(six.with_metaclass(ModelMeta)):
                         v = typ(obj[name])
                 else:
                     v = typ(obj[name])
-            except TypeError as e:
+            except Exception:
                 print('Failed during parsing of field {} => {} (`{}`)'.format(name, typ, obj[name]))
-                raise e
+                raise
 
             if client and isinstance(v, Model):
                 v.client = client
@@ -122,10 +136,16 @@ class Model(six.with_metaclass(ModelMeta)):
             setattr(self, dest_name, v)
 
     def update(self, other):
-        for name in six.iterkeys(self.__class__.fields):
+        for name in six.iterkeys(self.__class__._fields):
             value = getattr(other, name)
             if value:
                 setattr(self, name, value)
+
+        # Clear cached properties
+        for name in dir(type(self)):
+            if isinstance(getattr(type(self), name), property):
+                delattr(self, name)
+
 
     @classmethod
     def create(cls, client, data):
@@ -133,4 +153,4 @@ class Model(six.with_metaclass(ModelMeta)):
 
     @classmethod
     def create_map(cls, client, data):
-        return map(functools.partial(cls.create, client), data)
+        return list(map(functools.partial(cls.create, client), data))

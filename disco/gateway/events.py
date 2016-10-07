@@ -73,10 +73,12 @@ class ChannelCreate(GatewayEvent):
         return self.channel.guild
 
 
+@wraps_model(Channel)
 class ChannelUpdate(ChannelCreate):
     pass
 
 
+@wraps_model(Channel)
 class ChannelDelete(ChannelCreate):
     pass
 
@@ -91,6 +93,7 @@ class GuildBanAdd(GatewayEvent):
     pass
 
 
+@wraps_model(User)
 class GuildBanRemove(GuildBanAdd):
     pass
 
@@ -144,6 +147,7 @@ class MessageCreate(GatewayEvent):
         return self.message.channel
 
 
+@wraps_model(Message)
 class MessageUpdate(MessageCreate):
     pass
 

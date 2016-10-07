@@ -1,10 +1,22 @@
 import re
 
-from disco.types.base import Model, snowflake, text, datetime, dictof, listof
+from holster.enum import Enum
 
+from disco.types.base import Model, snowflake, text, datetime, dictof, listof, enum
 from disco.util import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
+
+
+MessageType = Enum(
+    DEFAULT=0,
+    RECIPIENT_ADD=1,
+    RECIPIENT_REMOVE=2,
+    CALL=3,
+    CHANNEL_NAME_CHANGE=4,
+    CHANNEL_ICON_CHANGE=5,
+    PINS_ADD=6
+)
 
 
 class MessageEmbed(Model):
@@ -68,6 +80,8 @@ class Message(Model):
         The ID of this message.
     channel_id : snowflake
         The channel ID this message was sent in.
+    type : ``MessageType``
+        Type of the message.
     author : :class:`disco.types.user.User`
         The author of this message.
     content : str
@@ -95,6 +109,7 @@ class Message(Model):
     """
     id = snowflake
     channel_id = snowflake
+    type = enum(MessageType)
     author = User
     content = text
     nonce = snowflake

@@ -240,7 +240,7 @@ class MessageIterator(object):
         self.last = None
         self._buffer = []
 
-        if len(filter(bool, (before, after))) > 1:
+        if not before and not after:
             raise Exception('Must specify at most one of before or after')
 
         if not any((before, after)) and self.direction == self.Direction.DOWN:
@@ -268,10 +268,13 @@ class MessageIterator(object):
             self._buffer.reverse()
             self.after == self._buffer[-1].id
 
+    def next(self):
+        return self.__next__()
+
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if not len(self._buffer):
             self.fill()
 
