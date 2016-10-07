@@ -1,6 +1,6 @@
 from holster.enum import Enum
 
-from disco.types.base import Model, snowflake, enum, listof, dictof, alias, text
+from disco.types.base import Model, Field, snowflake, enum, listof, dictof, text
 from disco.types.permissions import PermissionValue
 
 from disco.util.functional import cached_property
@@ -39,10 +39,10 @@ class PermissionOverwrite(Model):
         All denied permissions
     """
 
-    id = snowflake
-    type = enum(PermissionOverwriteType)
-    allow = PermissionValue
-    deny = PermissionValue
+    id = Field(snowflake)
+    type = Field(enum(PermissionOverwriteType))
+    allow = Field(PermissionValue)
+    deny = Field(PermissionValue)
 
 
 class Channel(Model, Permissible):
@@ -70,16 +70,16 @@ class Channel(Model, Permissible):
     overwrites : dict(snowflake, :class:`disco.types.channel.PermissionOverwrite`)
         Channel permissions overwrites.
     """
-    id = snowflake
-    guild_id = snowflake
-    name = text
-    topic = text
-    _last_message_id = alias(snowflake, 'last_message_id')
-    position = int
-    bitrate = int
-    recipients = listof(User)
-    type = enum(ChannelType)
-    overwrites = alias(dictof(PermissionOverwrite, key='id'), 'permission_overwrites')
+    id = Field(snowflake)
+    guild_id = Field(snowflake)
+    name = Field(text)
+    topic = Field(text)
+    _last_message_id = Field(snowflake, alias='last_message_id')
+    position = Field(int)
+    bitrate = Field(int)
+    recipients = Field(listof(User))
+    type = Field(enum(ChannelType))
+    overwrites = Field(dictof(PermissionOverwrite, key='id'), alias='permission_overwrites')
 
     def get_permissions(self, user):
         """

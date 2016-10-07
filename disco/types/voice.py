@@ -1,16 +1,16 @@
-from disco.types.base import Model, snowflake
+from disco.types.base import Model, Field, snowflake
 
 
 class VoiceState(Model):
-    session_id = str
-    guild_id = snowflake
-    channel_id = snowflake
-    user_id = snowflake
-    deaf = bool
-    mute = bool
-    self_deaf = bool
-    self_mute = bool
-    suppress = bool
+    session_id = Field(str)
+    guild_id = Field(snowflake)
+    channel_id = Field(snowflake)
+    user_id = Field(snowflake)
+    deaf = Field(bool)
+    mute = Field(bool)
+    self_deaf = Field(bool)
+    self_mute = Field(bool)
+    suppress = Field(bool)
 
     @property
     def guild(self):

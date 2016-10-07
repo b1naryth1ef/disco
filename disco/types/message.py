@@ -2,7 +2,7 @@ import re
 
 from holster.enum import Enum
 
-from disco.types.base import Model, snowflake, text, datetime, dictof, listof, enum
+from disco.types.base import Model, Field, snowflake, text, datetime, dictof, listof, enum
 from disco.util import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
@@ -34,10 +34,10 @@ class MessageEmbed(Model):
     url : str
         URL of the embed.
     """
-    title = text
-    type = str
-    description = text
-    url = str
+    title = Field(text)
+    type = Field(str)
+    description = Field(text)
+    url = Field(str)
 
 
 class MessageAttachment(Model):
@@ -61,13 +61,13 @@ class MessageAttachment(Model):
     width : int
         Width of the attachment.
     """
-    id = str
-    filename = text
-    url = str
-    proxy_url = str
-    size = int
-    height = int
-    width = int
+    id = Field(str)
+    filename = Field(text)
+    url = Field(str)
+    proxy_url = Field(str)
+    size = Field(int)
+    height = Field(int)
+    width = Field(int)
 
 
 class Message(Model):
@@ -107,21 +107,21 @@ class Message(Model):
     attachments : list(:class:`MessageAttachment`)
         All attachments for this message.
     """
-    id = snowflake
-    channel_id = snowflake
-    type = enum(MessageType)
-    author = User
-    content = text
-    nonce = snowflake
-    timestamp = datetime
-    edited_timestamp = datetime
-    tts = bool
-    mention_everyone = bool
-    pinned = bool
-    mentions = dictof(User, key='id')
-    mention_roles = listof(snowflake)
-    embeds = listof(MessageEmbed)
-    attachments = dictof(MessageAttachment, key='id')
+    id = Field(snowflake)
+    channel_id = Field(snowflake)
+    type = Field(enum(MessageType))
+    author = Field(User)
+    content = Field(text)
+    nonce = Field(snowflake)
+    timestamp = Field(datetime)
+    edited_timestamp = Field(datetime)
+    tts = Field(bool)
+    mention_everyone = Field(bool)
+    pinned = Field(bool)
+    mentions = Field(dictof(User, key='id'))
+    mention_roles = Field(listof(snowflake))
+    embeds = Field(listof(MessageEmbed))
+    attachments = Field(dictof(MessageAttachment, key='id'))
 
     def __str__(self):
         return '<Message {} ({})>'.format(self.id, self.channel_id)

@@ -10,6 +10,69 @@ DATETIME_FORMATS = [
 ]
 
 
+class FieldType(object):
+    def __init__(self, typ):
+        if isinstance(typ, FieldType) or inspect.isclass(typ) and issubclass(typ, Model):
+            self.typ = typ
+        else:
+            self.typ = lambda raw, _: typ(raw)
+
+    def try_convert(self, raw, client):
+        pass
+
+    def __call__(self, raw, client):
+        return self.try_convert(raw, client)
+
+
+class Field(FieldType):
+    def __init__(self, typ, alias=None):
+        super(Field, self).__init__(typ)
+
+        # Set names
+        self.src_name = alias
+        self.dst_name = None
+
+        self.default = None
+
+        if isinstance(self.typ, FieldType):
+            self.default = self.typ.default
+
+    def set_name(self, name):
+        if not self.dst_name:
+            self.dst_name = name
+
+        if not self.src_name:
+            self.src_name = name
+
+    def has_default(self):
+        return self.default is not None
+
+    def try_convert(self, raw, client):
+        return self.typ(raw, client)
+
+
+class _Dict(FieldType):
+    default = dict
+
+    def __init__(self, typ, key=None):
+        super(_Dict, self).__init__(typ)
+        self.key = key
+
+    def try_convert(self, raw, client):
+        if self.key:
+            converted = [self.typ(i, client) for i in raw]
+            return {getattr(i, self.key): i for i in converted}
+        else:
+            return {k: self.typ(v, client) for k, v in six.iteritems(raw)}
+
+
+class _List(FieldType):
+    default = list
+
+    def try_convert(self, raw, client):
+        return [self.typ(i, client) for i in raw]
+
+
 def _make(typ, data, client):
     if inspect.isclass(typ) and issubclass(typ, Model):
         return typ(data, client)
@@ -26,33 +89,12 @@ def enum(typ):
     return _f
 
 
-def listof(typ):
-    def _f(data, client=None):
-        if not data:
-            return []
-        return [_make(typ, obj, client) for obj in data]
-    _f._takes_client = None
-    return _f
+def listof(*args, **kwargs):
+    return _List(*args, **kwargs)
 
 
-def dictof(typ, key=None):
-    def _f(data, client=None):
-        if not data:
-            return {}
-
-        if key:
-            return {
-                getattr(v, key): v for v in (
-                    _make(typ, i, client) for i in data
-                )}
-        else:
-            return {k: _make(typ, v, client) for k, v in six.iteritems(data)}
-    _f._takes_client = None
-    return _f
-
-
-def alias(typ, name):
-    return ('alias', name, typ)
+def dictof(*args, **kwargs):
+    return _Dict(*args, **kwargs)
 
 
 def datetime(data):
@@ -76,23 +118,21 @@ def binary(obj):
     return six.text_type(obj) if obj else six.text_type()
 
 
+def field(typ, alias=None):
+    pass
+
+
 class ModelMeta(type):
     def __new__(cls, name, parents, dct):
         fields = {}
+
         for k, v in six.iteritems(dct):
-            if isinstance(v, tuple):
-                if v[0] == 'alias':
-                    fields[v[1]] = (k, v[2])
-                    continue
+            if not isinstance(v, Field):
+                continue
 
-            if inspect.isclass(v):
-                fields[k] = v
-            elif callable(v):
-                args, _, _, _ = inspect.getargspec(v)
-                if 'self' in args:
-                    continue
-
-                fields[k] = v
+            v.set_name(k)
+            fields[k] = v
+            dct[k] = None
 
         dct['_fields'] = fields
         return super(ModelMeta, cls).__new__(cls, name, parents, dct)
@@ -102,40 +142,17 @@ class Model(six.with_metaclass(ModelMeta)):
     def __init__(self, obj, client=None):
         self.client = client
 
-        for name, typ in self.__class__._fields.items():
-            dest_name = name
-
-            if isinstance(typ, tuple):
-                dest_name, typ = typ
-
-            if name not in obj or not obj[name]:
-                if inspect.isclass(typ) and issubclass(typ, Model):
-                    res = None
-                elif isinstance(typ, type):
-                    res = typ()
-                else:
-                    res = typ(None)
-                setattr(self, dest_name, res)
+        for name, field in self._fields.items():
+            if name not in obj or not obj[field.src_name]:
+                if field.has_default():
+                    setattr(self, field.dst_name, field.default())
                 continue
 
-            try:
-                if client:
-                    if inspect.isfunction(typ) and hasattr(typ, '_takes_client'):
-                        v = typ(obj[name], client)
-                    elif inspect.isclass(typ) and issubclass(typ, Model):
-                        v = typ(obj[name], client)
-                    else:
-                        v = typ(obj[name])
-                else:
-                    v = typ(obj[name])
-            except Exception:
-                print('Failed during parsing of field {} => {}'.format(name, typ))
-                raise
-
-            setattr(self, dest_name, v)
+            value = field.try_convert(obj[field.src_name], client)
+            setattr(self, field.dst_name, value)
 
     def update(self, other):
-        for name in six.iterkeys(self.__class__._fields):
+        for name in six.iterkeys(self._fields):
             value = getattr(other, name)
             if value:
                 setattr(self, name, value)

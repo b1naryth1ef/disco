@@ -1,4 +1,4 @@
-from disco.types.base import Model, datetime
+from disco.types.base import Model, Field, datetime
 from disco.types.user import User
 from disco.types.guild import Guild
 from disco.types.channel import Channel
@@ -29,12 +29,12 @@ class Invite(Model):
     created_at : datetime
         When this invite was created.
     """
-    code = str
-    inviter = User
-    guild = Guild
-    channel = Channel
-    max_age = int
-    max_uses = int
-    uses = int
-    temporary = bool
-    created_at = datetime
+    code = Field(str)
+    inviter = Field(User)
+    guild = Field(Guild)
+    channel = Field(Channel)
+    max_age = Field(int)
+    max_uses = Field(int)
+    uses = Field(int)
+    temporary = Field(bool)
+    created_at = Field(datetime)

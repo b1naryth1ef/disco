@@ -118,7 +118,7 @@ GatewayClient
 Gateway Events
 ~~~~~~~~~~~~~~
 
-.. automodule:: disco.gateway.client.Events
+.. automodule:: disco.gateway.events
       :members:
 
 

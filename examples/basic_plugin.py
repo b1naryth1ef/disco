@@ -10,10 +10,8 @@ from disco.types.permissions import Permissions
 
 class BasicPlugin(Plugin):
     @Plugin.listen('MessageCreate')
-    def on_message_create(self, event):
-        self.log.info('Message created: <{}>: {}'.format(
-            event.message.author.username,
-            event.message.content))
+    def on_message_create(self, msg):
+        self.log.info('Message created: {}: {}'.format(msg.author, msg.content))
 
     @Plugin.command('status', '[component]')
     def on_status_command(self, event, component=None):

@@ -3,7 +3,7 @@ from holster.enum import Enum
 from disco.api.http import APIException
 from disco.util import to_snowflake
 from disco.util.functional import cached_property
-from disco.types.base import Model, snowflake, listof, dictof, datetime, text, binary, enum
+from disco.types.base import Model, Field, snowflake, listof, dictof, datetime, text, binary, enum
 from disco.types.user import User
 from disco.types.voice import VoiceState
 from disco.types.permissions import PermissionValue, Permissions, Permissible
@@ -36,11 +36,11 @@ class Emoji(Model):
     roles : list(snowflake)
         Roles this emoji is attached to.
     """
-    id = snowflake
-    name = text
-    require_colons = bool
-    managed = bool
-    roles = listof(snowflake)
+    id = Field(snowflake)
+    name = Field(text)
+    require_colons = Field(bool)
+    managed = Field(bool)
+    roles = Field(listof(snowflake))
 
 
 class Role(Model):
@@ -64,13 +64,13 @@ class Role(Model):
     position : int
         The position of this role in the hierarchy.
     """
-    id = snowflake
-    name = text
-    hoist = bool
-    managed = bool
-    color = int
-    permissions = PermissionValue
-    position = int
+    id = Field(snowflake)
+    name = Field(text)
+    hoist = Field(bool)
+    managed = Field(bool)
+    color = Field(int)
+    permissions = Field(PermissionValue)
+    position = Field(int)
 
 
 class GuildMember(Model):
@@ -94,13 +94,13 @@ class GuildMember(Model):
     roles : list(snowflake)
         Roles this member is part of.
     """
-    user = User
-    guild_id = snowflake
-    nick = text
-    mute = bool
-    deaf = bool
-    joined_at = datetime
-    roles = listof(snowflake)
+    user = Field(User)
+    guild_id = Field(snowflake)
+    nick = Field(text)
+    mute = Field(bool)
+    deaf = Field(bool)
+    joined_at = Field(datetime)
+    roles = Field(listof(snowflake))
 
     def get_voice_state(self):
         """
@@ -196,24 +196,24 @@ class Guild(Model, Permissible):
         All of the guilds voice states.
     """
 
-    id = snowflake
-    owner_id = snowflake
-    afk_channel_id = snowflake
-    embed_channel_id = snowflake
-    name = text
-    icon = binary
-    splash = binary
-    region = str
-    afk_timeout = int
-    embed_enabled = bool
-    verification_level = enum(VerificationLevel)
-    mfa_level = int
-    features = listof(str)
-    members = dictof(GuildMember, key='id')
-    channels = dictof(Channel, key='id')
-    roles = dictof(Role, key='id')
-    emojis = dictof(Emoji, key='id')
-    voice_states = dictof(VoiceState, key='session_id')
+    id = Field(snowflake)
+    owner_id = Field(snowflake)
+    afk_channel_id = Field(snowflake)
+    embed_channel_id = Field(snowflake)
+    name = Field(text)
+    icon = Field(binary)
+    splash = Field(binary)
+    region = Field(str)
+    afk_timeout = Field(int)
+    embed_enabled = Field(bool)
+    verification_level = Field(enum(VerificationLevel))
+    mfa_level = Field(int)
+    features = Field(listof(str))
+    members = Field(dictof(GuildMember, key='id'))
+    channels = Field(dictof(Channel, key='id'))
+    roles = Field(dictof(Role, key='id'))
+    emojis = Field(dictof(Emoji, key='id'))
+    voice_states = Field(dictof(VoiceState, key='session_id'))
 
     def get_permissions(self, user):
         """

@@ -1,13 +1,13 @@
-from disco.types.base import Model, snowflake, text, binary
+from disco.types.base import Model, Field, snowflake, text, binary
 
 
 class User(Model):
-    id = snowflake
-    username = text
-    discriminator = str
-    avatar = binary
-    verified = bool
-    email = str
+    id = Field(snowflake)
+    username = Field(text)
+    discriminator = Field(str)
+    avatar = Field(binary)
+    verified = Field(bool)
+    email = Field(str)
 
     def to_string(self):
         return '{}#{}'.format(self.username, self.discriminator)
