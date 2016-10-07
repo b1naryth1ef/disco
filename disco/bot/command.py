@@ -1,7 +1,7 @@
 import re
 
 from disco.bot.parser import ArgumentSet, ArgumentError
-from disco.util.cache import cached_property
+from disco.util.functional import cached_property
 
 REGEX_FMT = '({})'
 ARGS_REGEX = '( (.*)$|$)'

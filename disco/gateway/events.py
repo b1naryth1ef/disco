@@ -1,5 +1,6 @@
 import inflection
 import skema
+import six
 
 from disco.util import skema_find_recursive_by_type
 from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceState
@@ -22,21 +23,29 @@ class GatewayEvent(skema.Model):
 
     @classmethod
     def create(cls, obj):
+        # If this event is wrapping a model, pull its fields
+        if hasattr(cls, '_wraps_model'):
+            alias, model = cls._wraps_model
+
+            data = {
+                k: obj.pop(k) for k in six.iterkeys(model._fields_by_stored_name) if k in obj
+            }
+
+            obj[alias] = data
+
         self = cls(obj)
         self.validate()
         return self
 
 
-def Sub(field):
-    class _T(GatewayEvent):
-        @classmethod
-        def create(cls, obj):
-            obj[field] = obj
-            self = cls(obj)
-            self.validate()
-            return self
+def wraps_model(model, alias=None):
+    alias = alias or model.__name__.lower()
 
-    return _T
+    def deco(cls):
+        cls.add_field(alias, skema.ModelType(model))
+        cls._wraps_model = (alias, model)
+        return cls
+    return deco
 
 
 class Ready(GatewayEvent):
@@ -50,12 +59,13 @@ class Resumed(GatewayEvent):
     pass
 
 
-class GuildCreate(Sub('guild')):
-    guild = skema.ModelType(Guild)
+@wraps_model(Guild)
+class GuildCreate(GatewayEvent):
     unavailable = skema.BooleanType(default=None)
 
 
-class GuildUpdate(Sub('guild')):
+@wraps_model(Guild)
+class GuildUpdate(GatewayEvent):
     guild = skema.ModelType(Guild)
 
 
@@ -64,9 +74,8 @@ class GuildDelete(GatewayEvent):
     unavailable = skema.BooleanType(default=None)
 
 
-class ChannelCreate(Sub('channel')):
-    channel = skema.ModelType(Channel)
-
+@wraps_model(Channel)
+class ChannelCreate(GatewayEvent):
     @property
     def guild(self):
         return self.channel.guild
@@ -85,12 +94,13 @@ class ChannelPinsUpdate(GatewayEvent):
     last_pin_timestamp = skema.IntType()
 
 
-class GuildBanAdd(Sub('user')):
-    user = skema.ModelType(User)
+@wraps_model(User)
+class GuildBanAdd(GatewayEvent):
+    pass
 
 
-class GuildBanRemove(Sub('user')):
-    user = skema.ModelType(User)
+class GuildBanRemove(GuildBanAdd):
+    pass
 
 
 class GuildEmojisUpdate(GatewayEvent):
@@ -106,8 +116,9 @@ class GuildMembersChunk(GatewayEvent):
     members = skema.ListType(skema.ModelType(GuildMember))
 
 
-class GuildMemberAdd(Sub('member')):
-    member = skema.ModelType(GuildMember)
+@wraps_model(GuildMember, alias='member')
+class GuildMemberAdd(GatewayEvent):
+    pass
 
 
 class GuildMemberRemove(GatewayEvent):
@@ -136,16 +147,15 @@ class GuildRoleDelete(GatewayEvent):
     role = skema.ModelType(Role)
 
 
-class MessageCreate(Sub('message')):
-    message = skema.ModelType(Message)
-
+@wraps_model(Message)
+class MessageCreate(GatewayEvent):
     @property
     def channel(self):
         return self.message.channel
 
 
 class MessageUpdate(MessageCreate):
-    message = skema.ModelType(Message)
+    pass
 
 
 class MessageDelete(GatewayEvent):
@@ -177,8 +187,9 @@ class TypingStart(GatewayEvent):
     timestamp = skema.IntType()
 
 
-class VoiceStateUpdate(Sub('state')):
-    state = skema.ModelType(VoiceState)
+@wraps_model(VoiceState, alias='state')
+class VoiceStateUpdate(GatewayEvent):
+    pass
 
 
 class VoiceServerUpdate(GatewayEvent):

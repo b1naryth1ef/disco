@@ -92,7 +92,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     Attributes
     ----------
-    client : :class:`disco.client.DiscoClient`
+    client : :class:`disco.client.Client`
         An alias to the client the bot is running with.
     state : :class:`disco.state.State`
         An alias to the state object for the client.

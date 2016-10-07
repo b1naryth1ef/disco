@@ -1,9 +1,10 @@
 import gevent
 import zlib
+import six
 
 from disco.gateway.packets import OPCode
 from disco.gateway.events import GatewayEvent
-from disco.util.json import loads, dumps
+from disco.gateway.encoding.json import JSONEncoder
 from disco.util.websocket import WebsocketProcessProxy
 from disco.util.logging import LoggingClass
 
@@ -14,9 +15,10 @@ class GatewayClient(LoggingClass):
     GATEWAY_VERSION = 6
     MAX_RECONNECTS = 5
 
-    def __init__(self, client):
+    def __init__(self, client, encoder=None):
         super(GatewayClient, self).__init__()
         self.client = client
+        self.encoder = encoder or JSONEncoder
 
         self.events = client.events
         self.packets = client.packets
@@ -48,10 +50,10 @@ class GatewayClient(LoggingClass):
         self._heartbeat_task = None
 
     def send(self, op, data):
-        self.ws.send(dumps({
+        self.ws.send(self.encoder.encode({
             'op': op.value,
             'd': data,
-        }))
+        }), self.encoder.OPCODE)
 
     def heartbeat_task(self, interval):
         while True:
@@ -90,7 +92,9 @@ class GatewayClient(LoggingClass):
 
     def connect_and_run(self):
         if not self._cached_gateway_url:
-            self._cached_gateway_url = self.client.api.gateway(version=self.GATEWAY_VERSION, encoding='json')
+            self._cached_gateway_url = self.client.api.gateway(
+                version=self.GATEWAY_VERSION,
+                encoding=self.encoder.TYPE)
 
         self.log.info('Opening websocket connection to URL `%s`', self._cached_gateway_url)
         self.ws = WebsocketProcessProxy(self._cached_gateway_url)
@@ -103,11 +107,12 @@ class GatewayClient(LoggingClass):
 
     def on_message(self, msg):
         # Detect zlib and decompress
-        if msg[0] != '{':
+        is_erlpack = ((six.PY2 and ord(msg[0]) == 131) or (six.PY3 and msg[0] == 131))
+        if msg[0] != '{' and not is_erlpack:
             msg = zlib.decompress(msg, 15, TEN_MEGABYTES).decode("utf-8")
 
         try:
-            data = loads(msg)
+            data = self.encoder.decode(msg)
         except:
             self.log.exception('Failed to parse gateway message: ')
             return
@@ -128,17 +133,20 @@ class GatewayClient(LoggingClass):
         if self.seq and self.session_id:
             self.log.info('WS Opened: attempting resume w/ SID: %s SEQ: %s', self.session_id, self.seq)
             self.send(OPCode.RESUME, {
-                'token': self.client.token,
+                'token': self.client.config.token,
                 'session_id': self.session_id,
                 'seq': self.seq
             })
         else:
             self.log.info('WS Opened: sending identify payload')
             self.send(OPCode.IDENTIFY, {
-                'token': self.client.token,
+                'token': self.client.config.token,
                 'compress': True,
                 'large_threshold': 250,
-                'shard': [self.client.sharding['number'], self.client.sharding['total']],
+                'shard': [
+                    self.client.config.shard_id,
+                    self.client.config.shard_count,
+                ],
                 'properties': {
                     '$os': 'linux',
                     '$browser': 'disco',

@@ -6,9 +6,9 @@ import time
 from holster.enum import Enum
 from holster.emitter import Emitter
 
+from disco.gateway.encoding.json import JSONEncoder
 from disco.util.websocket import Websocket
 from disco.util.logging import LoggingClass
-from disco.util.json import loads, dumps
 from disco.voice.packets import VoiceOPCode
 from disco.gateway.packets import OPCode
 
@@ -83,12 +83,13 @@ class UDPVoiceClient(LoggingClass):
 
 
 class VoiceClient(LoggingClass):
-    def __init__(self, channel):
+    def __init__(self, channel, encoder=None):
         super(VoiceClient, self).__init__()
 
         assert channel.is_voice, 'Cannot spawn a VoiceClient for a non-voice channel'
         self.channel = channel
         self.client = self.channel.client
+        self.encoder = encoder or JSONEncoder
 
         self.packets = Emitter(gevent.spawn)
         self.packets.on(VoiceOPCode.READY, self.on_voice_ready)
@@ -120,10 +121,10 @@ class VoiceClient(LoggingClass):
         })
 
     def send(self, op, data):
-        self.ws.send(dumps({
+        self.ws.send(self.encoder.encode({
             'op': op.value,
             'd': data,
-        }))
+        }), self.encoder.OPCODE)
 
     def on_voice_ready(self, data):
         self.state = VoiceState.CONNECTING
@@ -179,7 +180,7 @@ class VoiceClient(LoggingClass):
 
     def on_message(self, ws, msg):
         try:
-            data = loads(msg)
+            data = self.encoder.decode(msg)
         except:
             self.log.exception('Failed to parse voice gateway message: ')
 

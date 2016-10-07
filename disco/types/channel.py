@@ -2,7 +2,7 @@ import skema
 
 from holster.enum import Enum
 
-from disco.util.cache import cached_property
+from disco.util.functional import cached_property
 from disco.util.types import ListToDictType
 from disco.types.base import BaseType
 from disco.types.user import User
@@ -214,7 +214,7 @@ class MessageIterator(object):
 
     Parameters
     ----------
-    client : :class:`disco.client.DiscoClient`
+    client : :class:`disco.client.Client`
         The disco client instance to use when making requests.
     channel : `Channel`
         The channel to iterate within.

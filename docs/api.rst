@@ -14,10 +14,10 @@ version information for the installed package.
   versioning format. E.g. ``'5.4.3-rc.2'``
 
 
-DiscoClient
+Client
 ------------
 
-.. autoclass:: disco.client.DiscoClient
+.. autoclass:: disco.client.Client
       :members:
 
 

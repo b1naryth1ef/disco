@@ -57,8 +57,8 @@ class State(object):
     ----------
     EVENTS : list(str)
         A list of all events the State object binds too.
-    client : :class:`disco.client.DiscoClient`
-        The DiscoClient instance this state is attached too
+    client : :class:`disco.client.Client`
+        The Client instance this state is attached too
     config : :class:`StateConfig`
         The configuration for this state instance
     me : :class:`disco.types.user.User`
@@ -239,6 +239,7 @@ class State(object):
             member.guild = guild
             member.guild_id = guild.id
             guild.members[member.id] = member
+            self.users[member.id] = member.user
 
     def on_guild_role_create(self, event):
         if event.guild_id not in self.guilds:

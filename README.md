@@ -14,7 +14,8 @@ Disco was built to run both as a generic-use library, and a standalone bot toolk
 |Name|Reason|
 |----|------|
 |requests[security]|adds packages for a proper SSL implementation|
-|rapidjson|provides a Python implementation of the C rapidjson library, improves performance|
+|ujson|faster json parser, improves performance|
+|erlpack|ETF parser, only Python 2.x, run with the --encoder=etf flag|
 
 ## Examples
 

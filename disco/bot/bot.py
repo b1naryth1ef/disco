@@ -1,6 +1,5 @@
 import re
 
-from disco.client import DiscoClient
 from disco.bot.command import CommandEvent
 
 
@@ -13,7 +12,7 @@ class BotConfig(object):
     ----------
     token : str
         The authentication token for this bot. This is passed on to the
-        :class:`disco.client.DiscoClient` without any validation.
+        :class:`disco.client.Client` without any validation.
     commands_enabled : bool
         Whether this bot instance should utilize command parsing. Generally this
         should be true, unless your bot is only handling events and has no user
@@ -61,25 +60,23 @@ class Bot(object):
 
     Parameters
     ----------
-    client : Optional[:class:`disco.client.DiscoClient`]
-        The client this bot should utilize for its connection. If not provided,
-        will create a new :class:`disco.client.DiscoClient` with the token inside
-        the bot config (:class:`BotConfig`)
+    client : :class:`disco.client.Client`
+        The client this bot should utilize for its connection.
     config : Optional[:class:`BotConfig`]
         The configuration to use for this bot. If not provided will use the defaults
         inside of :class:`BotConfig`.
 
     Attributes
     ----------
-    client : `disco.client.DiscoClient`
+    client : `disco.client.Client`
         The client instance for this bot.
     config : `BotConfig`
         The bot configuration instance for this bot.
     plugins : dict(str, :class:`disco.bot.plugin.Plugin`)
         Any plugins this bot has loaded
     """
-    def __init__(self, client=None, config=None):
-        self.client = client or DiscoClient(config.token)
+    def __init__(self, client, config=None):
+        self.client = client
         self.config = config or BotConfig()
 
         self.plugins = {}

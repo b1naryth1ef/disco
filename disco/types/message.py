@@ -2,7 +2,7 @@ import re
 import skema
 
 from disco.util import to_snowflake
-from disco.util.cache import cached_property
+from disco.util.functional import cached_property
 from disco.util.types import PreHookType, ListToDictType
 from disco.types.base import BaseType
 from disco.types.user import User

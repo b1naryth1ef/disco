@@ -27,7 +27,7 @@ class APIClient(LoggingClass):
         super(APIClient, self).__init__()
 
         self.client = client
-        self.http = HTTPClient(self.client.token)
+        self.http = HTTPClient(self.client.config.token)
 
     def gateway(self, version, encoding):
         data = self.http(Routes.GATEWAY_GET).json()
