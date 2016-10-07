@@ -11,13 +11,7 @@ DATETIME_FORMATS = [
 
 
 def _make(typ, data, client):
-    if inspect.isfunction(typ):
-        args, _, _, _ = inspect.getargspec(typ)
-        if 'client' in args:
-            return typ(data, client)
-    elif issubclass(typ, Model):
-        if not client:
-            raise Exception()
+    if inspect.isclass(typ) and issubclass(typ, Model):
         return typ(data, client)
     return typ(data)
 
@@ -37,6 +31,7 @@ def listof(typ):
         if not data:
             return []
         return [_make(typ, obj, client) for obj in data]
+    _f._takes_client = None
     return _f
 
 
@@ -52,6 +47,7 @@ def dictof(typ, key=None):
                 )}
         else:
             return {k: _make(typ, v, client) for k, v in six.iteritems(data)}
+    _f._takes_client = None
     return _f
 
 
@@ -123,14 +119,13 @@ class Model(six.with_metaclass(ModelMeta)):
                 continue
 
             try:
-                if client and inspect.isfunction(typ):
-                    args, _, _, _ = inspect.getargspec(typ)
-                    if 'client' in args:
+                if client:
+                    if inspect.isfunction(typ) and hasattr(typ, '_takes_client'):
+                        v = typ(obj[name], client)
+                    elif inspect.isclass(typ) and issubclass(typ, Model):
                         v = typ(obj[name], client)
                     else:
                         v = typ(obj[name])
-                elif inspect.isclass(typ) and issubclass(typ, Model):
-                    v = typ(obj[name], client)
                 else:
                     v = typ(obj[name])
             except Exception:
