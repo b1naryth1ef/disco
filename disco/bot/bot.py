@@ -227,7 +227,7 @@ class Bot(object):
 
                 self.last_message_cache[msg.channel_id] = (msg, triggered)
 
-    def add_plugin(self, cls):
+    def add_plugin(self, cls, config=None):
         """
         Adds and loads a plugin, based on its class.
 
@@ -235,11 +235,14 @@ class Bot(object):
         ----------
         cls : subclass of :class:`disco.bot.plugin.Plugin`
             Plugin class to initialize and load.
+        config : Optional
+            The configuration to load the plugin with.
         """
         if cls.__name__ in self.plugins:
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
 
-        config = self.config.plugin_config_provider(cls.__name__) if self.config.plugin_config_provider else None
+        if not config and callable(self.config.plugin_config_provider):
+            config = self.config.plugin_config_provider(cls.__name__)
 
         self.plugins[cls.__name__] = cls(self, config)
         self.plugins[cls.__name__].load()
