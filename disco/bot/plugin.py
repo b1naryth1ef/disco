@@ -1,6 +1,8 @@
 import inspect
 import functools
 
+from holster.emitter import Priority
+
 from disco.util.logging import LoggingClass
 from disco.bot.command import Command, CommandError
 
@@ -10,6 +12,8 @@ class PluginDeco(object):
     A utility mixin which provides various function decorators that a plugin
     author can use to create bound event/command handlers.
     """
+    Prio = Priority
+
     @staticmethod
     def add_meta_deco(meta):
         def deco(f):
@@ -22,13 +26,14 @@ class PluginDeco(object):
         return deco
 
     @classmethod
-    def listen(cls, event_name):
+    def listen(cls, event_name, priority=None):
         """
         Binds the function to listen for a given event name
         """
         return cls.add_meta_deco({
             'type': 'listener',
             'event_name': event_name,
+            'priority': priority
         })
 
     @classmethod
@@ -118,7 +123,7 @@ class Plugin(LoggingClass, PluginDeco):
             if hasattr(member, 'meta'):
                 for meta in member.meta:
                     if meta['type'] == 'listener':
-                        self.register_listener(member, meta['event_name'])
+                        self.register_listener(member, meta['event_name'], meta['priority'])
                     elif meta['type'] == 'command':
                         self.register_command(member, *meta['args'], **meta['kwargs'])
                     elif meta['type'].startswith('pre_') or meta['type'].startswith('post_'):
@@ -155,7 +160,7 @@ class Plugin(LoggingClass, PluginDeco):
 
         return True
 
-    def register_listener(self, func, name):
+    def register_listener(self, func, name, priority):
         """
         Registers a listener
 
@@ -165,9 +170,11 @@ class Plugin(LoggingClass, PluginDeco):
             The function to be registered.
         name : string
             Name of event to listen for.
+        priority : Priority
+            The priority of this listener.
         """
         func = functools.partial(self._dispatch, 'listener', func)
-        self.listeners.append(self.bot.client.events.on(name, func))
+        self.listeners.append(self.bot.client.events.on(name, func, priority=priority or Priority.NONE))
 
     def register_command(self, func, *args, **kwargs):
         """

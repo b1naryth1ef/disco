@@ -2,6 +2,7 @@ from holster.enum import Enum
 
 from disco.api.http import APIException
 from disco.util import to_snowflake
+from disco.util.functional import cached_property
 from disco.types.base import Model, snowflake, listof, dictof, datetime, text, binary, enum
 from disco.types.user import User
 from disco.types.voice import VoiceState
@@ -82,6 +83,8 @@ class GuildMember(Model):
         The user object of this member.
     guild_id : snowflake
         The guild this member is part of.
+    nick : str
+        The nickname of the member.
     mute : bool
         Whether this member is server voice-muted.
     deaf : bool
@@ -93,6 +96,7 @@ class GuildMember(Model):
     """
     user = User
     guild_id = snowflake
+    nick = text
     mute = bool
     deaf = bool
     joined_at = datetime
@@ -124,6 +128,21 @@ class GuildMember(Model):
             The number of days to retroactively delete messages for.
         """
         self.client.api.guilds_bans_create(self.guild.id, self.user.id, delete_message_days)
+
+    def set_nickname(self, nickname=None):
+        """
+        Sets the members nickname (or clears it if None).
+
+        Args
+        ----
+        nickname : Optional[str]
+            The nickname (or none to reset) to set.
+        """
+        self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
+
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
     @property
     def id(self):

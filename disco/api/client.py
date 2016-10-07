@@ -144,17 +144,17 @@ class APIClient(LoggingClass):
         return GuildMember.create_map(self.client, r.json())
 
     def guilds_members_get(self, guild, member):
-        r = self.http(Routes.GUILD_MEMBERS_GET, dict(guild=guild, member=member))
+        r = self.http(Routes.GUILDS_MEMBERS_GET, dict(guild=guild, member=member))
         return GuildMember.create(self.client, r.json())
 
     def guilds_members_modify(self, guild, member, **kwargs):
-        self.http(Routes.GUILD_MEMBERS_MODIFY, dict(guild=guild, member=member), json=kwargs)
+        self.http(Routes.GUILDS_MEMBERS_MODIFY, dict(guild=guild, member=member), json=kwargs)
 
     def guilds_members_kick(self, guild, member):
-        self.http(Routes.GUILD_MEMBERS_KICK, dict(guild=guild, member=member))
+        self.http(Routes.GUILDS_MEMBERS_KICK, dict(guild=guild, member=member))
 
     def guilds_bans_list(self, guild):
-        r = self.http(Routes.GUILD_BANS_LIST, dict(guild=guild))
+        r = self.http(Routes.GUILDS_BANS_LIST, dict(guild=guild))
         return User.create_map(self.client, r.json())
 
     def guilds_bans_create(self, guild, user, delete_message_days):

@@ -2,7 +2,7 @@ import inflection
 import six
 
 from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceState
-from disco.types.base import Model, snowflake, alias, listof
+from disco.types.base import Model, snowflake, alias, listof, text
 
 
 # TODO: clean this... use BaseType, etc
@@ -121,10 +121,9 @@ class GuildMemberRemove(GatewayEvent):
     user = User
 
 
+@wraps_model(GuildMember, alias='member')
 class GuildMemberUpdate(GatewayEvent):
-    guild_id = snowflake
-    user = User
-    roles = listof(snowflake)
+    pass
 
 
 class GuildRoleCreate(GatewayEvent):
@@ -166,14 +165,14 @@ class PresenceUpdate(GatewayEvent):
     class Game(Model):
         # TODO enum
         type = int
-        name = str
-        url = str
+        name = text
+        url = text
 
     user = User
     guild_id = snowflake
     roles = listof(snowflake)
     game = Game
-    status = str
+    status = text
 
 
 class TypingStart(GatewayEvent):

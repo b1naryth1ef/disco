@@ -1,6 +1,7 @@
 import gevent
 import zlib
 import six
+import ssl
 
 from disco.gateway.packets import OPCode
 from disco.gateway.events import GatewayEvent
@@ -99,7 +100,7 @@ class GatewayClient(LoggingClass):
         self.ws.emitter.on('on_close', self.on_close)
         self.ws.emitter.on('on_message', self.on_message)
 
-        self.ws.run_forever()
+        self.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
 
     def on_message(self, msg):
         # Detect zlib and decompress

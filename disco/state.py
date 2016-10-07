@@ -219,11 +219,11 @@ class State(object):
         self.guilds[event.member.guild_id].members[event.member.id] = event.member
 
     def on_guild_member_update(self, event):
-        if event.guild_id not in self.guilds:
+        if event.member.guild_id not in self.guilds:
             return
 
-        self.guilds[event.guild_id].members[event.user.id].roles = event.roles
-        self.guilds[event.guild_id].members[event.user.id].user.update(event.user)
+        event.member.guild = self.guilds[event.member.guild_id]
+        self.guilds[event.member.guild_id].members[event.member.id].update(event.member)
 
     def on_guild_member_remove(self, event):
         if event.guild_id not in self.guilds:

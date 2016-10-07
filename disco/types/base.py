@@ -15,6 +15,10 @@ def _make(typ, data, client):
         args, _, _, _ = inspect.getargspec(typ)
         if 'client' in args:
             return typ(data, client)
+    elif issubclass(typ, Model):
+        if not client:
+            raise Exception()
+        return typ(data, client)
     return typ(data)
 
 
@@ -125,14 +129,13 @@ class Model(six.with_metaclass(ModelMeta)):
                         v = typ(obj[name], client)
                     else:
                         v = typ(obj[name])
+                elif inspect.isclass(typ) and issubclass(typ, Model):
+                    v = typ(obj[name], client)
                 else:
                     v = typ(obj[name])
             except Exception:
-                print('Failed during parsing of field {} => {} (`{}`)'.format(name, typ, obj[name]))
+                print('Failed during parsing of field {} => {}'.format(name, typ))
                 raise
-
-            if client and isinstance(v, Model):
-                v.client = client
 
             setattr(self, dest_name, v)
 
@@ -145,7 +148,10 @@ class Model(six.with_metaclass(ModelMeta)):
         # Clear cached properties
         for name in dir(type(self)):
             if isinstance(getattr(type(self), name), property):
-                delattr(self, name)
+                try:
+                    delattr(self, name)
+                except:
+                    pass
 
     @classmethod
     def create(cls, client, data):
