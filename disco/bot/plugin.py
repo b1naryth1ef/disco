@@ -228,9 +228,17 @@ class Plugin(LoggingClass, PluginDeco):
 
     def destroy(self):
         """
-        Destroys the plugin (removing all listeners)
+        Destroys the plugin, removing all listeners and schedules. Called after
+        unload.
         """
-        map(lambda k: k.remove(), self._events)
+        for listener in self.listeners:
+            listener.remove()
+
+        for schedule in self.schedules.values():
+            schedule.kill()
+
+        self.listeners = []
+        self.schedules = {}
 
     def load(self):
         """
