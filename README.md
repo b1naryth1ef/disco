@@ -13,7 +13,7 @@ Disco is currently in an early-alpha phase. What you see today may change a lot 
 
 ## Installation
 
-Disco was built to run both as a generic-use library, and a standalone bot toolkit. Installing disco is as easy as running `pip install disco`, however some extra packages are recommended for power-users, namely:
+Disco was built to run both as a generic-use library, and a standalone bot toolkit. Installing disco is as easy as running `pip install disco-py`, however some extra packages are recommended for power-users, namely:
 
 |Name|Reason|
 |----|------|

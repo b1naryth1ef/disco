@@ -11,9 +11,10 @@ DATETIME_FORMATS = [
 
 
 def _make(typ, data, client):
-    args, _, _, _ = inspect.getargspec(typ)
-    if 'client' in args:
-        return typ(data, client)
+    if inspect.isfunction(typ):
+        args, _, _, _ = inspect.getargspec(typ)
+        if 'client' in args:
+            return typ(data, client)
     return typ(data)
 
 
@@ -118,7 +119,7 @@ class Model(six.with_metaclass(ModelMeta)):
                 continue
 
             try:
-                if client:
+                if client and inspect.isfunction(typ):
                     args, _, _, _ = inspect.getargspec(typ)
                     if 'client' in args:
                         v = typ(obj[name], client)
@@ -145,7 +146,6 @@ class Model(six.with_metaclass(ModelMeta)):
         for name in dir(type(self)):
             if isinstance(getattr(type(self), name), property):
                 delattr(self, name)
-
 
     @classmethod
     def create(cls, client, data):
