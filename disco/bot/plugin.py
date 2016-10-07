@@ -1,5 +1,6 @@
 import inspect
 import functools
+import gevent
 
 from holster.emitter import Priority
 
@@ -83,6 +84,16 @@ class PluginDeco(object):
             'type': 'post_listener',
         })
 
+    @classmethod
+    def schedule(cls, interval=60):
+        """
+        Runs a function repeatedly, waiting for a specified interval
+        """
+        return cls.add_meta_deco({
+            'type': 'schedule',
+            'interval': interval,
+        })
+
 
 class Plugin(LoggingClass, PluginDeco):
     """
@@ -115,6 +126,7 @@ class Plugin(LoggingClass, PluginDeco):
 
         self.listeners = []
         self.commands = {}
+        self.schedules = {}
 
         self._pre = {'command': [], 'listener': []}
         self._post = {'command': [], 'listener': []}
@@ -126,6 +138,8 @@ class Plugin(LoggingClass, PluginDeco):
                         self.register_listener(member, meta['event_name'], meta['priority'])
                     elif meta['type'] == 'command':
                         self.register_command(member, *meta['args'], **meta['kwargs'])
+                    elif meta['type'] == 'schedule':
+                        self.register_schedule(member, meta['interval'])
                     elif meta['type'].startswith('pre_') or meta['type'].startswith('post_'):
                         when, typ = meta['type'].split('_', 1)
                         self.register_trigger(typ, when, member)
@@ -192,6 +206,25 @@ class Plugin(LoggingClass, PluginDeco):
         """
         wrapped = functools.partial(self._dispatch, 'command', func)
         self.commands[func.__name__] = Command(self, wrapped, *args, **kwargs)
+
+    def register_schedule(self, func, interval):
+        """
+        Registers a function to be called repeatedly, waiting for an interval
+        duration.
+
+        Args
+        ----
+        func : function
+            The function to be registered.
+        interval : int
+            Interval (in seconds) to repeat the function on.
+        """
+        def repeat():
+            while True:
+                func()
+                gevent.sleep(interval)
+
+        self.schedules[func.__name__] = gevent.spawn(repeat)
 
     def destroy(self):
         """

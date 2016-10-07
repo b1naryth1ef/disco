@@ -137,6 +137,16 @@ class Message(Model):
         return self.channel.guild
 
     @cached_property
+    def member(self):
+        """
+        Returns
+        -------
+        :class:`disco.types.guild.GuildMember`
+            The guild member (if applicable) that sent this message.
+        """
+        return self.channel.guild.get_member(self.author)
+
+    @cached_property
     def channel(self):
         """
         Returns
