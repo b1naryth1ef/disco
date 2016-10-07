@@ -1,4 +1,4 @@
 build/
 dist/
-disco.egg-info/
+disco*.egg-info/
 docs/_build
