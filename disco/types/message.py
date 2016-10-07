@@ -1,14 +1,13 @@
 import re
-import skema
+
+from disco.types.base import Model, snowflake, text, datetime, dictof, listof
 
 from disco.util import to_snowflake
 from disco.util.functional import cached_property
-from disco.util.types import PreHookType, ListToDictType
-from disco.types.base import BaseType
 from disco.types.user import User
 
 
-class MessageEmbed(BaseType):
+class MessageEmbed(Model):
     """
     Message embed object
 
@@ -23,13 +22,13 @@ class MessageEmbed(BaseType):
     url : str
         URL of the embed.
     """
-    title = skema.StringType()
-    type = skema.StringType()
-    description = skema.StringType()
-    url = skema.StringType()
+    title = text
+    type = str
+    description = text
+    url = str
 
 
-class MessageAttachment(BaseType):
+class MessageAttachment(Model):
     """
     Message attachment object
 
@@ -50,16 +49,16 @@ class MessageAttachment(BaseType):
     width : int
         Width of the attachment.
     """
-    id = skema.SnowflakeType()
-    filename = skema.StringType()
-    url = skema.StringType()
-    proxy_url = skema.StringType()
-    size = skema.IntType()
-    height = skema.IntType()
-    width = skema.IntType()
+    id = str
+    filename = text
+    url = str
+    proxy_url = str
+    size = int
+    height = int
+    width = int
 
 
-class Message(BaseType):
+class Message(Model):
     """
     Represents a Message created within a Channel on Discord.
 
@@ -94,26 +93,20 @@ class Message(BaseType):
     attachments : list(:class:`MessageAttachment`)
         All attachments for this message.
     """
-    id = skema.SnowflakeType()
-    channel_id = skema.SnowflakeType()
-
-    author = skema.ModelType(User)
-    content = skema.StringType()
-    nonce = skema.StringType()
-
-    timestamp = PreHookType(lambda k: k[:-6], skema.DateTimeType())
-    edited_timestamp = PreHookType(lambda k: k[:-6], skema.DateTimeType())
-
-    tts = skema.BooleanType()
-    mention_everyone = skema.BooleanType()
-
-    pinned = skema.BooleanType(required=False)
-
-    mentions = ListToDictType('id', skema.ModelType(User))
-    mention_roles = skema.ListType(skema.SnowflakeType())
-
-    embeds = skema.ListType(skema.ModelType(MessageEmbed))
-    attachments = ListToDictType('id', skema.ModelType(MessageAttachment))
+    id = snowflake
+    channel_id = snowflake
+    author = User
+    content = text
+    nonce = snowflake
+    timestamp = datetime
+    edited_timestamp = datetime
+    tts = bool
+    mention_everyone = bool
+    pinned = bool
+    mentions = dictof(User, key='id')
+    mention_roles = listof(snowflake)
+    embeds = listof(MessageEmbed)
+    attachments = dictof(MessageAttachment, key='id')
 
     def __str__(self):
         return '<Message {} ({})>'.format(self.id, self.channel_id)

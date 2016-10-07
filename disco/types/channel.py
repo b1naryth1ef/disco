@@ -1,12 +1,11 @@
-import skema
-
 from holster.enum import Enum
 
+from disco.types.base import Model, snowflake, enum, listof, dictof, alias, text
+from disco.types.permissions import PermissionValue
+
 from disco.util.functional import cached_property
-from disco.util.types import ListToDictType
-from disco.types.base import BaseType
 from disco.types.user import User
-from disco.types.permissions import PermissionType, Permissions, Permissible
+from disco.types.permissions import Permissions, Permissible
 from disco.voice.client import VoiceClient
 
 
@@ -23,7 +22,7 @@ PermissionOverwriteType = Enum(
 )
 
 
-class PermissionOverwrite(BaseType):
+class PermissionOverwrite(Model):
     """
     A PermissionOverwrite for a :class:`Channel`
 
@@ -39,14 +38,14 @@ class PermissionOverwrite(BaseType):
     denied : :class:`PermissionValue`
         All denied permissions
     """
-    id = skema.SnowflakeType()
-    type = skema.StringType(choices=PermissionOverwriteType.ALL_VALUES)
 
-    allow = PermissionType()
-    deny = PermissionType()
+    id = snowflake
+    type = enum(PermissionOverwriteType)
+    allow = PermissionValue
+    deny = PermissionValue
 
 
-class Channel(BaseType, Permissible):
+class Channel(Model, Permissible):
     """
     Represents a Discord Channel
 
@@ -71,19 +70,16 @@ class Channel(BaseType, Permissible):
     overwrites : dict(snowflake, :class:`disco.types.channel.PermissionOverwrite`)
         Channel permissions overwrites.
     """
-    id = skema.SnowflakeType()
-    guild_id = skema.SnowflakeType(required=False)
-
-    name = skema.StringType()
-    topic = skema.StringType()
-    _last_message_id = skema.SnowflakeType(stored_name='last_message_id')
-    position = skema.IntType()
-    bitrate = skema.IntType(required=False)
-
-    recipients = skema.ListType(skema.ModelType(User))
-    type = skema.IntType(choices=ChannelType.ALL_VALUES)
-
-    overwrites = ListToDictType('id', skema.ModelType(PermissionOverwrite), stored_name='permission_overwrites')
+    id = snowflake
+    guild_id = snowflake
+    name = text
+    topic = text
+    _last_message_id = alias(snowflake, 'last_message_id')
+    position = int
+    bitrate = int
+    recipients = listof(User)
+    type = enum(ChannelType)
+    overwrites = alias(dictof(PermissionOverwrite, key='id'), 'permission_overwrites')
 
     def get_permissions(self, user):
         """

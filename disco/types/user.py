@@ -1,17 +1,13 @@
-import skema
-
-from disco.types.base import BaseType
+from disco.types.base import Model, snowflake, text, binary
 
 
-class User(BaseType):
-    id = skema.SnowflakeType()
-
-    username = skema.StringType()
-    discriminator = skema.StringType()
-    avatar = skema.BinaryType(None)
-
-    verified = skema.BooleanType(required=False)
-    email = skema.EmailType(required=False)
+class User(Model):
+    id = snowflake
+    username = text
+    discriminator = str
+    avatar = binary
+    verified = bool
+    email = str
 
     def to_string(self):
         return '{}#{}'.format(self.username, self.discriminator)

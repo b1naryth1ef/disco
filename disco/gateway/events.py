@@ -1,25 +1,19 @@
 import inflection
-import skema
 import six
 
-from disco.util import skema_find_recursive_by_type
 from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceState
+from disco.types.base import Model, snowflake, alias, listof
 
 
 # TODO: clean this... use BaseType, etc
-class GatewayEvent(skema.Model):
+class GatewayEvent(Model):
     @staticmethod
     def from_dispatch(client, data):
         cls = globals().get(inflection.camelize(data['t'].lower()))
         if not cls:
             raise Exception('Could not find cls for {}'.format(data['t']))
 
-        obj = cls.create(data['d'])
-
-        for field, value in skema_find_recursive_by_type(obj, skema.ModelType):
-            value.client = client
-
-        return obj
+        return cls.create(data['d'])
 
     @classmethod
     def create(cls, obj):
@@ -28,31 +22,29 @@ class GatewayEvent(skema.Model):
             alias, model = cls._wraps_model
 
             data = {
-                k: obj.pop(k) for k in six.iterkeys(model._fields_by_stored_name) if k in obj
+                k: obj.pop(k) for k in six.iterkeys(model._fields) if k in obj
             }
 
             obj[alias] = data
 
-        self = cls(obj)
-        self.validate()
-        return self
+        return cls(obj)
 
 
 def wraps_model(model, alias=None):
     alias = alias or model.__name__.lower()
 
     def deco(cls):
-        cls.add_field(alias, skema.ModelType(model))
+        cls._fields[alias] = model
         cls._wraps_model = (alias, model)
         return cls
     return deco
 
 
 class Ready(GatewayEvent):
-    version = skema.IntType(stored_name='v')
-    session_id = skema.StringType()
-    user = skema.ModelType(User)
-    guilds = skema.ListType(skema.ModelType(Guild))
+    version = alias(int, 'v')
+    session_id = str
+    user = User
+    guilds = listof(Guild)
 
 
 class Resumed(GatewayEvent):
@@ -61,17 +53,17 @@ class Resumed(GatewayEvent):
 
 @wraps_model(Guild)
 class GuildCreate(GatewayEvent):
-    unavailable = skema.BooleanType(default=None)
+    unavailable = bool
 
 
 @wraps_model(Guild)
 class GuildUpdate(GatewayEvent):
-    guild = skema.ModelType(Guild)
+    pass
 
 
 class GuildDelete(GatewayEvent):
-    id = skema.SnowflakeType()
-    unavailable = skema.BooleanType(default=None)
+    id = snowflake
+    unavailable = bool
 
 
 @wraps_model(Channel)
@@ -90,8 +82,8 @@ class ChannelDelete(ChannelCreate):
 
 
 class ChannelPinsUpdate(GatewayEvent):
-    channel_id = skema.SnowflakeType()
-    last_pin_timestamp = skema.IntType()
+    channel_id = snowflake
+    last_pin_timestamp = int
 
 
 @wraps_model(User)
@@ -112,8 +104,8 @@ class GuildIntegrationsUpdate(GatewayEvent):
 
 
 class GuildMembersChunk(GatewayEvent):
-    guild_id = skema.SnowflakeType()
-    members = skema.ListType(skema.ModelType(GuildMember))
+    guild_id = snowflake
+    members = listof(GuildMember)
 
 
 @wraps_model(GuildMember, alias='member')
@@ -122,29 +114,27 @@ class GuildMemberAdd(GatewayEvent):
 
 
 class GuildMemberRemove(GatewayEvent):
-    guild_id = skema.SnowflakeType()
-    user = skema.ModelType(User)
+    guild_id = snowflake
+    user = User
 
 
 class GuildMemberUpdate(GatewayEvent):
-    guild_id = skema.SnowflakeType()
-    user = skema.ModelType(User)
-    roles = skema.ListType(skema.SnowflakeType())
+    guild_id = snowflake
+    user = User
+    roles = listof(snowflake)
 
 
 class GuildRoleCreate(GatewayEvent):
-    guild_id = skema.SnowflakeType()
-    role = skema.ModelType(Role)
+    guild_id = snowflake
+    role = Role
 
 
-class GuildRoleUpdate(GatewayEvent):
-    guild_id = skema.SnowflakeType()
-    role = skema.ModelType(Role)
+class GuildRoleUpdate(GuildRoleCreate):
+    pass
 
 
-class GuildRoleDelete(GatewayEvent):
-    guild_id = skema.SnowflakeType()
-    role = skema.ModelType(Role)
+class GuildRoleDelete(GuildRoleCreate):
+    pass
 
 
 @wraps_model(Message)
@@ -159,32 +149,33 @@ class MessageUpdate(MessageCreate):
 
 
 class MessageDelete(GatewayEvent):
-    id = skema.SnowflakeType()
-    channel_id = skema.SnowflakeType()
+    id = snowflake
+    channel_id = snowflake
 
 
 class MessageDeleteBulk(GatewayEvent):
-    channel_id = skema.SnowflakeType()
-    ids = skema.ListType(skema.SnowflakeType())
+    channel_id = snowflake
+    ids = listof(snowflake)
 
 
 class PresenceUpdate(GatewayEvent):
-    class Game(skema.Model):
-        type = skema.IntType()
-        name = skema.StringType()
-        url = skema.StringType(required=False)
+    class Game(Model):
+        # TODO enum
+        type = int
+        name = str
+        url = str
 
-    user = skema.ModelType(User)
-    guild_id = skema.SnowflakeType()
-    roles = skema.ListType(skema.SnowflakeType())
-    game = skema.ModelType(Game)
-    status = skema.StringType()
+    user = User
+    guild_id = snowflake
+    roles = listof(snowflake)
+    game = Game
+    status = str
 
 
 class TypingStart(GatewayEvent):
-    channel_id = skema.SnowflakeType()
-    user_id = skema.SnowflakeType()
-    timestamp = skema.IntType()
+    channel_id = snowflake
+    user_id = snowflake
+    timestamp = snowflake
 
 
 @wraps_model(VoiceState, alias='state')
@@ -193,6 +184,6 @@ class VoiceStateUpdate(GatewayEvent):
 
 
 class VoiceServerUpdate(GatewayEvent):
-    token = skema.StringType()
-    endpoint = skema.StringType()
-    guild_id = skema.SnowflakeType()
+    token = str
+    endpoint = str
+    guild_id = snowflake
