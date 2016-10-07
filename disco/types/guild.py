@@ -1,12 +1,21 @@
-
-from disco.types.base import Model, snowflake, listof, dictof, datetime, text, binary
+from holster.enum import Enum
 
 from disco.api.http import APIException
 from disco.util import to_snowflake
+from disco.types.base import Model, snowflake, listof, dictof, datetime, text, binary, enum
 from disco.types.user import User
 from disco.types.voice import VoiceState
 from disco.types.permissions import PermissionValue, Permissions, Permissible
 from disco.types.channel import Channel
+
+
+VerificationLevel = Enum(
+    NONE=0,
+    LOW=1,
+    MEDIUM=2,
+    HIGH=3,
+    EXTREME=4,
+)
 
 
 class Emoji(Model):
@@ -178,7 +187,7 @@ class Guild(Model, Permissible):
     region = str
     afk_timeout = int
     embed_enabled = bool
-    verification_level = int
+    verification_level = enum(VerificationLevel)
     mfa_level = int
     features = listof(str)
     members = dictof(GuildMember, key='id')
