@@ -79,6 +79,9 @@ class Bot(object):
         self.client = client
         self.config = config or BotConfig()
 
+        if self.client.config.manhole_enable:
+            self.client.manhole_locals['bot'] = self
+
         self.plugins = {}
 
         # Only bind event listeners if we're going to parse commands
@@ -203,6 +206,9 @@ class Bot(object):
         return False
 
     def on_message_create(self, event):
+        if event.message.author.id == self.client.state.me.id:
+            return
+
         if self.config.commands_allow_edit:
             self.last_message_cache[event.message.channel_id] = (event.message, False)
 

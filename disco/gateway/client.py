@@ -5,7 +5,7 @@ import six
 from disco.gateway.packets import OPCode
 from disco.gateway.events import GatewayEvent
 from disco.gateway.encoding.json import JSONEncoder
-from disco.util.websocket import WebsocketProcessProxy
+from disco.util.websocket import Websocket
 from disco.util.logging import LoggingClass
 
 TEN_MEGABYTES = 10490000
@@ -29,7 +29,6 @@ class GatewayClient(LoggingClass):
         self.packets.on(OPCode.RECONNECT, self.handle_reconnect)
         self.packets.on(OPCode.INVALID_SESSION, self.handle_invalid_session)
         self.packets.on(OPCode.HELLO, self.handle_hello)
-        self.packets.on(OPCode.HEARTBEAT_ACK, self.handle_heartbeat_ack)
 
         # Bind to ready payload
         self.events.on('Ready', self.on_ready)
@@ -74,16 +73,13 @@ class GatewayClient(LoggingClass):
         self.ws.close()
 
     def handle_invalid_session(self, packet):
-        self.log.warning('Recieved INVALID_SESSIOIN, forcing a fresh reconnect')
+        self.log.warning('Recieved INVALID_SESSION, forcing a fresh reconnect')
         self.session_id = None
         self.ws.close()
 
     def handle_hello(self, packet):
         self.log.info('Recieved HELLO, starting heartbeater...')
         self._heartbeat_task = gevent.spawn(self.heartbeat_task, packet['d']['heartbeat_interval'])
-
-    def handle_heartbeat_ack(self, packet):
-        pass
 
     def on_ready(self, ready):
         self.log.info('Recieved READY')
@@ -97,7 +93,7 @@ class GatewayClient(LoggingClass):
                 encoding=self.encoder.TYPE)
 
         self.log.info('Opening websocket connection to URL `%s`', self._cached_gateway_url)
-        self.ws = WebsocketProcessProxy(self._cached_gateway_url)
+        self.ws = Websocket(self._cached_gateway_url)
         self.ws.emitter.on('on_open', self.on_open)
         self.ws.emitter.on('on_error', self.on_error)
         self.ws.emitter.on('on_close', self.on_close)

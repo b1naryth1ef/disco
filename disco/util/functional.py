@@ -3,8 +3,8 @@ from gevent.lock import RLock
 
 def cached_property(f):
     """
-    Creates a cached property out of ``f``. When the property is resolved for
-    the first time, the function will be called and its result will be cached.
+    Creates a cached class property out of ``f``. When the property is resolved
+    for the first time, the function will be called and its result will be cached.
     Subsequent calls will return the cached value. If this property is set, the
     cached value will be replaced (or set initially) with the value provided. If
     this property is deleted, the cache will be cleared and the next call will
@@ -25,25 +25,22 @@ def cached_property(f):
         The cached property created.
     """
     lock = RLock()
-    f._value = None
-    f._has_value = False
+    value_name = '_' + f.__name__
 
-    def getf(*args, **kwargs):
-        if not f._has_value:
+    def getf(self, *args, **kwargs):
+        if not hasattr(self, value_name):
             with lock:
-                if f._has_value:
-                    return f._value
+                if hasattr(self, value_name):
+                    return getattr(self, value_name)
 
-                f._value = f(*args, **kwargs)
-                f._has_value = True
+                setattr(self, value_name, f(self, *args, **kwargs))
 
-        return f._value
+        return getattr(self, value_name)
 
     def setf(self, value):
-        f._value = value
+        setattr(self, value_name, value)
 
     def delf(self):
-        f._value = None
-        f._has_value = False
+        delattr(self, value_name)
 
     return property(getf, setf, delf)

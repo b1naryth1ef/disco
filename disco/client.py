@@ -1,12 +1,12 @@
 import gevent
 
-from gevent.backdoor import BackdoorServer
 from holster.emitter import Emitter
 
 from disco.state import State
 from disco.api.client import APIClient
 from disco.gateway.client import GatewayClient
 from disco.util.logging import LoggingClass
+from disco.util.backdoor import DiscoBackdoorServer
 
 
 class ClientConfig(LoggingClass):
@@ -67,6 +67,9 @@ class Client(object):
         The API client.
     gw : :class:`GatewayClient`
         The gateway client.
+    manhole_locals : dict
+        Dictionary of local variables for each manhole connection. This can be
+        modified to add/modify local variables.
     manhole : Optional[:class:`BackdoorServer`]
         Gevent backdoor server (if the manhole is enabled).
     """
@@ -82,14 +85,10 @@ class Client(object):
         self.gw = GatewayClient(self, self.config.encoding_cls)
 
         if self.config.manhole_enable:
-            self.manhole = BackdoorServer(self.config.manhole_bind,
+            self.manhole_locals = {}
+            self.manhole = DiscoBackdoorServer(self.config.manhole_bind,
                 banner='Disco Manhole',
-                locals={
-                    'client': self,
-                    'state': self.state,
-                    'api': self.api,
-                    'gw': self.gw,
-                })
+                localf=lambda: self.manhole_locals)
             self.manhole.start()
 
     def run(self):
