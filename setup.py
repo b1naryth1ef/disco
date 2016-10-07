@@ -9,7 +9,7 @@ with open('README.md') as f:
     readme = f.read()
 
 setup(
-    name='disco',
+    name='disco-py',
     author='b1nzy',
     url='https://github.com/b1naryth1ef/disco',
     version=VERSION,
