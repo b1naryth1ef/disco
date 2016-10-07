@@ -1,17 +1,15 @@
-import skema
-import copy
+
+from disco.types.base import Model, snowflake, listof, dictof, datetime, text, binary
 
 from disco.api.http import APIException
 from disco.util import to_snowflake
-from disco.util.types import PreHookType, ListToDictType
-from disco.types.base import BaseType
 from disco.types.user import User
 from disco.types.voice import VoiceState
-from disco.types.permissions import PermissionType, PermissionValue, Permissions, Permissible
+from disco.types.permissions import PermissionValue, Permissions, Permissible
 from disco.types.channel import Channel
 
 
-class Emoji(BaseType):
+class Emoji(Model):
     """
     An emoji object
 
@@ -28,14 +26,14 @@ class Emoji(BaseType):
     roles : list(snowflake)
         Roles this emoji is attached to.
     """
-    id = skema.SnowflakeType()
-    name = skema.StringType()
-    require_colons = skema.BooleanType()
-    managed = skema.BooleanType()
-    roles = skema.ListType(skema.SnowflakeType())
+    id = snowflake
+    name = text
+    require_colons = bool
+    managed = bool
+    roles = listof(snowflake)
 
 
-class Role(BaseType):
+class Role(Model):
     """
     A role object
 
@@ -56,16 +54,16 @@ class Role(BaseType):
     position : int
         The position of this role in the hierarchy.
     """
-    id = skema.SnowflakeType()
-    name = skema.StringType()
-    hoist = skema.BooleanType()
-    managed = skema.BooleanType()
-    color = skema.IntType()
-    permissions = PermissionType()
-    position = skema.IntType()
+    id = snowflake
+    name = text
+    hoist = bool
+    managed = bool
+    color = int
+    permissions = PermissionValue
+    position = int
 
 
-class GuildMember(BaseType):
+class GuildMember(Model):
     """
     A GuildMember object
 
@@ -84,12 +82,12 @@ class GuildMember(BaseType):
     roles : list(snowflake)
         Roles this member is part of.
     """
-    user = skema.ModelType(User)
-    guild_id = skema.SnowflakeType(required=False)
-    mute = skema.BooleanType()
-    deaf = skema.BooleanType()
-    joined_at = PreHookType(lambda k: k[:-6], skema.DateTimeType())
-    roles = skema.ListType(skema.SnowflakeType())
+    user = User
+    guild_id = snowflake
+    mute = bool
+    deaf = bool
+    joined_at = datetime
+    roles = listof(snowflake)
 
     def get_voice_state(self):
         """
@@ -126,7 +124,7 @@ class GuildMember(BaseType):
         return self.user.id
 
 
-class Guild(BaseType, Permissible):
+class Guild(Model, Permissible):
     """
     A guild object
 
@@ -170,29 +168,24 @@ class Guild(BaseType, Permissible):
         All of the guilds voice states.
     """
 
-    id = skema.SnowflakeType()
-
-    owner_id = skema.SnowflakeType()
-    afk_channel_id = skema.SnowflakeType()
-    embed_channel_id = skema.SnowflakeType()
-
-    name = skema.StringType()
-    icon = skema.BinaryType(None)
-    splash = skema.BinaryType(None)
-    region = skema.StringType()
-
-    afk_timeout = skema.IntType()
-    embed_enabled = skema.BooleanType()
-    verification_level = skema.IntType()
-    mfa_level = skema.IntType()
-
-    features = skema.ListType(skema.StringType())
-
-    members = ListToDictType('id', skema.ModelType(copy.deepcopy(GuildMember)))
-    channels = ListToDictType('id', skema.ModelType(Channel))
-    roles = ListToDictType('id', skema.ModelType(Role))
-    emojis = ListToDictType('id', skema.ModelType(Emoji))
-    voice_states = ListToDictType('session_id', skema.ModelType(VoiceState))
+    id = snowflake
+    owner_id = snowflake
+    afk_channel_id = snowflake
+    embed_channel_id = snowflake
+    name = text
+    icon = binary
+    splash = binary
+    region = str
+    afk_timeout = int
+    embed_enabled = bool
+    verification_level = int
+    mfa_level = int
+    features = listof(str)
+    members = dictof(GuildMember, key='id')
+    channels = dictof(Channel, key='id')
+    roles = dictof(Role, key='id')
+    emojis = dictof(Emoji, key='id')
+    voice_states = dictof(VoiceState, key='session_id')
 
     def get_permissions(self, user):
         """

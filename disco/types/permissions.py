@@ -1,5 +1,3 @@
-from skema import NumberType
-
 from holster.enum import Enum, EnumAttr
 
 Permissions = Enum(
@@ -102,11 +100,6 @@ class PermissionValue(object):
     @classmethod
     def voice(cls):
         return cls(66060288)
-
-
-class PermissionType(NumberType):
-    def __init__(self, *args, **kwargs):
-        super(PermissionType, self).__init__(number_class=PermissionValue, number_type='PermissionValue', *args, **kwargs)
 
 
 class Permissible(object):

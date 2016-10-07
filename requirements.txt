@@ -3,5 +3,4 @@ holster==1.0.1
 inflection==0.3.1
 requests==2.11.1
 six==1.10.0
-# skema==0.0.1
 websocket-client==0.37.0
