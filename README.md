@@ -44,16 +44,11 @@ class SimplePlugin(Plugin):
     @Plugin.command('echo', '<content:str...>')
     def on_echo_command(self, event, content):
         event.msg.reply(content)
-
-if __name__ == '__main__':
-    Bot.from_cli(
-        SimplePlugin
-    ).run_forever()
 ```
 
 Using the default bot configuration, we can now run this script like so:
 
-`./simple.py --token="MY_DISCORD_TOKEN"`
+`python -m disco.cli --token="MY_DISCORD_TOKEN" --bot --plugin simpleplugin`
 
 And commands can be triggered by mentioning the bot (configued by the BotConfig.command\_require\_mention flag):
 

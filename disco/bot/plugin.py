@@ -124,6 +124,7 @@ class Plugin(LoggingClass, PluginDeco):
         self.state = bot.client.state
         self.config = config
 
+    def bind_all(self):
         self.listeners = []
         self.commands = {}
         self.schedules = {}
@@ -226,10 +227,15 @@ class Plugin(LoggingClass, PluginDeco):
 
         self.schedules[func.__name__] = gevent.spawn(repeat)
 
-    def destroy(self):
+    def load(self):
         """
-        Destroys the plugin, removing all listeners and schedules. Called after
-        unload.
+        Called when the plugin is loaded
+        """
+        self.bind_all()
+
+    def unload(self):
+        """
+        Called when the plugin is unloaded
         """
         for listener in self.listeners:
             listener.remove()
@@ -237,17 +243,5 @@ class Plugin(LoggingClass, PluginDeco):
         for schedule in self.schedules.values():
             schedule.kill()
 
-        self.listeners = []
-        self.schedules = {}
-
-    def load(self):
-        """
-        Called when the plugin is loaded
-        """
-        pass
-
-    def unload(self):
-        """
-        Called when the plugin is unloaded
-        """
-        pass
+    def reload(self):
+        self.bot.reload_plugin(self.__class__)

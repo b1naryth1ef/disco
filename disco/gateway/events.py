@@ -5,10 +5,19 @@ from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceS
 from disco.types.base import Model, Field, snowflake, listof, text
 
 
-# TODO: clean this... use BaseType, etc
 class GatewayEvent(Model):
+    """
+    The GatewayEvent class wraps various functionality for events passed to us
+    over the gateway websocket, and serves as a simple proxy to inner values for
+    some wrapped event-types (e.g. MessageCreate only contains a message, so we
+    proxy all attributes to the inner message object).
+    """
+
     @staticmethod
     def from_dispatch(client, data):
+        """
+        Create a new GatewayEvent instance based on event data.
+        """
         cls = globals().get(inflection.camelize(data['t'].lower()))
         if not cls:
             raise Exception('Could not find cls for {}'.format(data['t']))
@@ -17,6 +26,9 @@ class GatewayEvent(Model):
 
     @classmethod
     def create(cls, obj, client):
+        """
+        Create this GatewayEvent class from data and the client.
+        """
         # If this event is wrapping a model, pull its fields
         if hasattr(cls, '_wraps_model'):
             alias, model = cls._wraps_model

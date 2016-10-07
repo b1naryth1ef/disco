@@ -1,5 +1,10 @@
 import re
+import importlib
+import inspect
 
+from six.moves import reload_module
+
+from disco.bot.plugin import Plugin
 from disco.bot.command import CommandEvent
 
 
@@ -261,12 +266,35 @@ class Bot(object):
             raise Exception('Cannot remove non-existant plugin: {}'.format(cls.__name__))
 
         self.plugins[cls.__name__].unload()
-        self.plugins[cls.__name__].destroy()
         del self.plugins[cls.__name__]
         self.compute_command_matches_re()
+
+    def reload_plugin(self, cls):
+        """
+        Reloads a plugin.
+        """
+        config = self.plugins[cls.__name__].config
+
+        self.rmv_plugin(cls)
+        module = reload_module(inspect.getmodule(cls))
+        self.add_plugin(getattr(module, cls.__name__), config)
 
     def run_forever(self):
         """
         Runs this bots core loop forever
         """
         self.client.run_forever()
+
+    def add_plugin_module(self, path, config=None):
+        """
+        Adds and loads a plugin, based on its module path.
+        """
+
+        mod = importlib.import_module(path)
+
+        for entry in map(lambda i: getattr(mod, i), dir(mod)):
+            if inspect.isclass(entry) and issubclass(entry, Plugin):
+                self.add_plugin(entry, config)
+                break
+        else:
+            raise Exception('Could not find any plugins to load within module {}'.format(path))

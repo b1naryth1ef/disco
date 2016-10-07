@@ -18,11 +18,13 @@ parser.add_argument('--shard-id', help='Current shard number/id', default=0)
 parser.add_argument('--manhole', action='store_true', help='Enable the manhole', default=False)
 parser.add_argument('--manhole-bind', help='host:port for the manhole to bind too', default='localhost:8484')
 parser.add_argument('--encoder', help='encoder for gateway data', default='json')
+parser.add_argument('--bot', help='run a disco bot on this client', action='store_true', default=False)
+parser.add_argument('--plugin', help='load plugins into the bot', nargs='*', default=[])
 
 logging.basicConfig(level=logging.INFO)
 
 
-def disco_main():
+def disco_main(run=False):
     """
     Creates an argument parser and parses a standard set of command line arguments,
     creating a new :class:`Client`.
@@ -35,6 +37,7 @@ def disco_main():
     args = parser.parse_args()
 
     from disco.client import Client, ClientConfig
+    from disco.bot import Bot
     from disco.gateway.encoding import ENCODERS
     from disco.util.token import is_valid_token
 
@@ -50,7 +53,18 @@ def disco_main():
     cfg.manhole_bind = args.manhole_bind
     cfg.encoding_cls = ENCODERS[args.encoder]
 
-    return Client(cfg)
+    client = Client(cfg)
+
+    if args.bot:
+        bot = Bot(client)
+
+        for plugin in args.plugin:
+            bot.add_plugin_module(plugin)
+
+    if run:
+        client.run_forever()
+
+    return client
 
 if __name__ == '__main__':
-    disco_main().run_forever()
+    disco_main(True)

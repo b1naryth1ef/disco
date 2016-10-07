@@ -3,12 +3,15 @@ import sys
 import json
 
 from disco import VERSION
-from disco.cli import disco_main
-from disco.bot import Bot, Plugin
-from disco.types.permissions import Permissions
+from disco.bot import Plugin
 
 
 class BasicPlugin(Plugin):
+    @Plugin.command('reload')
+    def on_reload(self, event):
+        self.reload()
+        event.msg.reply('Reloaded!')
+
     @Plugin.listen('MessageCreate')
     def on_message_create(self, msg):
         self.log.info('Message created: {}: {}'.format(msg.author, msg.content))
@@ -82,7 +85,8 @@ class BasicPlugin(Plugin):
 
     @Plugin.command('lol')
     def on_lol(self, event):
-        event.msg.reply("{}".format(event.channel.can(event.msg.author, Permissions.MANAGE_EMOJIS)))
+        event.msg.reply(':^)')
+        # event.msg.reply("{}".format(event.channel.can(event.msg.author, Permissions.MANAGE_EMOJIS)))
 
     @Plugin.command('perms')
     def on_perms(self, event):
@@ -90,8 +94,3 @@ class BasicPlugin(Plugin):
         event.msg.reply('```json\n{}\n```'.format(
             json.dumps(perms.to_dict(), sort_keys=True, indent=2, separators=(',', ': '))
         ))
-
-if __name__ == '__main__':
-    bot = Bot(disco_main())
-    bot.add_plugin(BasicPlugin)
-    bot.run_forever()
