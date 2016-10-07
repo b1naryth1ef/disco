@@ -13,10 +13,10 @@ class GatewayEvent(Model):
         if not cls:
             raise Exception('Could not find cls for {}'.format(data['t']))
 
-        return cls.create(data['d'])
+        return cls.create(data['d'], client)
 
     @classmethod
-    def create(cls, obj):
+    def create(cls, obj, client):
         # If this event is wrapping a model, pull its fields
         if hasattr(cls, '_wraps_model'):
             alias, model = cls._wraps_model
@@ -27,7 +27,7 @@ class GatewayEvent(Model):
 
             obj[alias] = data
 
-        return cls(obj)
+        return cls(obj, client)
 
 
 def wraps_model(model, alias=None):
