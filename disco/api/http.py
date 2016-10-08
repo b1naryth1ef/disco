@@ -63,7 +63,7 @@ class Routes(object):
     GUILDS_BANS_CREATE = (HTTPMethod.PUT, GUILDS + '/bans/{user}')
     GUILDS_BANS_DELETE = (HTTPMethod.DELETE, GUILDS + '/bans/{user}')
     GUILDS_ROLES_LIST = (HTTPMethod.GET, GUILDS + '/roles')
-    GUILDS_ROLES_CREATE = (HTTPMethod.GET, GUILDS + '/roles')
+    GUILDS_ROLES_CREATE = (HTTPMethod.POST, GUILDS + '/roles')
     GUILDS_ROLES_MODIFY_BATCH = (HTTPMethod.PATCH, GUILDS + '/roles')
     GUILDS_ROLES_MODIFY = (HTTPMethod.PATCH, GUILDS + '/roles/{role}')
     GUILDS_ROLES_DELETE = (HTTPMethod.DELETE, GUILDS + '/roles/{role}')

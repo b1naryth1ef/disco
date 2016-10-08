@@ -44,6 +44,12 @@ class PermissionOverwrite(Model):
     allow = Field(PermissionValue)
     deny = Field(PermissionValue)
 
+    def save(self):
+        return self.channel.update_overwrite(self)
+
+    def delete(self):
+        return self.channel.delete_overwrite(self)
+
 
 class Channel(Model, Permissible):
     """
@@ -80,6 +86,11 @@ class Channel(Model, Permissible):
     recipients = Field(listof(User))
     type = Field(enum(ChannelType))
     overwrites = Field(dictof(PermissionOverwrite, key='id'), alias='permission_overwrites')
+
+    def __init__(self, *args, **kwargs):
+        super(Channel, self).__init__(*args, **kwargs)
+
+        self.attach(self.overwrites.values(), {'channel_id': self.id, 'channel': self})
 
     def get_permissions(self, user):
         """
@@ -202,6 +213,33 @@ class Channel(Model, Permissible):
         vc = VoiceClient(self)
         vc.connect(*args, **kwargs)
         return vc
+
+    def create_overwrite(self, entity, allow=0, deny=0):
+        from disco.types.guild import Role
+
+        type = PermissionOverwriteType.ROLE if isinstance(entity, Role) else PermissionOverwriteType.MEMBER
+        ow = PermissionOverwrite(
+            id=entity.id,
+            type=type,
+            allow=allow,
+            deny=deny
+        )
+
+        ow.channel_id = self.id
+        ow.channel = self
+
+        return self.update_overwrite(ow)
+
+    def update_overwrite(self, ow):
+        self.client.api.channels_permissions_modify(self.id,
+            ow.id,
+            ow.allow.value if ow.allow else 0,
+            ow.deny.value if ow.deny else 0,
+            ow.type.name)
+        return ow
+
+    def delete_overwrite(self, ow):
+        self.client.api.channels_permissions_delete(self.id, ow.id)
 
 
 class MessageIterator(object):

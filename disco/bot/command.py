@@ -5,6 +5,7 @@ from disco.util.functional import cached_property
 
 REGEX_FMT = '({})'
 ARGS_REGEX = '( (.*)$|$)'
+MENTION_RE = re.compile('<@!?([0-9]+)>')
 
 
 class CommandEvent(object):
@@ -97,9 +98,40 @@ class Command(object):
         self.func = func
         self.triggers = [trigger] + (aliases or [])
 
-        self.args = ArgumentSet.from_string(args or '')
+        def resolve_role(ctx, id):
+            return ctx.msg.guild.roles.get(id)
+
+        def resolve_user(ctx, id):
+            return ctx.msg.mentions.get(id)
+
+        self.args = ArgumentSet.from_string(args or '', {
+            'mention': self.mention_type([resolve_role, resolve_user]),
+            'user': self.mention_type([resolve_user], force=True),
+            'role': self.mention_type([resolve_role], force=True),
+        })
+
         self.group = group
         self.is_regex = is_regex
+
+    @staticmethod
+    def mention_type(getters, force=False):
+        def _f(ctx, i):
+            res = MENTION_RE.match(i)
+            if not res:
+                raise TypeError('Invalid mention: {}'.format(i))
+
+            id = int(res.group(1))
+
+            for getter in getters:
+                obj = getter(ctx, id)
+                if obj:
+                    return obj
+
+            if force:
+                raise TypeError('Cannot resolve mention: {}'.format(id))
+
+            return id
+        return _f
 
     @cached_property
     def compiled_regex(self):
@@ -137,7 +169,7 @@ class Command(object):
             ))
 
         try:
-            args = self.args.parse(event.args)
+            args = self.args.parse(event.args, ctx=event)
         except ArgumentError as e:
             raise CommandError(e.message)
 

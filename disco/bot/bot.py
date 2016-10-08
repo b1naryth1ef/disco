@@ -3,9 +3,11 @@ import importlib
 import inspect
 
 from six.moves import reload_module
+from holster.threadlocal import ThreadLocal
 
 from disco.bot.plugin import Plugin
 from disco.bot.command import CommandEvent
+# from disco.bot.storage import Storage
 
 
 class BotConfig(object):
@@ -39,7 +41,7 @@ class BotConfig(object):
         helpful for allowing edits to typod commands.
     plugin_config_provider : Optional[function]
         If set, this function will be called before loading a plugin, with the
-        plugins name. Its expected to return a type of configuration object the
+        plugins class. Its expected to return a type of configuration object the
         plugin understands.
     """
     token = None
@@ -83,6 +85,12 @@ class Bot(object):
     def __init__(self, client, config=None):
         self.client = client
         self.config = config or BotConfig()
+
+        # The context carries information about events in a threadlocal storage
+        self.ctx = ThreadLocal()
+
+        # The storage object acts as a dynamic contextual aware store
+        # self.storage = Storage(self.ctx)
 
         if self.client.config.manhole_enable:
             self.client.manhole_locals['bot'] = self
@@ -160,17 +168,28 @@ class Bot(object):
         content = msg.content
 
         if self.config.commands_require_mention:
-            match = any((
-                self.config.commands_mention_rules['user'] and msg.is_mentioned(self.client.state.me),
-                self.config.commands_mention_rules['everyone'] and msg.mention_everyone,
-                self.config.commands_mention_rules['role'] and any(map(msg.is_mentioned,
-                    msg.guild.get_member(self.client.state.me).roles
-                ))))
+            mention_direct = msg.is_mentioned(self.client.state.me)
+            mention_everyone = msg.mention_everyone
+            mention_roles = list(filter(lambda r: msg.is_mentioned(r),
+                msg.guild.get_member(self.client.state.me).roles))
 
-            if not match:
+            if not any((
+                self.config.commands_mention_rules['user'] and mention_direct,
+                self.config.commands_mention_rules['everyone'] and mention_everyone,
+                self.config.commands_mention_rules['role'] and any(mention_roles),
+            )):
                 raise StopIteration
 
-            content = msg.without_mentions.strip()
+            if mention_direct:
+                content = content.replace(self.client.state.me.mention, '', 1)
+                content = content.replace(self.client.state.me.mention_nick, '', 1)
+            elif mention_everyone:
+                content = content.replace('@everyone', '', 1)
+            else:
+                for role in mention_roles:
+                    content = content.replace(role.mention, '', 1)
+
+            content = content.lstrip()
 
         if self.config.commands_prefix and not content.startswith(self.config.commands_prefix):
             raise StopIteration
@@ -247,7 +266,7 @@ class Bot(object):
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
 
         if not config and callable(self.config.plugin_config_provider):
-            config = self.config.plugin_config_provider(cls.__name__)
+            config = self.config.plugin_config_provider(cls)
 
         self.plugins[cls.__name__] = cls(self, config)
         self.plugins[cls.__name__].load()
@@ -293,7 +312,7 @@ class Bot(object):
         mod = importlib.import_module(path)
 
         for entry in map(lambda i: getattr(mod, i), dir(mod)):
-            if inspect.isclass(entry) and issubclass(entry, Plugin):
+            if inspect.isclass(entry) and issubclass(entry, Plugin) and not entry == Plugin:
                 self.add_plugin(entry, config)
                 break
         else:

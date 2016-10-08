@@ -139,8 +139,15 @@ class ModelMeta(type):
 
 
 class Model(six.with_metaclass(ModelMeta)):
-    def __init__(self, obj, client=None):
-        self.client = client
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.pop('client', None)
+
+        if len(args) == 1:
+            obj = args[0]
+        elif len(args) == 2:
+            obj, self.client = args
+        else:
+            obj = kwargs
 
         for name, field in self._fields.items():
             if name not in obj or not obj[field.src_name]:
@@ -148,7 +155,7 @@ class Model(six.with_metaclass(ModelMeta)):
                     setattr(self, field.dst_name, field.default())
                 continue
 
-            value = field.try_convert(obj[field.src_name], client)
+            value = field.try_convert(obj[field.src_name], self.client)
             setattr(self, field.dst_name, value)
 
     def update(self, other):
@@ -165,10 +172,25 @@ class Model(six.with_metaclass(ModelMeta)):
                 except:
                     pass
 
+    def to_dict(self):
+        return {k: getattr(self, k) for k in six.iterkeys(self._fields)}
+
     @classmethod
-    def create(cls, client, data):
-        return cls(data, client)
+    def create(cls, client, data, **kwargs):
+        inst = cls(data, client)
+        inst.__dict__.update(kwargs)
+        return inst
 
     @classmethod
     def create_map(cls, client, data):
         return list(map(functools.partial(cls.create, client), data))
+
+    @classmethod
+    def attach(cls, it, data):
+        for item in it:
+            for k, v in data.items():
+                try:
+                    setattr(item, k, v)
+                except:
+                    # TODO: wtf
+                    pass

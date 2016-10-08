@@ -127,11 +127,11 @@ class APIClient(LoggingClass):
 
     def guilds_channels_list(self, guild):
         r = self.http(Routes.GUILDS_CHANNELS_LIST, dict(guild=guild))
-        return Channel.create_map(self.client, r.json())
+        return Channel.create_map(self.client, r.json(), guild_id=guild)
 
     def guilds_channels_create(self, guild, **kwargs):
         r = self.http(Routes.GUILDS_CHANNELS_CREATE, dict(guild=guild), json=kwargs)
-        return Channel.create(self.client, r.json())
+        return Channel.create(self.client, r.json(), guild_id=guild)
 
     def guilds_channels_modify(self, guild, channel, position):
         self.http(Routes.GUILDS_CHANNELS_MODIFY, dict(guild=guild), json={
@@ -141,11 +141,11 @@ class APIClient(LoggingClass):
 
     def guilds_members_list(self, guild):
         r = self.http(Routes.GUILDS_MEMBERS_LIST, dict(guild=guild))
-        return GuildMember.create_map(self.client, r.json())
+        return GuildMember.create_map(self.client, r.json(), guild_id=guild)
 
     def guilds_members_get(self, guild, member):
         r = self.http(Routes.GUILDS_MEMBERS_GET, dict(guild=guild, member=member))
-        return GuildMember.create(self.client, r.json())
+        return GuildMember.create(self.client, r.json(), guild_id=guild)
 
     def guilds_members_modify(self, guild, member, **kwargs):
         self.http(Routes.GUILDS_MEMBERS_MODIFY, dict(guild=guild, member=member), json=kwargs)
@@ -167,19 +167,19 @@ class APIClient(LoggingClass):
 
     def guilds_roles_list(self, guild):
         r = self.http(Routes.GUILDS_ROLES_LIST, dict(guild=guild))
-        return Role.create_map(self.client, r.json())
+        return Role.create_map(self.client, r.json(), guild_id=guild)
 
     def guilds_roles_create(self, guild):
         r = self.http(Routes.GUILDS_ROLES_CREATE, dict(guild=guild))
-        return Role.create(self.client, r.json())
+        return Role.create(self.client, r.json(), guild_id=guild)
 
     def guilds_roles_modify_batch(self, guild, roles):
         r = self.http(Routes.GUILDS_ROLES_MODIFY_BATCH, dict(guild=guild), json=roles)
-        return Role.create_map(self.client, r.json())
+        return Role.create_map(self.client, r.json(), guild_id=guild)
 
     def guilds_roles_modify(self, guild, role, **kwargs):
         r = self.http(Routes.GUILDS_ROLES_MODIFY, dict(guild=guild, role=role), json=kwargs)
-        return Role.create(self.client, r.json())
+        return Role.create(self.client, r.json(), guild_id=guild)
 
     def guilds_roles_delete(self, guild, role):
         self.http(Routes.GUILDS_ROLES_DELETE, dict(guild=guild, role=role))

@@ -154,10 +154,6 @@ class State(object):
         self.guilds[event.guild.id] = event.guild
         self.channels.update(event.guild.channels)
 
-        for channel in event.guild.channels.values():
-            channel.guild_id = event.guild.id
-            channel.guild = event.guild
-
         for member in event.guild.members.values():
             self.users[member.user.id] = member.user
 

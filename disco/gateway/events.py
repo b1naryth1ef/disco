@@ -20,7 +20,7 @@ class GatewayEvent(Model):
         """
         cls = globals().get(inflection.camelize(data['t'].lower()))
         if not cls:
-            raise Exception('Could not find cls for {}'.format(data['t']))
+            raise Exception('Could not find cls for {} ({})'.format(data['t'], data))
 
         return cls.create(data['d'], client)
 
@@ -46,7 +46,8 @@ class GatewayEvent(Model):
             modname, _ = self._wraps_model
             if hasattr(self, modname) and hasattr(getattr(self, modname), name):
                 return getattr(getattr(self, modname), name)
-        return object.__getattr__(self, name)
+        print self.__dict__
+        raise AttributeError(name)
 
 
 def wraps_model(model, alias=None):

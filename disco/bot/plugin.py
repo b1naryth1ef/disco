@@ -1,6 +1,7 @@
 import inspect
 import functools
 import gevent
+import os
 
 from holster.emitter import Priority
 
@@ -122,6 +123,8 @@ class Plugin(LoggingClass, PluginDeco):
         self.bot = bot
         self.client = bot.client
         self.state = bot.client.state
+        self.ctx = bot.ctx
+        self.storage = bot.storage
         self.config = config
 
     def bind_all(self):
@@ -149,11 +152,17 @@ class Plugin(LoggingClass, PluginDeco):
         """
         Executes a CommandEvent this plugin owns
         """
+        self.ctx['guild'] = event.guild
+        self.ctx['channel'] = event.channel
+        self.ctx['user'] = event.author
+
         try:
             return event.command.execute(event)
         except CommandError as e:
             event.msg.reply(e.message)
             return False
+        finally:
+            self.ctx.drop()
 
     def register_trigger(self, typ, when, func):
         """
@@ -245,3 +254,24 @@ class Plugin(LoggingClass, PluginDeco):
 
     def reload(self):
         self.bot.reload_plugin(self.__class__)
+
+    @staticmethod
+    def load_config_from_path(cls, path, format='json'):
+        inst = cls()
+
+        if not os.path.exists(path):
+            return inst
+
+        with open(path, 'r') as f:
+            data = f.read()
+
+        if format == 'json':
+            import json
+            inst.__dict__.update(json.loads(data))
+        elif format == 'yaml':
+            import yaml
+            inst.__dict__.update(yaml.load(data))
+        else:
+            raise Exception('Unsupported config format {}'.format(format))
+
+        return inst

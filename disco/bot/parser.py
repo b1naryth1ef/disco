@@ -7,10 +7,10 @@ PARTS_RE = re.compile('(\<|\[)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\])')
 
 # Mapping of types
 TYPE_MAP = {
-    'str': str,
-    'int': int,
-    'float': float,
-    'snowflake': int,
+    'str': lambda ctx, data: str(data),
+    'int': lambda ctx, data: int(data),
+    'float': lambda ctx, data: int(data),
+    'snowflake': lambda ctx, data: int(data),
 }
 
 
@@ -105,7 +105,7 @@ class ArgumentSet(object):
 
         return args
 
-    def convert(self, types, value):
+    def convert(self, ctx, types, value):
         """
         Attempts to convert a value to one or more types.
 
@@ -122,7 +122,7 @@ class ArgumentSet(object):
                 raise Exception('Unknown type {}'.format(typ_name))
 
             try:
-                return typ(value)
+                return typ(ctx, value)
             except Exception as e:
                 continue
 
@@ -140,7 +140,7 @@ class ArgumentSet(object):
 
         self.args.append(arg)
 
-    def parse(self, rawargs):
+    def parse(self, rawargs, ctx=None):
         """
         Parse a string of raw arguments into this argument specification.
         """
@@ -158,7 +158,7 @@ class ArgumentSet(object):
             if arg.types:
                 for idx, r in enumerate(raw):
                     try:
-                        raw[idx] = self.convert(arg.types, r)
+                        raw[idx] = self.convert(ctx, arg.types, r)
                     except:
                         raise ArgumentError('cannot convert `{}` to `{}`'.format(
                             r, ', '.join(arg.types)

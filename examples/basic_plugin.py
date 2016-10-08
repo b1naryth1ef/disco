@@ -94,3 +94,16 @@ class BasicPlugin(Plugin):
         event.msg.reply('```json\n{}\n```'.format(
             json.dumps(perms.to_dict(), sort_keys=True, indent=2, separators=(',', ': '))
         ))
+
+    """
+    @Plugin.command('tag', '<name:str> [value:str]')
+    def on_tag(self, event, name, value=None):
+        if value:
+            self.storage.guild['tags'][name] = value
+            event.msg.reply(':ok_hand:')
+        else:
+            if name in self.storage.guild['tags']:
+                return event.msg.reply(self.storage.guild['tags'][name])
+            else:
+                event.msg.reply('Unknown tag `{}`'.format(name))
+    """

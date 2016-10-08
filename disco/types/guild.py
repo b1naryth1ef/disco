@@ -71,6 +71,18 @@ class Role(Model):
     color = Field(int)
     permissions = Field(PermissionValue)
     position = Field(int)
+    mentionable = Field(bool)
+
+    def save(self):
+        self.guild.update_role(self)
+
+    @property
+    def mention(self):
+        return '<@{}>'.format(self.id)
+
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.id)
 
 
 class GuildMember(Model):
@@ -140,6 +152,10 @@ class GuildMember(Model):
         """
         self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
 
+    def add_role(self, role):
+        roles = self.roles + [role.id]
+        self.client.api.guilds_members_modify(self.guild.id, self.user.id, roles=roles)
+
     @cached_property
     def guild(self):
         return self.client.state.guilds.get(self.guild_id)
@@ -195,7 +211,6 @@ class Guild(Model, Permissible):
     voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
         All of the guilds voice states.
     """
-
     id = Field(snowflake)
     owner_id = Field(snowflake)
     afk_channel_id = Field(snowflake)
@@ -214,6 +229,15 @@ class Guild(Model, Permissible):
     roles = Field(dictof(Role, key='id'))
     emojis = Field(dictof(Emoji, key='id'))
     voice_states = Field(dictof(VoiceState, key='session_id'))
+
+    def __init__(self, *args, **kwargs):
+        super(Guild, self).__init__(*args, **kwargs)
+
+        self.attach(self.channels.values(), {'guild_id': self.id})
+        self.attach(self.members.values(), {'guild_id': self.id})
+        self.attach(self.roles.values(), {'guild_id': self.id})
+        self.attach(self.emojis.values(), {'guild_id': self.id})
+        self.attach(self.voice_states.values(), {'guild_id': self.id})
 
     def get_permissions(self, user):
         """
@@ -270,14 +294,23 @@ class Guild(Model, Permissible):
 
         return self.members.get(user)
 
-    def validate_members(self, ctx):
-        if self.members:
-            for member in self.members.values():
-                member.guild = self
-                member.guild_id = self.id
+    def create_role(self):
+        """
+        Create a new role.
 
-    def validate_channels(self, ctx):
-        if self.channels:
-            for channel in self.channels.values():
-                channel.guild_id = self.id
-                channel.guild = self
+        Returns
+        -------
+        :class:`Role`
+            The newly created role.
+        """
+        return self.client.api.guilds_roles_create(self.id)
+
+    def update_role(self, role):
+        return self.client.api.guilds_roles_modify(self.id, role.id, **{
+            'name': role.name,
+            'permissions': role.permissions.value,
+            'position': role.position,
+            'color': role.color,
+            'hoist': role.hoist,
+            'mentionable': role.mentionable,
+        })

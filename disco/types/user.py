@@ -9,6 +9,14 @@ class User(Model):
     verified = Field(bool)
     email = Field(str)
 
+    @property
+    def mention(self):
+        return '<@{}>'.format(self.id)
+
+    @property
+    def mention_nick(self):
+        return '<@!{}>'.format(self.id)
+
     def to_string(self):
         return '{}#{}'.format(self.username, self.discriminator)
 
