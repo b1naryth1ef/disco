@@ -1,3 +1,5 @@
+from holster.enum import Enum
+
 from disco.types.base import Model, Field, snowflake, text, binary, with_equality, with_hash
 
 
@@ -8,6 +10,8 @@ class User(Model, with_equality('id'), with_hash('id')):
     avatar = Field(binary)
     verified = Field(bool)
     email = Field(str)
+
+    presence = None
 
     @property
     def mention(self):
@@ -21,3 +25,29 @@ class User(Model, with_equality('id'), with_hash('id')):
 
     def on_create(self):
         self.client.state.users[self.id] = self
+
+
+GameType = Enum(
+    DEFAULT=0,
+    STREAMING=1,
+)
+
+Status = Enum(
+    'ONLINE',
+    'IDLE',
+    'DND',
+    'INVISIBLE',
+    'OFFLINE'
+)
+
+
+class Game(Model):
+    type = Field(GameType)
+    name = Field(text)
+    url = Field(text)
+
+
+class Presence(Model):
+    user = Field(User)
+    game = Field(Game)
+    status = Field(Status)

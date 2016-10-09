@@ -2,6 +2,7 @@ import six
 import inspect
 import functools
 
+from holster.enum import BaseEnumMeta
 from datetime import datetime as real_datetime
 
 DATETIME_FORMATS = [
@@ -10,10 +11,19 @@ DATETIME_FORMATS = [
 ]
 
 
+class ConversionError(Exception):
+    def __init__(self, field, raw, e):
+        super(ConversionError, self).__init__(
+            'Failed to convert `{}` (`{}`) to {}: {}'.format(
+                raw, field.src_name, field.typ, e))
+
+
 class FieldType(object):
     def __init__(self, typ):
         if isinstance(typ, FieldType) or inspect.isclass(typ) and issubclass(typ, Model):
             self.typ = typ
+        elif isinstance(typ, BaseEnumMeta):
+            self.typ = lambda raw, _: typ.get(raw)
         else:
             self.typ = lambda raw, _: typ(raw)
 
@@ -48,7 +58,10 @@ class Field(FieldType):
         return self.default is not None
 
     def try_convert(self, raw, client):
-        return self.typ(raw, client)
+        try:
+            return self.typ(raw, client)
+        except Exception as e:
+            raise ConversionError(self, raw, e)
 
 
 class _Dict(FieldType):

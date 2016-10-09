@@ -80,6 +80,7 @@ class State(object):
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
         'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
         'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
+        'PresenceUpdate'
     ]
 
     def __init__(self, client, config=None):
@@ -262,3 +263,7 @@ class State(object):
             return
 
         del self.guilds[event.guild_id].roles[event.role.id]
+
+    def on_presence_update(self, event):
+        if event.user.id in self.users:
+            self.users[event.user.id].presence = event.presence

@@ -3,8 +3,13 @@ from __future__ import print_function
 import inflection
 import six
 
-from disco.types import Guild, Channel, User, GuildMember, Role, Message, VoiceState
-from disco.types.base import Model, Field, snowflake, listof, text
+from disco.types.user import User, Presence
+from disco.types.channel import Channel
+from disco.types.message import Message
+from disco.types.voice import VoiceState
+from disco.types.guild import Guild, GuildMember, Role
+
+from disco.types.base import Model, Field, snowflake, listof
 
 
 class GatewayEvent(Model):
@@ -267,21 +272,13 @@ class MessageDeleteBulk(GatewayEvent):
     ids = Field(listof(snowflake))
 
 
+@wraps_model(Presence)
 class PresenceUpdate(GatewayEvent):
     """
     Sent when a users presence is updated.
     """
-    class Game(Model):
-        # TODO enum
-        type = Field(int)
-        name = Field(text)
-        url = Field(text)
-
-    user = Field(User)
     guild_id = Field(snowflake)
     roles = Field(listof(snowflake))
-    game = Field(Game)
-    status = Field(text)
 
 
 class TypingStart(GatewayEvent):
