@@ -1,7 +1,7 @@
 from holster.enum import Enum
 
 from disco.api.http import APIException
-from disco.util import to_snowflake
+from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.base import Model, Field, snowflake, listof, dictof, datetime, text, binary, enum
 from disco.types.user import User

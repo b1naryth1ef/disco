@@ -3,7 +3,7 @@ import re
 from holster.enum import Enum
 
 from disco.types.base import Model, Field, snowflake, text, datetime, dictof, listof, enum
-from disco.util import to_snowflake
+from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
 

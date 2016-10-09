@@ -3,7 +3,7 @@ from holster.enum import Enum
 from disco.types.base import Model, Field, snowflake, enum, listof, dictof, text
 from disco.types.permissions import PermissionValue
 
-from disco.util import to_snowflake
+from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property, one_or_many, chunks
 from disco.types.user import User
 from disco.types.permissions import Permissions, Permissible

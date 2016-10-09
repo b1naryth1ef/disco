@@ -1,3 +1,5 @@
+import six
+
 from datetime import datetime
 
 DISCORD_EPOCH = 1420070400000
@@ -16,3 +18,14 @@ def to_unix(snowflake):
 
 def to_unix_ms(snowflake):
     return ((int(snowflake) >> 22) + DISCORD_EPOCH)
+
+
+def to_snowflake(i):
+    if isinstance(i, six.integer_types):
+        return i
+    elif isinstance(i, str):
+        return int(i)
+    elif hasattr(i, 'id'):
+        return i.id
+
+    raise Exception('{} ({}) is not convertable to a snowflake'.format(type(i), i))
