@@ -1,6 +1,7 @@
 import requests
 import random
 import gevent
+import six
 
 from holster.enum import Enum
 
@@ -166,7 +167,7 @@ class HTTPClient(LoggingClass):
             kwargs['headers'] = self.headers
 
         # Build the bucket URL
-        filtered = {k: (v if v in ('guild', 'channel') else '') for k, v in args.items()}
+        filtered = {k: (v if v in ('guild', 'channel') else '') for k, v in six.iteritems(args)}
         bucket = (route[0].value, route[1].format(**filtered))
 
         # Possibly wait if we're rate limited

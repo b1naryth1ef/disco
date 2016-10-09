@@ -1,12 +1,12 @@
-from holster.enum import Enum
+import six
 
-from disco.types.base import Model, Field, snowflake, enum, listof, dictof, text
-from disco.types.permissions import PermissionValue
+from holster.enum import Enum
 
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property, one_or_many, chunks
 from disco.types.user import User
-from disco.types.permissions import Permissions, Permissible
+from disco.types.base import Model, Field, snowflake, enum, listof, dictof, text
+from disco.types.permissions import Permissions, Permissible, PermissionValue
 from disco.voice.client import VoiceClient
 
 
@@ -91,7 +91,7 @@ class Channel(Model, Permissible):
     def __init__(self, *args, **kwargs):
         super(Channel, self).__init__(*args, **kwargs)
 
-        self.attach(self.overwrites.values(), {'channel_id': self.id, 'channel': self})
+        self.attach(six.itervalues(self.overwrites), {'channel_id': self.id, 'channel': self})
 
     def get_permissions(self, user):
         """
@@ -108,7 +108,7 @@ class Channel(Model, Permissible):
         member = self.guild.members.get(user.id)
         base = self.guild.get_permissions(user)
 
-        for ow in self.overwrites.values():
+        for ow in six.itervalues(self.overwrites):
             if ow.id != user.id and ow.id not in member.roles:
                 continue
 

@@ -24,7 +24,7 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
         self.emitter = Emitter(gevent.spawn)
 
         # Hack to get events to emit
-        for var in self.__dict__.keys():
+        for var in six.iterkeys(self.__dict__):
             if not var.startswith('on_'):
                 continue
 

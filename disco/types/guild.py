@@ -1,3 +1,5 @@
+import six
+
 from holster.enum import Enum
 
 from disco.api.http import APIException
@@ -6,8 +8,8 @@ from disco.util.functional import cached_property
 from disco.types.base import Model, Field, snowflake, listof, dictof, datetime, text, binary, enum
 from disco.types.user import User
 from disco.types.voice import VoiceState
-from disco.types.permissions import PermissionValue, Permissions, Permissible
 from disco.types.channel import Channel
+from disco.types.permissions import PermissionValue, Permissions, Permissible
 
 
 VerificationLevel = Enum(
@@ -243,11 +245,11 @@ class Guild(Model, Permissible):
     def __init__(self, *args, **kwargs):
         super(Guild, self).__init__(*args, **kwargs)
 
-        self.attach(self.channels.values(), {'guild_id': self.id})
-        self.attach(self.members.values(), {'guild_id': self.id})
-        self.attach(self.roles.values(), {'guild_id': self.id})
-        self.attach(self.emojis.values(), {'guild_id': self.id})
-        self.attach(self.voice_states.values(), {'guild_id': self.id})
+        self.attach(six.itervalues(self.channels), {'guild_id': self.id})
+        self.attach(six.itervalues(self.members), {'guild_id': self.id})
+        self.attach(six.itervalues(self.roles), {'guild_id': self.id})
+        self.attach(six.itervalues(self.emojis), {'guild_id': self.id})
+        self.attach(six.itervalues(self.voice_states), {'guild_id': self.id})
 
     def get_permissions(self, user):
         """
@@ -281,7 +283,7 @@ class Guild(Model, Permissible):
         """
         user = to_snowflake(user)
 
-        for state in self.voice_states.values():
+        for state in six.itervalues(self.voice_states):
             if state.user_id == user:
                 return state
 

@@ -5,6 +5,7 @@ creating and running bots/clients.
 from __future__ import print_function
 
 import os
+import six
 import logging
 import argparse
 
@@ -47,7 +48,7 @@ def disco_main(run=False):
     else:
         config = ClientConfig()
 
-    for k, v in vars(args).items():
+    for k, v in six.iteritems(vars(args)):
         if hasattr(config, k) and v is not None:
             setattr(config, k, v)
 

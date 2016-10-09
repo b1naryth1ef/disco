@@ -1,3 +1,5 @@
+import six
+
 from disco.api.http import Routes, HTTPClient
 from disco.util.logging import LoggingClass
 
@@ -15,7 +17,7 @@ def optional(**kwargs):
 
     :returns: dict
     """
-    return {k: v for k, v in kwargs.items() if v is not None}
+    return {k: v for k, v in six.iteritems(kwargs) if v is not None}
 
 
 class APIClient(LoggingClass):

@@ -1,7 +1,8 @@
 import re
 import os
-import importlib
+import six
 import inspect
+import importlib
 
 from six.moves import reload_module
 from holster.threadlocal import ThreadLocal
@@ -48,6 +49,10 @@ class BotConfig(Config):
     commands_level_getter : function
         If set, a function which when given a GuildMember or User, returns the
         relevant :class:`disco.bot.commands.CommandLevels`.
+    commands_group_abbrev : function
+        If true, command groups may be abbreviated to the least common variation.
+        E.g. the grouping 'test' may be abbreviated down to 't', unless 'tag' exists,
+        in which case it may be abbreviated down to 'te'.
     plugin_config_provider : Optional[function]
         If set, this function will replace the default configuration loading
         function, which normally attempts to load a file located at config/plugin_name.fmt
@@ -72,6 +77,7 @@ class BotConfig(Config):
     commands_prefix = ''
     commands_allow_edit = True
     commands_level_getter = None
+    commands_group_abbrev = True
 
     plugin_config_provider = None
     plugin_config_format = 'yaml'
@@ -121,6 +127,7 @@ class Bot(object):
             self.client.manhole_locals['bot'] = self
 
         self.plugins = {}
+        self.group_abbrev = {}
 
         # Only bind event listeners if we're going to parse commands
         if self.config.commands_enabled:
@@ -140,7 +147,7 @@ class Bot(object):
             self.add_plugin_module(plugin_mod)
 
         # Convert level mapping
-        for k, v in self.config.levels.items():
+        for k, v in six.iteritems(self.config.levels):
             self.config.levels[k] = CommandLevels.get(v)
 
     @classmethod
@@ -169,9 +176,36 @@ class Bot(object):
         """
         Generator of all commands this bots plugins have defined
         """
-        for plugin in self.plugins.values():
-            for command in plugin.commands.values():
+        for plugin in six.itervalues(self.plugins):
+            for command in six.itervalues(plugin.commands):
                 yield command
+
+    def recompute(self):
+        """
+        Called when a plugin is loaded/unloaded to recompute internal state.
+        """
+        self.compute_group_abbrev()
+        if self.config.commands_group_abbrev:
+            self.compute_command_matches_re()
+
+    def compute_group_abbrev(self):
+        """
+        Computes all possible abbreviations for a command grouping
+        """
+        self.group_abbrev = {}
+        groups = set(command.group for command in self.commands if command.group)
+
+        for group in groups:
+            grp = group
+            while grp:
+                # If the group already exists, means someone else thought they
+                #  could use it so we need to
+                if grp in list(six.itervalues(self.group_abbrev)):
+                    self.group_abbrev = {k: v for k, v in six.iteritems(self.group_abbrev) if v != grp}
+                else:
+                    self.group_abbrev[group] = grp
+
+                grp = grp[:-1]
 
     def compute_command_matches_re(self):
         """
@@ -340,7 +374,7 @@ class Bot(object):
 
         self.plugins[cls.__name__] = cls(self, config)
         self.plugins[cls.__name__].load()
-        self.compute_command_matches_re()
+        self.recompute()
 
     def rmv_plugin(self, cls):
         """
@@ -356,7 +390,7 @@ class Bot(object):
 
         self.plugins[cls.__name__].unload()
         del self.plugins[cls.__name__]
-        self.compute_command_matches_re()
+        self.recompute()
 
     def reload_plugin(self, cls):
         """

@@ -1,7 +1,8 @@
-import inspect
-import functools
+import six
 import gevent
+import inspect
 import weakref
+import functools
 
 from holster.emitter import Priority
 
@@ -170,6 +171,7 @@ class Plugin(LoggingClass, PluginDeco):
                     if meta['type'] == 'listener':
                         self.register_listener(member, meta['what'], meta['desc'], meta['priority'])
                     elif meta['type'] == 'command':
+                        meta['kwargs']['update'] = True
                         self.register_command(member, *meta['args'], **meta['kwargs'])
                     elif meta['type'] == 'schedule':
                         self.register_schedule(member, *meta['args'], **meta['kwargs'])
@@ -260,8 +262,11 @@ class Plugin(LoggingClass, PluginDeco):
             Keyword arguments to pass onto the :class:`disco.bot.command.Command`
             object.
         """
-        wrapped = functools.partial(self._dispatch, 'command', func)
-        self.commands[func.__name__] = Command(self, wrapped, *args, **kwargs)
+        if kwargs.pop('update', False) and func.__name__ in self.commands:
+            self.commands[func.__name__].update(*args, **kwargs)
+        else:
+            wrapped = functools.partial(self._dispatch, 'command', func)
+            self.commands[func.__name__] = Command(self, wrapped, *args, **kwargs)
 
     def register_schedule(self, func, interval, repeat=True, init=True):
         """
@@ -303,7 +308,7 @@ class Plugin(LoggingClass, PluginDeco):
         for listener in self.listeners:
             listener.remove()
 
-        for schedule in self.schedules.values():
+        for schedule in six.itervalues(self.schedules):
             schedule.kill()
 
     def reload(self):

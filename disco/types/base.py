@@ -178,7 +178,7 @@ class Model(six.with_metaclass(ModelMeta)):
         else:
             obj = kwargs
 
-        for name, field in self._fields.items():
+        for name, field in six.iteritems(self._fields):
             if field.src_name not in obj or not obj[field.src_name]:
                 if field.has_default():
                     setattr(self, field.dst_name, field.default())
@@ -217,7 +217,7 @@ class Model(six.with_metaclass(ModelMeta)):
     @classmethod
     def attach(cls, it, data):
         for item in it:
-            for k, v in data.items():
+            for k, v in six.iteritems(data):
                 try:
                     setattr(item, k, v)
                 except:

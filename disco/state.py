@@ -1,3 +1,4 @@
+import six
 import inflection
 
 from collections import defaultdict, deque, namedtuple
@@ -159,7 +160,7 @@ class State(object):
         self.guilds[event.guild.id] = event.guild
         self.channels.update(event.guild.channels)
 
-        for member in event.guild.members.values():
+        for member in six.itervalues(event.guild.members):
             self.users[member.user.id] = member.user
 
         # Request full member list

@@ -103,12 +103,14 @@ class Command(object):
     is_regex : Optional[bool]
         Whether the triggers for this command should be treated as raw regex.
     """
-    def __init__(self, plugin, func, trigger, args=None, level=None,
-            aliases=None, group=None, is_regex=False):
-
+    def __init__(self, plugin, func, trigger, *args, **kwargs):
         self.plugin = plugin
         self.func = func
-        self.triggers = [trigger] + (aliases or [])
+        self.triggers = [trigger]
+        self.update(*args, **kwargs)
+
+    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None):
+        self.triggers += aliases or []
 
         def resolve_role(ctx, id):
             return ctx.msg.guild.roles.get(id)
@@ -161,7 +163,12 @@ class Command(object):
         if self.is_regex:
             return REGEX_FMT.format('|'.join(self.triggers))
         else:
-            group = self.group + ' ' if self.group else ''
+            group = ''
+            if self.group:
+                if self.group in self.plugin.bot.group_abbrev.get(self.group):
+                    group = '{}(?:\w+)? '.format(self.group)
+                else:
+                    group = self.group
             return REGEX_FMT.format('|'.join(['^' + group + trigger for trigger in self.triggers]) + ARGS_REGEX)
 
     def execute(self, event):
