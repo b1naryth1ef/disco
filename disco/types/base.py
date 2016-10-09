@@ -111,11 +111,17 @@ def datetime(data):
 
 
 def text(obj):
-    return six.text_type(obj) if obj else six.text_type()
+    if six.PY2:
+        return unicode(obj)
+    else:
+        return str(obj)
 
 
 def binary(obj):
-    return six.text_type(obj) if obj else six.text_type()
+    if six.PY2:
+        return unicode(obj)
+    else:
+        return bytes(obj)
 
 
 def field(typ, alias=None):

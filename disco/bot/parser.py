@@ -1,4 +1,5 @@
 import re
+import six
 import copy
 
 
@@ -7,7 +8,7 @@ PARTS_RE = re.compile('(\<|\[)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\])')
 
 # Mapping of types
 TYPE_MAP = {
-    'str': lambda ctx, data: str(data),
+    'str': lambda ctx, data: str(data) if six.PY3 else unicode(data),
     'int': lambda ctx, data: int(data),
     'float': lambda ctx, data: int(data),
     'snowflake': lambda ctx, data: int(data),
@@ -160,7 +161,7 @@ class ArgumentSet(object):
                     try:
                         raw[idx] = self.convert(ctx, arg.types, r)
                     except:
-                        raise ArgumentError('cannot convert `{}` to `{}`'.format(
+                        raise ArgumentError(u'cannot convert `{}` to `{}`'.format(
                             r, ', '.join(arg.types)
                         ))
 

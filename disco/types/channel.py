@@ -3,6 +3,7 @@ from holster.enum import Enum
 from disco.types.base import Model, Field, snowflake, enum, listof, dictof, text
 from disco.types.permissions import PermissionValue
 
+from disco.util import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
 from disco.types.permissions import Permissions, Permissible
@@ -240,6 +241,10 @@ class Channel(Model, Permissible):
 
     def delete_overwrite(self, ow):
         self.client.api.channels_permissions_delete(self.id, ow.id)
+
+    def delete_messages_bulk(self, messages):
+        messages = map(to_snowflake, messages)
+        self.client.api.channels_messages_delete_bulk(self.id, messages)
 
 
 class MessageIterator(object):

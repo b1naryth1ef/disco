@@ -1,7 +1,7 @@
 import inspect
 import functools
 import gevent
-import os
+import weakref
 
 from holster.emitter import Priority
 
@@ -25,6 +25,16 @@ class PluginDeco(object):
             f.meta.append(meta)
 
             return f
+        return deco
+
+    @classmethod
+    def with_config(cls, config_cls):
+        """
+        Sets the plugins config class to the specified config class.
+        """
+        def deco(plugin_cls):
+            plugin_cls.config_cls = config_cls
+            return plugin_cls
         return deco
 
     @classmethod
@@ -86,13 +96,14 @@ class PluginDeco(object):
         })
 
     @classmethod
-    def schedule(cls, interval=60):
+    def schedule(cls, *args, **kwargs):
         """
         Runs a function repeatedly, waiting for a specified interval
         """
         return cls.add_meta_deco({
             'type': 'schedule',
-            'interval': interval,
+            'args': args,
+            'kwargs': kwargs,
         })
 
 
@@ -131,9 +142,14 @@ class Plugin(LoggingClass, PluginDeco):
         self.listeners = []
         self.commands = {}
         self.schedules = {}
+        self.greenlets = weakref.WeakSet()
 
         self._pre = {'command': [], 'listener': []}
         self._post = {'command': [], 'listener': []}
+
+        # TODO: when handling events/commands we need to track the greenlet in
+        #  the greenlets set so we can termiante long running commands/listeners
+        #  on reload.
 
         for name, member in inspect.getmembers(self, predicate=inspect.ismethod):
             if hasattr(member, 'meta'):
@@ -143,10 +159,15 @@ class Plugin(LoggingClass, PluginDeco):
                     elif meta['type'] == 'command':
                         self.register_command(member, *meta['args'], **meta['kwargs'])
                     elif meta['type'] == 'schedule':
-                        self.register_schedule(member, meta['interval'])
+                        self.register_schedule(member, *meta['args'], **meta['kwargs'])
                     elif meta['type'].startswith('pre_') or meta['type'].startswith('post_'):
                         when, typ = meta['type'].split('_', 1)
                         self.register_trigger(typ, when, member)
+
+    def spawn(self, method, *args, **kwargs):
+        obj = gevent.spawn(method, *args, **kwargs)
+        self.greenlets.add(obj)
+        return obj
 
     def execute(self, event):
         """
@@ -217,7 +238,7 @@ class Plugin(LoggingClass, PluginDeco):
         wrapped = functools.partial(self._dispatch, 'command', func)
         self.commands[func.__name__] = Command(self, wrapped, *args, **kwargs)
 
-    def register_schedule(self, func, interval):
+    def register_schedule(self, func, interval, repeat=True, init=True):
         """
         Registers a function to be called repeatedly, waiting for an interval
         duration.
@@ -230,11 +251,16 @@ class Plugin(LoggingClass, PluginDeco):
             Interval (in seconds) to repeat the function on.
         """
         def repeat():
-            while True:
+            if init:
                 func()
-                gevent.sleep(interval)
 
-        self.schedules[func.__name__] = gevent.spawn(repeat)
+            while True:
+                gevent.sleep(interval)
+                func()
+                if not repeat:
+                    break
+
+        self.schedules[func.__name__] = self.spawn(repeat)
 
     def load(self):
         """
@@ -246,6 +272,9 @@ class Plugin(LoggingClass, PluginDeco):
         """
         Called when the plugin is unloaded
         """
+        for greenlet in self.greenlets:
+            greenlet.kill()
+
         for listener in self.listeners:
             listener.remove()
 
@@ -254,24 +283,3 @@ class Plugin(LoggingClass, PluginDeco):
 
     def reload(self):
         self.bot.reload_plugin(self.__class__)
-
-    @staticmethod
-    def load_config_from_path(cls, path, format='json'):
-        inst = cls()
-
-        if not os.path.exists(path):
-            return inst
-
-        with open(path, 'r') as f:
-            data = f.read()
-
-        if format == 'json':
-            import json
-            inst.__dict__.update(json.loads(data))
-        elif format == 'yaml':
-            import yaml
-            inst.__dict__.update(yaml.load(data))
-        else:
-            raise Exception('Unsupported config format {}'.format(format))
-
-        return inst

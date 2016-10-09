@@ -85,7 +85,13 @@ class Client(object):
         self.gw = GatewayClient(self, self.config.encoding_cls)
 
         if self.config.manhole_enable:
-            self.manhole_locals = {}
+            self.manhole_locals = {
+                'client': self,
+                'state': self.state,
+                'api': self.api,
+                'gw': self.gw
+            }
+
             self.manhole = DiscoBackdoorServer(self.config.manhole_bind,
                 banner='Disco Manhole',
                 localf=lambda: self.manhole_locals)

@@ -95,15 +95,15 @@ class BasicPlugin(Plugin):
             json.dumps(perms.to_dict(), sort_keys=True, indent=2, separators=(',', ': '))
         ))
 
-    """
     @Plugin.command('tag', '<name:str> [value:str]')
     def on_tag(self, event, name, value=None):
+        tags = self.storage.guild.ensure('tags')
+
         if value:
-            self.storage.guild['tags'][name] = value
+            tags[name] = value
             event.msg.reply(':ok_hand:')
         else:
-            if name in self.storage.guild['tags']:
-                return event.msg.reply(self.storage.guild['tags'][name])
+            if name in tags:
+                return event.msg.reply(tags[name])
             else:
-                event.msg.reply('Unknown tag `{}`'.format(name))
-    """
+                return event.msg.reply('Unknown tag: `{}`'.format(name))

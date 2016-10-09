@@ -156,6 +156,16 @@ class GuildMember(Model):
         roles = self.roles + [role.id]
         self.client.api.guilds_members_modify(self.guild.id, self.user.id, roles=roles)
 
+    @property
+    def owner(self):
+        return self.guild.owner_id == self.id
+
+    @property
+    def mention(self):
+        if self.nick:
+            return '<@!{}>'.format(self.id)
+        return self.user.mention
+
     @cached_property
     def guild(self):
         return self.client.state.guilds.get(self.guild_id)

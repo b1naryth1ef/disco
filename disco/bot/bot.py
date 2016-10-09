@@ -1,4 +1,5 @@
 import re
+import os
 import importlib
 import inspect
 
@@ -7,10 +8,12 @@ from holster.threadlocal import ThreadLocal
 
 from disco.bot.plugin import Plugin
 from disco.bot.command import CommandEvent
-# from disco.bot.storage import Storage
+from disco.bot.storage import Storage
+from disco.util.config import Config
+from disco.util.serializer import Serializer
 
 
-class BotConfig(object):
+class BotConfig(Config):
     """
     An object which is used to configure and define the runtime configuration for
     a bot.
@@ -40,9 +43,14 @@ class BotConfig(object):
         message in a channel, and did not previously trigger a command. This is
         helpful for allowing edits to typod commands.
     plugin_config_provider : Optional[function]
-        If set, this function will be called before loading a plugin, with the
-        plugins class. Its expected to return a type of configuration object the
-        plugin understands.
+        If set, this function will replace the default configuration loading
+        function, which normally attempts to load a file located at config/plugin_name.fmt
+        where fmt is the plugin_config_format. The function here should return
+        a valid configuration object which the plugin understands.
+    plugin_config_format : str
+        The serilization format plugin configuration files are in.
+    plugin_config_dir : str
+        The directory plugin configuration is located within.
     """
     token = None
 
@@ -58,6 +66,13 @@ class BotConfig(object):
     commands_allow_edit = True
 
     plugin_config_provider = None
+    plugin_config_format = 'yaml'
+    plugin_config_dir = 'config'
+
+    storage_enabled = False
+    storage_backend = 'memory'
+    storage_autosave = True
+    storage_autosave_interval = 120
 
 
 class Bot(object):
@@ -90,7 +105,9 @@ class Bot(object):
         self.ctx = ThreadLocal()
 
         # The storage object acts as a dynamic contextual aware store
-        # self.storage = Storage(self.ctx)
+        self.storage = None
+        if self.config.storage_enabled:
+            self.storage = Storage(self.ctx, self.config.from_prefix('storage'))
 
         if self.client.config.manhole_enable:
             self.client.manhole_locals['bot'] = self
@@ -181,8 +198,12 @@ class Bot(object):
                 raise StopIteration
 
             if mention_direct:
-                content = content.replace(self.client.state.me.mention, '', 1)
-                content = content.replace(self.client.state.me.mention_nick, '', 1)
+                if msg.guild:
+                    member = msg.guild.get_member(self.client.state.me)
+                    if member:
+                        content = content.replace(member.mention, '', 1)
+                else:
+                    content = content.replace(self.client.state.me.mention, '', 1)
             elif mention_everyone:
                 content = content.replace('@everyone', '', 1)
             else:
@@ -265,8 +286,11 @@ class Bot(object):
         if cls.__name__ in self.plugins:
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
 
-        if not config and callable(self.config.plugin_config_provider):
-            config = self.config.plugin_config_provider(cls)
+        if not config:
+            if callable(self.config.plugin_config_provider):
+                config = self.config.plugin_config_provider(cls)
+            else:
+                config = self.load_plugin_config(cls)
 
         self.plugins[cls.__name__] = cls(self, config)
         self.plugins[cls.__name__].load()
@@ -317,3 +341,26 @@ class Bot(object):
                 break
         else:
             raise Exception('Could not find any plugins to load within module {}'.format(path))
+
+    def load_plugin_config(self, cls):
+        name = cls.__name__.lower()
+        if name.startswith('plugin'):
+            name = name[6:]
+
+        path = os.path.join(
+            self.config.plugin_config_dir, name) + '.' + self.config.plugin_config_format
+
+        if not os.path.exists(path):
+            if hasattr(cls, 'config_cls'):
+                return cls.config_cls()
+            return
+
+        with open(path, 'r') as f:
+            data = Serializer.loads(self.config.plugin_config_format, f.read())
+
+        if hasattr(cls, 'config_cls'):
+            inst = cls.config_cls()
+            inst.update(data)
+            return inst
+
+        return data
