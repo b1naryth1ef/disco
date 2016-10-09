@@ -46,7 +46,6 @@ class GatewayEvent(Model):
             modname, _ = self._wraps_model
             if hasattr(self, modname) and hasattr(getattr(self, modname), name):
                 return getattr(getattr(self, modname), name)
-        print self.__dict__
         raise AttributeError(name)
 
 
