@@ -63,13 +63,13 @@ class Channel(Model, Permissible):
     guild_id : Optional[snowflake]
         The guild id this channel is part of.
     name : str
-        The channels name.
+        The channel's name.
     topic : str
-        The channels topic.
+        The channel's topic.
     position : int
-        The channels position.
+        The channel's position.
     bitrate : int
-        The channels bitrate.
+        The channel's bitrate.
     recipients: list(:class:`disco.types.user.User`)
         Members of this channel (if this is a DM channel).
     type : :const:`ChannelType`

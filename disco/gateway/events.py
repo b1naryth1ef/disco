@@ -87,7 +87,7 @@ def wraps_model(model, alias=None):
 class Ready(GatewayEvent):
     """
     Sent after the initial gateway handshake is complete. Contains data required
-    for bootstrapping the clients states.
+    for bootstrapping the client's states.
     """
     version = Field(int, alias='v')
     session_id = Field(str)
@@ -151,7 +151,7 @@ class ChannelDelete(ChannelCreate):
 
 class ChannelPinsUpdate(GatewayEvent):
     """
-    Sent when a channels pins are updated.
+    Sent when a channel's pins are updated.
     """
     channel_id = Field(snowflake)
     last_pin_timestamp = Field(int)
@@ -175,21 +175,21 @@ class GuildBanRemove(GuildBanAdd):
 
 class GuildEmojisUpdate(GatewayEvent):
     """
-    Sent when a guilds emojis are updated.
+    Sent when a guild's emojis are updated.
     """
     pass
 
 
 class GuildIntegrationsUpdate(GatewayEvent):
     """
-    Sent when a guilds integrations are updated.
+    Sent when a guild's integrations are updated.
     """
     pass
 
 
 class GuildMembersChunk(GatewayEvent):
     """
-    Sent in response to a members chunk request.
+    Sent in response to a member's chunk request.
     """
     guild_id = Field(snowflake)
     members = Field(listof(GuildMember))
@@ -275,7 +275,7 @@ class MessageDeleteBulk(GatewayEvent):
 @wraps_model(Presence)
 class PresenceUpdate(GatewayEvent):
     """
-    Sent when a users presence is updated.
+    Sent when a user's presence is updated.
     """
     guild_id = Field(snowflake)
     roles = Field(listof(snowflake))

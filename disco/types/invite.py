@@ -19,13 +19,13 @@ class Invite(Model):
     channel : :class:`disco.types.channel.Channel`
         The channel this invite is for.
     max_age : int
-        The time after this invites creation at which it expires.
+        The time after this invite's creation at which it expires.
     max_uses : int
         The maximum number of uses.
     uses : int
         The current number of times the invite was used.
     temporary : bool
-        Whether this invite only grants temporary memborship.
+        Whether this invite only grants temporary membership.
     created_at : datetime
         When this invite was created.
     """

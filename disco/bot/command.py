@@ -77,7 +77,7 @@ class CommandEvent(object):
 class CommandError(Exception):
     """
     An exception which is thrown when the arguments for a command are invalid,
-    or don't match the commands specifications.
+    or don't match the command's specifications.
     """
 
 
@@ -151,7 +151,7 @@ class Command(object):
     @cached_property
     def compiled_regex(self):
         """
-        A compiled version of this commands regex
+        A compiled version of this command's regex
         """
         return re.compile(self.regex)
 
@@ -179,7 +179,7 @@ class Command(object):
         Returns
         -------
         bool
-            Whether this command was sucessful
+            Whether this command was successful
         """
         if len(event.args) < self.args.required_length:
             raise CommandError('{} requires {} arguments (passed {})'.format(

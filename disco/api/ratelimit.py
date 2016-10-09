@@ -114,7 +114,7 @@ class RateLimiter(object):
         """
         Checks whether a given route can be called. This function will return
         immediately if no rate-limit cooldown is being imposed for the given
-        route, or will wait indefinently (unless timeout is specified) until
+        route, or will wait indefinitely (unless timeout is specified) until
         the route is finished being cooled down. This function should be called
         before making a request to the specified route.
 
@@ -123,8 +123,8 @@ class RateLimiter(object):
         route : tuple(HTTPMethod, str)
             The route that will be checked.
         timeout : Optional[int]
-            A timeout after which we'll give up waiting for a routes cooldown
-            to expire, and immedietly return.
+            A timeout after which we'll give up waiting for a route's cooldown
+            to expire, and immediately return.
 
         Returns
         -------

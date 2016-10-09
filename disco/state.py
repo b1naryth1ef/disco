@@ -57,9 +57,9 @@ class State(object):
     Attributes
     ----------
     EVENTS : list(str)
-        A list of all events the State object binds too.
+        A list of all events the State object binds to
     client : :class:`disco.client.Client`
-        The Client instance this state is attached too
+        The Client instance this state is attached to
     config : :class:`StateConfig`
         The configuration for this state instance
     me : :class:`disco.types.user.User`

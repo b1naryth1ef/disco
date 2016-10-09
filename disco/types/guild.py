@@ -102,7 +102,7 @@ class GuildMember(Model):
     mute : bool
         Whether this member is server voice-muted.
     deaf : bool
-        Whether this member is server voice-deafend.
+        Whether this member is server voice-deafened.
     joined_at : datetime
         When this user joined the guild.
     roles : list(snowflake)
@@ -122,7 +122,7 @@ class GuildMember(Model):
         -------
         Optional[:class:`disco.types.voice.VoiceState`]
             Returns the voice state for the member if they are currently connected
-            to the guilds voice server.
+            to the guild's voice server.
         """
         return self.guild.get_voice_state(self)
 
@@ -145,7 +145,7 @@ class GuildMember(Model):
 
     def set_nickname(self, nickname=None):
         """
-        Sets the members nickname (or clears it if None).
+        Sets the member's nickname (or clears it if None).
 
         Args
         ----
@@ -195,17 +195,17 @@ class Guild(Model, Permissible):
     embed_channel_id : snowflake
         The id of the embed channel.
     name : str
-        Guilds name.
+        Guild's name.
     icon : str
-        Guilds icon (as PNG binary data).
+        Guild's icon (as PNG binary data).
     splash : str
-        Guilds splash image (as PNG binary data).
+        Guild's splash image (as PNG binary data).
     region : str
         Voice region.
     afk_timeout : int
         Delay after which users are automatically moved to the afk channel.
     embed_enabled : bool
-        Whether the guilds embed is enabled.
+        Whether the guild's embed is enabled.
     verification_level : int
         The verification level used by the guild.
     mfa_level : int
@@ -213,15 +213,15 @@ class Guild(Model, Permissible):
     features : list(str)
         Extra features enabled for this guild.
     members : dict(snowflake, :class:`GuildMember`)
-        All of the guilds members.
+        All of the guild's members.
     channels : dict(snowflake, :class:`disco.types.channel.Channel`)
-        All of the guilds channels.
+        All of the guild's channels.
     roles : dict(snowflake, :class:`Role`)
-        All of the guilds roles.
+        All of the guild's roles.
     emojis : dict(snowflake, :class:`Emoji`)
-        All of the guilds emojis.
+        All of the guild's emojis.
     voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
-        All of the guilds voice states.
+        All of the guild's voice states.
     """
     id = Field(snowflake)
     owner_id = Field(snowflake)
