@@ -5,11 +5,12 @@ from holster.emitter import Emitter
 from disco.state import State
 from disco.api.client import APIClient
 from disco.gateway.client import GatewayClient
+from disco.util.config import Config
 from disco.util.logging import LoggingClass
 from disco.util.backdoor import DiscoBackdoorServer
 
 
-class ClientConfig(LoggingClass):
+class ClientConfig(LoggingClass, Config):
     """
     Configuration for the :class:`Client`.
 
@@ -27,8 +28,9 @@ class ClientConfig(LoggingClass):
     manhole_bind : tuple(str, int)
         A (host, port) combination which the manhole server will bind to (if its
         enabled using :attr:`manhole_enable`).
-    encoding_cls : class
-        The class to use for encoding/decoding data from websockets.
+    encoder : str
+        The type of encoding to use for encoding/decoding data from websockets,
+        should be either 'json' or 'etf'.
     """
 
     token = ""
@@ -38,7 +40,7 @@ class ClientConfig(LoggingClass):
     manhole_enable = True
     manhole_bind = ('127.0.0.1', 8484)
 
-    encoding_cls = None
+    encoder = 'json'
 
 
 class Client(object):
@@ -82,7 +84,7 @@ class Client(object):
 
         self.state = State(self)
         self.api = APIClient(self)
-        self.gw = GatewayClient(self, self.config.encoding_cls)
+        self.gw = GatewayClient(self, self.config.encoder)
 
         if self.config.manhole_enable:
             self.manhole_locals = {

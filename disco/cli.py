@@ -4,6 +4,7 @@ creating and running bots/clients.
 """
 from __future__ import print_function
 
+import os
 import logging
 import argparse
 
@@ -12,13 +13,14 @@ from gevent import monkey
 monkey.patch_all()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--token', help='Bot Authentication Token', required=True)
-parser.add_argument('--shard-count', help='Total number of shards', default=1)
-parser.add_argument('--shard-id', help='Current shard number/id', default=0)
-parser.add_argument('--manhole', action='store_true', help='Enable the manhole', default=False)
-parser.add_argument('--manhole-bind', help='host:port for the manhole to bind too', default='localhost:8484')
-parser.add_argument('--encoder', help='encoder for gateway data', default='json')
-parser.add_argument('--bot', help='run a disco bot on this client', action='store_true', default=False)
+parser.add_argument('--config', help='Configuration file', default='config.yaml')
+parser.add_argument('--token', help='Bot Authentication Token', default=None)
+parser.add_argument('--shard-count', help='Total number of shards', default=None)
+parser.add_argument('--shard-id', help='Current shard number/id', default=None)
+parser.add_argument('--manhole', action='store_true', help='Enable the manhole', default=None)
+parser.add_argument('--manhole-bind', help='host:port for the manhole to bind too', default=None)
+parser.add_argument('--encoder', help='encoder for gateway data', default=None)
+parser.add_argument('--run-bot', help='run a disco bot on this client', action='store_true', default=False)
 parser.add_argument('--plugin', help='load plugins into the bot', nargs='*', default=[])
 
 logging.basicConfig(level=logging.INFO)
@@ -37,34 +39,34 @@ def disco_main(run=False):
     args = parser.parse_args()
 
     from disco.client import Client, ClientConfig
-    from disco.bot import Bot
-    from disco.gateway.encoding import ENCODERS
+    from disco.bot import Bot, BotConfig
     from disco.util.token import is_valid_token
 
-    if not is_valid_token(args.token):
+    if os.path.exists(args.config):
+        config = ClientConfig.from_file(args.config)
+    else:
+        config = ClientConfig()
+
+    for k, v in vars(args).items():
+        if hasattr(config, k) and v is not None:
+            setattr(config, k, v)
+
+    if not is_valid_token(config.token):
         print('Invalid token passed')
         return
 
-    cfg = ClientConfig()
-    cfg.token = args.token
-    cfg.shard_id = args.shard_id
-    cfg.shard_count = args.shard_count
-    cfg.manhole_enable = args.manhole
-    cfg.manhole_bind = args.manhole_bind
-    cfg.encoding_cls = ENCODERS[args.encoder]
+    client = Client(config)
 
-    client = Client(cfg)
-
-    if args.bot:
-        bot = Bot(client)
-
-        for plugin in args.plugin:
-            bot.add_plugin_module(plugin)
+    bot = None
+    if args.run_bot or hasattr(config, 'bot'):
+        bot_config = BotConfig(config.bot) if hasattr(config, 'bot') else BotConfig()
+        bot_config.plugins += args.plugin
+        bot = Bot(client, bot_config)
 
     if run:
-        client.run_forever()
+        (bot or client).run_forever()
 
-    return client
+    return (bot or client)
 
 if __name__ == '__main__':
     disco_main(True)

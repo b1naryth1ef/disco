@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import inflection
 import six
 
@@ -47,6 +49,23 @@ class GatewayEvent(Model):
             if hasattr(self, modname) and hasattr(getattr(self, modname), name):
                 return getattr(getattr(self, modname), name)
         raise AttributeError(name)
+
+
+def debug(func=None):
+    def deco(cls):
+        old_init = cls.__init__
+
+        def new_init(self, obj, *args, **kwargs):
+            if func:
+                print(func(obj))
+            else:
+                print(obj)
+
+            old_init(self, obj, *args, **kwargs)
+
+        cls.__init__ = new_init
+        return cls
+    return deco
 
 
 def wraps_model(model, alias=None):

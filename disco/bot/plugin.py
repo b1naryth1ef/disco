@@ -44,8 +44,21 @@ class PluginDeco(object):
         """
         return cls.add_meta_deco({
             'type': 'listener',
-            'event_name': event_name,
+            'what': 'event',
+            'desc': event_name,
             'priority': priority
+        })
+
+    @classmethod
+    def listen_packet(cls, op, priority=None):
+        """
+        Binds the function to listen for a given gateway op code
+        """
+        return cls.add_meta_deco({
+            'type': 'listener',
+            'what': 'packet',
+            'desc': op,
+            'priority': priority,
         })
 
     @classmethod
@@ -155,7 +168,7 @@ class Plugin(LoggingClass, PluginDeco):
             if hasattr(member, 'meta'):
                 for meta in member.meta:
                     if meta['type'] == 'listener':
-                        self.register_listener(member, meta['event_name'], meta['priority'])
+                        self.register_listener(member, meta['what'], meta['desc'], meta['priority'])
                     elif meta['type'] == 'command':
                         self.register_command(member, *meta['args'], **meta['kwargs'])
                     elif meta['type'] == 'schedule':
@@ -205,21 +218,33 @@ class Plugin(LoggingClass, PluginDeco):
 
         return True
 
-    def register_listener(self, func, name, priority):
+    def register_listener(self, func, what, desc, priority):
         """
         Registers a listener
 
         Parameters
         ----------
+        what : str
+            What the listener is for (event, packet)
         func : function
             The function to be registered.
-        name : string
-            Name of event to listen for.
+        desc
+            The descriptor of the event/packet.
         priority : Priority
             The priority of this listener.
         """
         func = functools.partial(self._dispatch, 'listener', func)
-        self.listeners.append(self.bot.client.events.on(name, func, priority=priority or Priority.NONE))
+
+        priority = priority or Priority.NONE
+
+        if what == 'event':
+            li = self.bot.client.events.on(desc, func, priority=priority)
+        elif what == 'packet':
+            li = self.bot.client.packets.on(desc, func, priority=priority)
+        else:
+            raise Exception('Invalid listener what: {}'.format(what))
+
+        self.listeners.append(li)
 
     def register_command(self, func, *args, **kwargs):
         """

@@ -124,8 +124,18 @@ def binary(obj):
         return bytes(obj)
 
 
-def field(typ, alias=None):
-    pass
+def with_equality(field):
+    class T(object):
+        def __eq__(self, other):
+            return getattr(self, field) == getattr(other, field)
+    return T
+
+
+def with_hash(field):
+    class T(object):
+        def __hash__(self, other):
+            return hash(getattr(self, field))
+    return T
 
 
 class ModelMeta(type):
@@ -156,7 +166,7 @@ class Model(six.with_metaclass(ModelMeta)):
             obj = kwargs
 
         for name, field in self._fields.items():
-            if name not in obj or not obj[field.src_name]:
+            if field.src_name not in obj or not obj[field.src_name]:
                 if field.has_default():
                     setattr(self, field.dst_name, field.default())
                 continue

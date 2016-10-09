@@ -1,5 +1,8 @@
 from holster.enum import Enum
 
+SEND = object()
+RECV = object()
+
 OPCode = Enum(
     DISPATCH=0,
     HEARTBEAT=1,

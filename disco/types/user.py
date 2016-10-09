@@ -1,7 +1,7 @@
-from disco.types.base import Model, Field, snowflake, text, binary
+from disco.types.base import Model, Field, snowflake, text, binary, with_equality, with_hash
 
 
-class User(Model):
+class User(Model, with_equality('id'), with_hash('id')):
     id = Field(snowflake)
     username = Field(text)
     discriminator = Field(str)

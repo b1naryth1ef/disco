@@ -6,8 +6,9 @@ import inspect
 from six.moves import reload_module
 from holster.threadlocal import ThreadLocal
 
+from disco.types.guild import GuildMember
 from disco.bot.plugin import Plugin
-from disco.bot.command import CommandEvent
+from disco.bot.command import CommandEvent, CommandLevels
 from disco.bot.storage import Storage
 from disco.util.config import Config
 from disco.util.serializer import Serializer
@@ -20,9 +21,11 @@ class BotConfig(Config):
 
     Attributes
     ----------
-    token : str
-        The authentication token for this bot. This is passed on to the
-        :class:`disco.client.Client` without any validation.
+    levels : dict(snowflake, str)
+        Mapping of user IDs/role IDs to :class:`disco.bot.commands.CommandLevesls`
+        which is used for the default commands_level_getter.
+    plugins : list[string]
+        List of plugin modules to load.
     commands_enabled : bool
         Whether this bot instance should utilize command parsing. Generally this
         should be true, unless your bot is only handling events and has no user
@@ -42,17 +45,21 @@ class BotConfig(Config):
         If true, the bot will reparse an edited message if it was the last sent
         message in a channel, and did not previously trigger a command. This is
         helpful for allowing edits to typod commands.
+    commands_level_getter : function
+        If set, a function which when given a GuildMember or User, returns the
+        relevant :class:`disco.bot.commands.CommandLevels`.
     plugin_config_provider : Optional[function]
         If set, this function will replace the default configuration loading
         function, which normally attempts to load a file located at config/plugin_name.fmt
         where fmt is the plugin_config_format. The function here should return
         a valid configuration object which the plugin understands.
     plugin_config_format : str
-        The serilization format plugin configuration files are in.
+        The serialization format plugin configuration files are in.
     plugin_config_dir : str
         The directory plugin configuration is located within.
     """
-    token = None
+    levels = {}
+    plugins = {}
 
     commands_enabled = True
     commands_require_mention = True
@@ -64,6 +71,7 @@ class BotConfig(Config):
     }
     commands_prefix = ''
     commands_allow_edit = True
+    commands_level_getter = None
 
     plugin_config_provider = None
     plugin_config_format = 'yaml'
@@ -126,6 +134,14 @@ class Bot(object):
 
         # Stores a giant regex matcher for all commands
         self.command_matches_re = None
+
+        # Finally, load all the plugin modules that where passed with the config
+        for plugin_mod in self.config.plugins:
+            self.add_plugin_module(plugin_mod)
+
+        # Convert level mapping
+        for k, v in self.config.levels.items():
+            self.config.levels[k] = CommandLevels.get(v)
 
     @classmethod
     def from_cli(cls, *plugins):
@@ -225,6 +241,32 @@ class Bot(object):
             if match:
                 yield (command, match)
 
+    def get_level(self, actor):
+        level = CommandLevels.DEFAULT
+
+        if callable(self.config.commands_level_getter):
+            level = self.config.commands_level_getter(actor)
+        else:
+            if actor.id in self.config.levels:
+                level = self.config.levels[actor.id]
+
+            if isinstance(actor, GuildMember):
+                for rid in actor.roles:
+                    if rid in self.config.levels and self.config.levels[rid] > level:
+                        level = self.config.levels[rid]
+
+        return level
+
+    def check_command_permissions(self, command, msg):
+        if not command.level:
+            return True
+
+        level = self.get_level(msg.author if not msg.guild else msg.guild.get_member(msg.author))
+
+        if level >= command.level:
+            return True
+        return False
+
     def handle_message(self, msg):
         """
         Attempts to handle a newly created or edited message in the context of
@@ -243,10 +285,14 @@ class Bot(object):
         commands = list(self.get_commands_for_message(msg))
 
         if len(commands):
-            return any([
-                command.plugin.execute(CommandEvent(command, msg, match))
-                for command, match in commands
-            ])
+            result = False
+            for command, match in commands:
+                if not self.check_command_permissions(command, msg):
+                    continue
+
+                if command.plugin.execute(CommandEvent(command, msg, match)):
+                    result = True
+            return result
 
         return False
 

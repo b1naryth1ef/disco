@@ -21,8 +21,8 @@ class Config(object):
             data = f.read()
 
         _, ext = os.path.splitext(path)
-        Serializer.check_format(ext)
-        inst.__dict__.update(Serializer.load(ext, data))
+        Serializer.check_format(ext[1:])
+        inst.__dict__.update(Serializer.loads(ext[1:], data))
         return inst
 
     def from_prefix(self, prefix):
@@ -33,10 +33,13 @@ class Config(object):
             if k.startswith(prefix):
                 obj[k[len(prefix):]] = v
 
-        return obj
+        return Config(obj)
 
     def update(self, other):
         if isinstance(other, Config):
             other = other.__dict__
 
         self.__dict__.update(other)
+
+    def to_dict(self):
+        return self.__dict__

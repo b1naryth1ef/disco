@@ -79,7 +79,7 @@ class State(object):
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
         'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
-        'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate'
+        'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
     ]
 
     def __init__(self, client, config=None):
@@ -96,7 +96,7 @@ class State(object):
         # If message tracking is enabled, listen to those events
         if self.config.track_messages:
             self.messages = defaultdict(lambda: deque(maxlen=self.config.track_messages_size))
-            self.EVENTS += ['MessageCreate', 'MessageDelete']
+            self.EVENTS += ['MessageDelete']
 
         # The bound listener objects
         self.listeners = []
@@ -120,25 +120,21 @@ class State(object):
             func = 'on_' + inflection.underscore(event)
             self.listeners.append(self.client.events.on(event, getattr(self, func)))
 
+    def fill_messages(self, channel):
+        for message in reversed(next(channel.messages_iter(bulk=True))):
+            self.messages[channel.id].append(
+                StackMessage(message.id, message.channel_id, message.author.id))
+
     def on_ready(self, event):
         self.me = event.user
 
     def on_message_create(self, event):
-        self.messages[event.message.channel_id].append(
-            StackMessage(event.message.id, event.message.channel_id, event.message.author.id))
+        if self.config.track_messages:
+            self.messages[event.message.channel_id].append(
+                StackMessage(event.message.id, event.message.channel_id, event.message.author.id))
 
-    def on_message_update(self, event):
-        message, cid = event.message, event.message.channel_id
-        if cid not in self.messages:
-            return
-
-        sm = next((i for i in self.messages[cid] if i.id == message.id), None)
-        if not sm:
-            return
-
-        sm.id = message.id
-        sm.channel_id = cid
-        sm.author_id = message.author.id
+        if event.message.channel_id in self.channels:
+            self.channels[event.message.channel_id].last_message_id = event.message.id
 
     def on_message_delete(self, event):
         if event.channel_id not in self.messages:
@@ -149,6 +145,14 @@ class State(object):
             return
 
         self.messages[event.channel_id].remove(sm)
+
+    def on_message_delete_bulk(self, event):
+        if event.channel_id not in self.messages:
+            return
+
+        for sm in self.messages[event.channel_id]:
+            if sm.id in event.ids:
+                self.messages[event.channel_id].remove(sm)
 
     def on_guild_create(self, event):
         self.guilds[event.guild.id] = event.guild

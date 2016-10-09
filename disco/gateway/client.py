@@ -3,9 +3,9 @@ import zlib
 import six
 import ssl
 
-from disco.gateway.packets import OPCode
+from disco.gateway.packets import OPCode, RECV, SEND
 from disco.gateway.events import GatewayEvent
-from disco.gateway.encoding.json import JSONEncoder
+from disco.gateway.encoding import ENCODERS
 from disco.util.websocket import Websocket
 from disco.util.logging import LoggingClass
 
@@ -16,20 +16,20 @@ class GatewayClient(LoggingClass):
     GATEWAY_VERSION = 6
     MAX_RECONNECTS = 5
 
-    def __init__(self, client, encoder=None):
+    def __init__(self, client, encoder='json'):
         super(GatewayClient, self).__init__()
         self.client = client
-        self.encoder = encoder or JSONEncoder
+        self.encoder = ENCODERS[encoder]
 
         self.events = client.events
         self.packets = client.packets
 
         # Create emitter and bind to gateway payloads
-        self.packets.on(OPCode.DISPATCH, self.handle_dispatch)
-        self.packets.on(OPCode.HEARTBEAT, self.handle_heartbeat)
-        self.packets.on(OPCode.RECONNECT, self.handle_reconnect)
-        self.packets.on(OPCode.INVALID_SESSION, self.handle_invalid_session)
-        self.packets.on(OPCode.HELLO, self.handle_hello)
+        self.packets.on((RECV, OPCode.DISPATCH), self.handle_dispatch)
+        self.packets.on((RECV, OPCode.HEARTBEAT), self.handle_heartbeat)
+        self.packets.on((RECV, OPCode.RECONNECT), self.handle_reconnect)
+        self.packets.on((RECV, OPCode.INVALID_SESSION), self.handle_invalid_session)
+        self.packets.on((RECV, OPCode.HELLO), self.handle_hello)
 
         # Bind to ready payload
         self.events.on('Ready', self.on_ready)
@@ -50,6 +50,7 @@ class GatewayClient(LoggingClass):
         self._heartbeat_task = None
 
     def send(self, op, data):
+        self.packets.emit((SEND, op), data)
         self.ws.send(self.encoder.encode({
             'op': op.value,
             'd': data,
@@ -119,7 +120,7 @@ class GatewayClient(LoggingClass):
             self.seq = data['s']
 
         # Emit packet
-        self.packets.emit(OPCode[data['op']], data)
+        self.packets.emit((RECV, OPCode[data['op']]), data)
 
     def on_error(self, error):
         if isinstance(error, KeyboardInterrupt):

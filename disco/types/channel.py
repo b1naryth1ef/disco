@@ -4,7 +4,7 @@ from disco.types.base import Model, Field, snowflake, enum, listof, dictof, text
 from disco.types.permissions import PermissionValue
 
 from disco.util import to_snowflake
-from disco.util.functional import cached_property
+from disco.util.functional import cached_property, one_or_many, chunks
 from disco.types.user import User
 from disco.types.permissions import Permissions, Permissible
 from disco.voice.client import VoiceClient
@@ -81,7 +81,7 @@ class Channel(Model, Permissible):
     guild_id = Field(snowflake)
     name = Field(text)
     topic = Field(text)
-    _last_message_id = Field(snowflake, alias='last_message_id')
+    last_message_id = Field(snowflake)
     position = Field(int)
     bitrate = Field(int)
     recipients = Field(listof(User))
@@ -139,15 +139,6 @@ class Channel(Model, Permissible):
         return self.type in (ChannelType.GUILD_VOICE, ChannelType.GROUP_DM)
 
     @property
-    def last_message_id(self):
-        """
-        Returns the ID of the last message sent in this channel
-        """
-        if self.id not in self.client.state.messages:
-            return self._last_message_id
-        return self.client.state.messages[self.id][-1].id
-
-    @property
     def messages(self):
         """
         a default :class:`MessageIterator` for the channel
@@ -159,7 +150,7 @@ class Channel(Model, Permissible):
         Creates a new :class:`MessageIterator` for the channel with the given
         keyword arguments
         """
-        return MessageIterator(self.client, self.id, before=self.last_message_id, **kwargs)
+        return MessageIterator(self.client, self.id, **kwargs)
 
     @cached_property
     def guild(self):
@@ -242,9 +233,40 @@ class Channel(Model, Permissible):
     def delete_overwrite(self, ow):
         self.client.api.channels_permissions_delete(self.id, ow.id)
 
-    def delete_messages_bulk(self, messages):
+    def delete_message(self, message):
+        """
+        Deletes a single message from this channel.
+
+        Args
+        ----
+        message : snowflake|:class:`disco.types.message.Message`
+            The message to delete.
+        """
+        self.client.api.channels_messages_delete(self.id, to_snowflake(message))
+
+    @one_or_many
+    def delete_messages(self, messages):
+        """
+        Deletes a set of messages using the correct API route based on the number
+        of messages passed.
+
+        Args
+        ----
+        messages : list[snowflake|:class:`disco.types.message.Message`]
+            List of messages (or message ids) to delete. All messages must originate
+            from this channel.
+        """
         messages = map(to_snowflake, messages)
-        self.client.api.channels_messages_delete_bulk(self.id, messages)
+
+        if not messages:
+            return
+
+        if len(messages) <= 2:
+            for msg in messages:
+                self.delete_message(msg)
+        else:
+            for chunk in chunks(messages, 100):
+                self.client.api.channels_messages_delete_bulk(self.id, chunk)
 
 
 class MessageIterator(object):
@@ -282,9 +304,6 @@ class MessageIterator(object):
 
         self.last = None
         self._buffer = []
-
-        if not before and not after:
-            raise Exception('Must specify at most one of before or after')
 
         if not any((before, after)) and self.direction == self.Direction.DOWN:
             raise Exception('Must specify either before or after for downward seeking')

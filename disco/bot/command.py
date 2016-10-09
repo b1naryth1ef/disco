@@ -1,11 +1,21 @@
 import re
 
+from holster.enum import Enum
+
 from disco.bot.parser import ArgumentSet, ArgumentError
 from disco.util.functional import cached_property
 
 REGEX_FMT = '({})'
 ARGS_REGEX = '( (.*)$|$)'
 MENTION_RE = re.compile('<@!?([0-9]+)>')
+
+CommandLevels = Enum(
+    DEFAULT=0,
+    TRUSTED=10,
+    MOD=50,
+    ADMIN=100,
+    OWNER=500,
+)
 
 
 class CommandEvent(object):
@@ -33,7 +43,7 @@ class CommandEvent(object):
         self.msg = msg
         self.match = match
         self.name = self.match.group(1)
-        self.args = self.match.group(2).strip().split(' ')
+        self.args = [i for i in self.match.group(2).strip().split(' ') if i]
 
     @cached_property
     def member(self):
@@ -93,7 +103,9 @@ class Command(object):
     is_regex : Optional[bool]
         Whether the triggers for this command should be treated as raw regex.
     """
-    def __init__(self, plugin, func, trigger, args=None, aliases=None, group=None, is_regex=False):
+    def __init__(self, plugin, func, trigger, args=None, level=None,
+            aliases=None, group=None, is_regex=False):
+
         self.plugin = plugin
         self.func = func
         self.triggers = [trigger] + (aliases or [])
@@ -110,6 +122,7 @@ class Command(object):
             'role': self.mention_type([resolve_role], force=True),
         })
 
+        self.level = level
         self.group = group
         self.is_regex = is_regex
 
