@@ -64,7 +64,7 @@ class BotConfig(Config):
         The directory plugin configuration is located within.
     """
     levels = {}
-    plugins = {}
+    plugins = []
 
     commands_enabled = True
     commands_require_mention = True
@@ -83,7 +83,7 @@ class BotConfig(Config):
     plugin_config_format = 'yaml'
     plugin_config_dir = 'config'
 
-    storage_enabled = False
+    storage_enabled = True
     storage_provider = 'memory'
     storage_config = {}
 
