@@ -31,6 +31,8 @@ Permissions = Enum(
 
 
 class PermissionValue(object):
+    __slots__ = ['value']
+
     def __init__(self, value=0):
         if isinstance(value, EnumAttr) or isinstance(value, PermissionValue):
             value = value.value

@@ -15,7 +15,7 @@ class ConversionError(Exception):
     def __init__(self, field, raw, e):
         super(ConversionError, self).__init__(
             'Failed to convert `{}` (`{}`) to {}: {}'.format(
-                raw, field.src_name, field.typ, e))
+                str(raw)[:144], field.src_name, field.typ, e))
 
 
 class FieldType(object):
@@ -125,13 +125,17 @@ def datetime(data):
 
 def text(obj):
     if six.PY2:
-        return unicode(obj)
+        if isinstance(obj, str):
+            return obj.decode('utf-8')
+        return obj
     else:
         return str(obj)
 
 
 def binary(obj):
     if six.PY2:
+        if isinstance(obj, str):
+            return obj.decode('utf-8')
         return unicode(obj)
     else:
         return bytes(obj)
