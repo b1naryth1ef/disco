@@ -165,10 +165,10 @@ class Command(object):
         else:
             group = ''
             if self.group:
-                if self.group in self.plugin.bot.group_abbrev.get(self.group):
-                    group = '{}(?:\w+)? '.format(self.group)
+                if self.group in self.plugin.bot.group_abbrev:
+                    group = '{}(?:\w+)? '.format(self.plugin.bot.group_abbrev.get(self.group))
                 else:
-                    group = self.group
+                    group = self.group + ' '
             return REGEX_FMT.format('|'.join(['^' + group + trigger for trigger in self.triggers]) + ARGS_REGEX)
 
     def execute(self, event):

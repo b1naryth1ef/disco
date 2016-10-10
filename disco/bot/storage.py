@@ -1,21 +1,26 @@
-from .backends import BACKENDS
+from .providers import load_provider
 
 
 class Storage(object):
     def __init__(self, ctx, config):
         self.ctx = ctx
-        self.backend = BACKENDS[config.backend]
-        # TODO: autosave
-        # config.autosave config.autosave_interval
+        self.config = config
+        self.provider = load_provider(config.provider)(config.config)
+        self.provider.load()
+        self.root = self.provider.root()
+
+    @property
+    def plugin(self):
+        return self.root.ensure('plugins').ensure(self.ctx['plugin'].name)
 
     @property
     def guild(self):
-        return self.backend.base().ensure('guilds').ensure(self.ctx['guild'].id)
+        return self.plugin.ensure('guilds').ensure(self.ctx['guild'].id)
 
     @property
     def channel(self):
-        return self.backend.base().ensure('channels').ensure(self.ctx['channel'].id)
+        return self.plugin.ensure('channels').ensure(self.ctx['channel'].id)
 
     @property
     def user(self):
-        return self.backend.base().ensure('users').ensure(self.ctx['user'].id)
+        return self.plugin.ensure('users').ensure(self.ctx['user'].id)

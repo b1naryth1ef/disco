@@ -3,7 +3,8 @@
 class Serializer(object):
     FORMATS = {
         'json',
-        'yaml'
+        'yaml',
+        'pickle',
     }
 
     @classmethod
@@ -20,6 +21,11 @@ class Serializer(object):
     def yaml():
         from yaml import load, dump
         return (load, dump)
+
+    @staticmethod
+    def pickle():
+        from pickle import loads, dumps
+        return (loads, dumps)
 
     @classmethod
     def loads(cls, fmt, raw):

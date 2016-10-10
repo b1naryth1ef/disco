@@ -84,9 +84,8 @@ class BotConfig(Config):
     plugin_config_dir = 'config'
 
     storage_enabled = False
-    storage_backend = 'memory'
-    storage_autosave = True
-    storage_autosave_interval = 120
+    storage_provider = 'memory'
+    storage_config = {}
 
 
 class Bot(object):
@@ -184,9 +183,10 @@ class Bot(object):
         """
         Called when a plugin is loaded/unloaded to recompute internal state.
         """
-        self.compute_group_abbrev()
         if self.config.commands_group_abbrev:
-            self.compute_command_matches_re()
+            self.compute_group_abbrev()
+
+        self.compute_command_matches_re()
 
     def compute_group_abbrev(self):
         """

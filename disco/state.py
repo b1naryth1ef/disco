@@ -98,7 +98,7 @@ class State(object):
         # If message tracking is enabled, listen to those events
         if self.config.track_messages:
             self.messages = defaultdict(lambda: deque(maxlen=self.config.track_messages_size))
-            self.EVENTS += ['MessageDelete']
+            self.EVENTS += ['MessageDelete', 'MessageDeleteBulk']
 
         # The bound listener objects
         self.listeners = []
@@ -152,7 +152,8 @@ class State(object):
         if event.channel_id not in self.messages:
             return
 
-        for sm in self.messages[event.channel_id]:
+        # TODO: performance
+        for sm in list(self.messages[event.channel_id]):
             if sm.id in event.ids:
                 self.messages[event.channel_id].remove(sm)
 

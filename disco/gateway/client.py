@@ -36,6 +36,7 @@ class GatewayClient(LoggingClass):
 
         # Websocket connection
         self.ws = None
+        self.ws_event = gevent.event.Event()
 
         # State
         self.seq = 0
@@ -125,6 +126,7 @@ class GatewayClient(LoggingClass):
     def on_error(self, error):
         if isinstance(error, KeyboardInterrupt):
             self.shutting_down = True
+            self.ws_event.set()
         raise Exception('WS recieved error: %s', error)
 
     def on_open(self):
@@ -176,4 +178,5 @@ class GatewayClient(LoggingClass):
         self.connect_and_run()
 
     def run(self):
-        self.connect_and_run()
+        gevent.spawn(self.connect_and_run)
+        self.ws_event.wait()

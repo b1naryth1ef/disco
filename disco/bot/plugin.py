@@ -17,6 +17,7 @@ class PluginDeco(object):
     """
     Prio = Priority
 
+    # TODO: dont smash class methods
     @staticmethod
     def add_meta_deco(meta):
         def deco(f):
@@ -152,6 +153,10 @@ class Plugin(LoggingClass, PluginDeco):
         self.storage = bot.storage
         self.config = config
 
+    @property
+    def name(self):
+        return self.__class__.__name__
+
     def bind_all(self):
         self.listeners = []
         self.commands = {}
@@ -188,6 +193,7 @@ class Plugin(LoggingClass, PluginDeco):
         """
         Executes a CommandEvent this plugin owns
         """
+        self.ctx['plugin'] = self
         self.ctx['guild'] = event.guild
         self.ctx['channel'] = event.channel
         self.ctx['user'] = event.author
