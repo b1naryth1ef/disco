@@ -9,10 +9,23 @@ from disco.types.message import Message
 from disco.types.voice import VoiceState
 from disco.types.guild import Guild, GuildMember, Role
 
-from disco.types.base import Model, Field, snowflake, listof
+from disco.types.base import Model, ModelMeta, Field, snowflake, listof
+
+# Mapping of discords event name to our event classes
+EVENTS_MAP = {}
 
 
-class GatewayEvent(Model):
+class GatewayEventMeta(ModelMeta):
+    def __new__(cls, name, parents, dct):
+        obj = super(GatewayEventMeta, cls).__new__(cls, name, parents, dct)
+
+        if name != 'GatewayEvent':
+            EVENTS_MAP[inflection.underscore(name).upper()] = obj
+
+        return obj
+
+
+class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
     """
     The GatewayEvent class wraps various functionality for events passed to us
     over the gateway websocket, and serves as a simple proxy to inner values for
@@ -25,7 +38,7 @@ class GatewayEvent(Model):
         """
         Create a new GatewayEvent instance based on event data.
         """
-        cls = globals().get(inflection.camelize(data['t'].lower()))
+        cls = EVENTS_MAP.get(data['t'])
         if not cls:
             raise Exception('Could not find cls for {} ({})'.format(data['t'], data))
 
