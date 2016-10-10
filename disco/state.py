@@ -195,7 +195,7 @@ class State(object):
         if event.channel.is_guild and event.channel.guild_id in self.guilds:
             del self.guilds[event.channel.id]
         elif event.channel.is_dm:
-            del self.pms[event.channel.id]
+            del self.dms[event.channel.id]
 
     def on_voice_state_update(self, event):
         # Happy path: we have the voice state and want to update/delete it

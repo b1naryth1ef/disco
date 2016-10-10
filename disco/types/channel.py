@@ -150,7 +150,7 @@ class Channel(Model, Permissible):
         Creates a new :class:`MessageIterator` for the channel with the given
         keyword arguments
         """
-        return MessageIterator(self.client, self.id, **kwargs)
+        return MessageIterator(self.client, self, **kwargs)
 
     @cached_property
     def guild(self):
@@ -313,7 +313,7 @@ class MessageIterator(object):
         Fills the internal buffer up with :class:`disco.types.message.Message` objects from the API
         """
         self._buffer = self.client.api.channels_messages_list(
-                self.channel,
+                self.channel.id,
                 before=self.before,
                 after=self.after,
                 limit=self.chunk_size)
@@ -326,9 +326,10 @@ class MessageIterator(object):
 
         if self.direction == self.Direction.UP:
             self.before = self._buffer[-1].id
+
         else:
             self._buffer.reverse()
-            self.after == self._buffer[-1].id
+            self.after = self._buffer[-1].id
 
     def next(self):
         return self.__next__()
