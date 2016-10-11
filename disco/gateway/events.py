@@ -9,7 +9,7 @@ from disco.types.message import Message
 from disco.types.voice import VoiceState
 from disco.types.guild import Guild, GuildMember, Role
 
-from disco.types.base import Model, ModelMeta, Field, snowflake, listof
+from disco.types.base import SlottedModel, ModelMeta, Field, snowflake, listof, lazy_datetime
 
 # Mapping of discords event name to our event classes
 EVENTS_MAP = {}
@@ -25,7 +25,7 @@ class GatewayEventMeta(ModelMeta):
         return obj
 
 
-class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
+class GatewayEvent(six.with_metaclass(GatewayEventMeta, SlottedModel)):
     """
     The GatewayEvent class wraps various functionality for events passed to us
     over the gateway websocket, and serves as a simple proxy to inner values for
@@ -167,7 +167,7 @@ class ChannelPinsUpdate(GatewayEvent):
     Sent when a channel's pins are updated.
     """
     channel_id = Field(snowflake)
-    last_pin_timestamp = Field(int)
+    last_pin_timestamp = Field(lazy_datetime)
 
 
 @wraps_model(User)

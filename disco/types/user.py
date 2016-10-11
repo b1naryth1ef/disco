@@ -4,6 +4,8 @@ from disco.types.base import Model, Field, snowflake, text, binary, with_equalit
 
 
 class User(Model, with_equality('id'), with_hash('id')):
+    __slots__ = ['id', 'username', 'discriminator', 'avatar', 'verified', 'email', 'presence']
+
     id = Field(snowflake)
     username = Field(text)
     discriminator = Field(str)
@@ -42,12 +44,16 @@ Status = Enum(
 
 
 class Game(Model):
+    __slots__ = ['type', 'name', 'url']
+
     type = Field(GameType)
     name = Field(text)
     url = Field(text)
 
 
 class Presence(Model):
+    __slots__ = ['user', 'game', 'status']
+
     user = Field(User)
     game = Field(Game)
     status = Field(Status)

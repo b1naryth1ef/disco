@@ -2,7 +2,7 @@ import gevent
 
 from holster.emitter import Emitter
 
-from disco.state import State
+from disco.state import State, StateConfig
 from disco.api.client import APIClient
 from disco.gateway.client import GatewayClient
 from disco.util.config import Config
@@ -82,9 +82,9 @@ class Client(object):
         self.events = Emitter(gevent.spawn)
         self.packets = Emitter(gevent.spawn)
 
-        self.state = State(self)
         self.api = APIClient(self)
         self.gw = GatewayClient(self, self.config.encoder)
+        self.state = State(self, StateConfig(self.config.get('state', {})))
 
         if self.config.manhole_enable:
             self.manhole_locals = {

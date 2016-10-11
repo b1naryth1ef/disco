@@ -2,7 +2,7 @@ import re
 
 from holster.enum import Enum
 
-from disco.types.base import Model, Field, snowflake, text, datetime, dictof, listof, enum
+from disco.types.base import Model, Field, snowflake, text, lazy_datetime, dictof, listof, enum
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
@@ -113,8 +113,8 @@ class Message(Model):
     author = Field(User)
     content = Field(text)
     nonce = Field(snowflake)
-    timestamp = Field(datetime)
-    edited_timestamp = Field(datetime)
+    timestamp = Field(lazy_datetime)
+    edited_timestamp = Field(lazy_datetime)
     tts = Field(bool)
     mention_everyone = Field(bool)
     pinned = Field(bool)

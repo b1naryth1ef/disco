@@ -29,3 +29,7 @@ def to_snowflake(i):
         return i.id
 
     raise Exception('{} ({}) is not convertable to a snowflake'.format(type(i), i))
+
+
+def calculate_shard(shard_count, guild_id):
+    return (guild_id >> 22) % shard_count

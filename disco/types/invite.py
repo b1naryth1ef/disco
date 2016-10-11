@@ -1,4 +1,4 @@
-from disco.types.base import Model, Field, datetime
+from disco.types.base import Model, Field, lazy_datetime
 from disco.types.user import User
 from disco.types.guild import Guild
 from disco.types.channel import Channel
@@ -37,4 +37,4 @@ class Invite(Model):
     max_uses = Field(int)
     uses = Field(int)
     temporary = Field(bool)
-    created_at = Field(datetime)
+    created_at = Field(lazy_datetime)

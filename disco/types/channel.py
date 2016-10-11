@@ -39,6 +39,7 @@ class PermissionOverwrite(Model):
     denied : :class:`PermissionValue`
         All denied permissions
     """
+    __slots__ = ['id', 'type', 'allow', 'deny', 'channel', 'channel_id']
 
     id = Field(snowflake)
     type = Field(enum(PermissionOverwriteType))

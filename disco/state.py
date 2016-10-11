@@ -3,8 +3,9 @@ import inflection
 
 from collections import defaultdict, deque, namedtuple
 from weakref import WeakValueDictionary
+from gevent.event import Event
 
-from disco.gateway.packets import OPCode
+from disco.util.config import Config
 
 
 class StackMessage(namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])):
@@ -23,7 +24,7 @@ class StackMessage(namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])
     """
 
 
-class StateConfig(object):
+class StateConfig(Config):
     """
     A configuration object for determining how the State tracking behaves.
 
@@ -43,9 +44,15 @@ class StateConfig(object):
         total number of possible :class:`StackMessage` objects kept in memory,
         using: `total_mesages_size * total_channels`. This can be tweaked based
         on usage to help prevent memory pressure.
+    sync_guild_members : bool
+        If true, guilds will be automatically synced when they are initially loaded
+        or joined. Generally this setting is OK for smaller bots, however bots in over
+        50 guilds will notice this operation can take a while to complete.
     """
     track_messages = True
     track_messages_size = 100
+
+    sync_guild_members = True
 
 
 class State(object):
@@ -84,9 +91,12 @@ class State(object):
         'PresenceUpdate'
     ]
 
-    def __init__(self, client, config=None):
+    def __init__(self, client, config):
         self.client = client
-        self.config = config or StateConfig()
+        self.config = config
+
+        self.ready = Event()
+        self.guilds_waiting_sync = 0
 
         self.me = None
         self.dms = {}
@@ -129,6 +139,7 @@ class State(object):
 
     def on_ready(self, event):
         self.me = event.user
+        self.guilds_waiting_sync = len(event.guilds)
 
     def on_message_create(self, event):
         if self.config.track_messages:
@@ -158,26 +169,27 @@ class State(object):
                 self.messages[event.channel_id].remove(sm)
 
     def on_guild_create(self, event):
+        if event.unavailable is False:
+            self.guilds_waiting_sync -= 1
+            if self.guilds_waiting_sync <= 0:
+                self.ready.set()
+
         self.guilds[event.guild.id] = event.guild
         self.channels.update(event.guild.channels)
 
         for member in six.itervalues(event.guild.members):
             self.users[member.user.id] = member.user
 
-        # Request full member list
-        self.client.gw.send(OPCode.REQUEST_GUILD_MEMBERS, {
-            'guild_id': event.guild.id,
-            'query': '',
-            'limit': 0,
-        })
+        if self.config.sync_guild_members:
+            event.guild.sync()
 
     def on_guild_update(self, event):
         self.guilds[event.guild.id].update(event.guild)
 
     def on_guild_delete(self, event):
-        if event.guild_id in self.guilds:
+        if event.id in self.guilds:
             # Just delete the guild, channel references will fall
-            del self.guilds[event.guild_id]
+            del self.guilds[event.id]
 
     def on_channel_create(self, event):
         if event.channel.is_guild and event.channel.guild_id in self.guilds:
@@ -192,14 +204,16 @@ class State(object):
             self.channels[event.channel.id].update(event.channel)
 
     def on_channel_delete(self, event):
-        if event.channel.is_guild and event.channel.guild_id in self.guilds:
-            del self.guilds[event.channel.id]
-        elif event.channel.is_dm:
+        if event.channel.is_guild and event.channel.guild and event.channel.id in event.channel.guild.channels:
+            del event.channel.guild.channels[event.channel.id]
+        elif event.channel.is_dm and event.channel.id in self.dms:
             del self.dms[event.channel.id]
 
     def on_voice_state_update(self, event):
         # Happy path: we have the voice state and want to update/delete it
         guild = self.guilds.get(event.state.guild_id)
+        if not guild:
+            return
 
         if event.state.session_id in guild.voice_states:
             if event.state.channel_id:
@@ -218,14 +232,12 @@ class State(object):
         if event.member.guild_id not in self.guilds:
             return
 
-        event.member.guild = self.guilds[event.member.guild_id]
         self.guilds[event.member.guild_id].members[event.member.id] = event.member
 
     def on_guild_member_update(self, event):
         if event.member.guild_id not in self.guilds:
             return
 
-        event.member.guild = self.guilds[event.member.guild_id]
         self.guilds[event.member.guild_id].members[event.member.id].update(event.member)
 
     def on_guild_member_remove(self, event):
@@ -243,10 +255,10 @@ class State(object):
 
         guild = self.guilds[event.guild_id]
         for member in event.members:
-            member.guild = guild
             member.guild_id = guild.id
             guild.members[member.id] = member
             self.users[member.id] = member.user
+        guild.synced = True
 
     def on_guild_role_create(self, event):
         if event.guild_id not in self.guilds:

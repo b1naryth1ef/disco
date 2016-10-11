@@ -12,6 +12,11 @@ class VoiceState(Model):
     self_mute = Field(bool)
     suppress = Field(bool)
 
+    __slots__ = [
+        'session_id', 'guild_id', 'channel_id', 'user_id', 'deaf', 'mute', 'self_deaf',
+        'self_mute', 'suppress'
+    ]
+
     @property
     def guild(self):
         return self.client.state.guilds.get(self.guild_id)

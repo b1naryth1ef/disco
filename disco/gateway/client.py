@@ -8,6 +8,7 @@ from disco.gateway.events import GatewayEvent
 from disco.gateway.encoding import ENCODERS
 from disco.util.websocket import Websocket
 from disco.util.logging import LoggingClass
+from disco.util.limiter import SimpleLimiter
 
 TEN_MEGABYTES = 10490000
 
@@ -23,6 +24,9 @@ class GatewayClient(LoggingClass):
 
         self.events = client.events
         self.packets = client.packets
+
+        # Its actually 60, 120 but lets give ourselves a buffer
+        self.limiter = SimpleLimiter(60, 130)
 
         # Create emitter and bind to gateway payloads
         self.packets.on((RECV, OPCode.DISPATCH), self.handle_dispatch)
@@ -51,6 +55,11 @@ class GatewayClient(LoggingClass):
         self._heartbeat_task = None
 
     def send(self, op, data):
+        self.limiter.check()
+        return self._send(op, data)
+
+    def _send(self, op, data):
+        self.log.debug('SEND %s', op)
         self.packets.emit((SEND, op), data)
         self.ws.send(self.encoder.encode({
             'op': op.value,
@@ -59,7 +68,7 @@ class GatewayClient(LoggingClass):
 
     def heartbeat_task(self, interval):
         while True:
-            self.send(OPCode.HEARTBEAT, self.seq)
+            self._send(OPCode.HEARTBEAT, self.seq)
             gevent.sleep(interval / 1000)
 
     def handle_dispatch(self, packet):
@@ -68,7 +77,7 @@ class GatewayClient(LoggingClass):
         self.client.events.emit(obj.__class__.__name__, obj)
 
     def handle_heartbeat(self, packet):
-        self.send(OPCode.HEARTBEAT, self.seq)
+        self._send(OPCode.HEARTBEAT, self.seq)
 
     def handle_reconnect(self, packet):
         self.log.warning('Received RECONNECT request, forcing a fresh reconnect')

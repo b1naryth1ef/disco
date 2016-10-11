@@ -35,14 +35,14 @@ class FieldType(object):
 
 
 class Field(FieldType):
-    def __init__(self, typ, alias=None):
+    def __init__(self, typ, alias=None, default=None):
         super(Field, self).__init__(typ)
 
         # Set names
         self.src_name = alias
         self.dst_name = None
 
-        self.default = None
+        self.default = default
 
         if isinstance(self.typ, FieldType):
             self.default = self.typ.default
@@ -110,6 +110,21 @@ def dictof(*args, **kwargs):
     return _Dict(*args, **kwargs)
 
 
+def lazy_datetime(data):
+    if not data:
+        return property(lambda: None)
+
+    def get():
+        for fmt in DATETIME_FORMATS:
+            try:
+                return real_datetime.strptime(data.rsplit('+', 1)[0], fmt)
+            except (ValueError, TypeError):
+                continue
+        raise ValueError('Failed to conver `{}` to datetime'.format(data))
+
+    return property(get)
+
+
 def datetime(data):
     if not data:
         return None
@@ -155,9 +170,18 @@ def with_hash(field):
     return T
 
 
+# Resolution hacks :(
+Model = None
+SlottedModel = None
+
+
 class ModelMeta(type):
     def __new__(cls, name, parents, dct):
         fields = {}
+
+        for parent in parents:
+            if issubclass(parent, Model) and parent != Model:
+                fields.update(parent._fields)
 
         for k, v in six.iteritems(dct):
             if not isinstance(v, Field):
@@ -165,7 +189,14 @@ class ModelMeta(type):
 
             v.set_name(k)
             fields[k] = v
-            dct[k] = None
+
+        dct = {k: v for k, v in six.iteritems(dct) if k not in fields}
+
+        if SlottedModel in parents and '__slots__' not in dct:
+            dct['__slots__'] = tuple(fields.keys())
+        elif '__slots__' in dct and Model in parents and SlottedModel:
+            dct['__slots__'] = tuple(dct['__slots__'])
+            parents = tuple([SlottedModel] + [i for i in parents if i != Model])
 
         dct['_fields'] = fields
         return super(ModelMeta, cls).__new__(cls, name, parents, dct)
@@ -182,17 +213,20 @@ class Model(six.with_metaclass(ModelMeta)):
         else:
             obj = kwargs
 
-        for name, field in six.iteritems(self._fields):
-            if field.src_name not in obj or not obj[field.src_name]:
+        for name, field in six.iteritems(self.__class__._fields):
+            if field.src_name not in obj or obj[field.src_name] is None:
                 if field.has_default():
-                    setattr(self, field.dst_name, field.default())
+                    default = field.default() if callable(field.default) else field.default
+                else:
+                    default = None
+                setattr(self, field.dst_name, default)
                 continue
 
             value = field.try_convert(obj[field.src_name], self.client)
             setattr(self, field.dst_name, value)
 
     def update(self, other):
-        for name in six.iterkeys(self._fields):
+        for name in six.iterkeys(self.__class__._fields):
             value = getattr(other, name)
             if value:
                 setattr(self, name, value)
@@ -206,7 +240,7 @@ class Model(six.with_metaclass(ModelMeta)):
                     pass
 
     def to_dict(self):
-        return {k: getattr(self, k) for k in six.iterkeys(self._fields)}
+        return {k: getattr(self, k) for k in six.iterkeys(self.__class__._fields)}
 
     @classmethod
     def create(cls, client, data, **kwargs):
@@ -227,3 +261,7 @@ class Model(six.with_metaclass(ModelMeta)):
                 except:
                     # TODO: wtf
                     pass
+
+
+class SlottedModel(Model):
+    __slots__ = ['client']

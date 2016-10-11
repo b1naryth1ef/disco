@@ -2,10 +2,11 @@ import six
 
 from holster.enum import Enum
 
+from disco.gateway.packets import OPCode
 from disco.api.http import APIException
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
-from disco.types.base import Model, Field, snowflake, listof, dictof, datetime, text, binary, enum
+from disco.types.base import Model, Field, snowflake, listof, dictof, lazy_datetime, text, binary, enum
 from disco.types.user import User
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
@@ -38,6 +39,8 @@ class Emoji(Model):
     roles : list(snowflake)
         Roles this emoji is attached to.
     """
+    __slots__ = ['id', 'name', 'require_colons', 'managed', 'roles', 'guild', 'guild_id']
+
     id = Field(snowflake)
     name = Field(text)
     require_colons = Field(bool)
@@ -66,6 +69,11 @@ class Role(Model):
     position : int
         The position of this role in the hierarchy.
     """
+    __slots__ = [
+        'id', 'name', 'hoist', 'managed', 'color', 'permissions', 'position', 'mentionable',
+        'guild', 'guild_id'
+    ]
+
     id = Field(snowflake)
     name = Field(text)
     hoist = Field(bool)
@@ -108,12 +116,16 @@ class GuildMember(Model):
     roles : list(snowflake)
         Roles this member is part of.
     """
+    __slots__ = [
+        'user', 'guild_id', 'nick', 'mute', 'deaf', 'joined_at', 'roles', 'guild'
+    ]
+
     user = Field(User)
     guild_id = Field(snowflake)
     nick = Field(text)
     mute = Field(bool)
     deaf = Field(bool)
-    joined_at = Field(datetime)
+    joined_at = Field(lazy_datetime)
     roles = Field(listof(snowflake))
 
     def get_voice_state(self):
@@ -242,6 +254,8 @@ class Guild(Model, Permissible):
     emojis = Field(dictof(Emoji, key='id'))
     voice_states = Field(dictof(VoiceState, key='session_id'))
 
+    synced = Field(bool, default=False)
+
     def __init__(self, *args, **kwargs):
         super(Guild, self).__init__(*args, **kwargs)
 
@@ -325,4 +339,14 @@ class Guild(Model, Permissible):
             'color': role.color,
             'hoist': role.hoist,
             'mentionable': role.mentionable,
+        })
+
+    def sync(self):
+        if self.synced:
+            return
+
+        self.client.gw.send(OPCode.REQUEST_GUILD_MEMBERS, {
+            'guild_id': self.id,
+            'query': '',
+            'limit': 0,
         })

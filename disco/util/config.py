@@ -13,6 +13,9 @@ class Config(object):
         if obj:
             self.__dict__.update(obj)
 
+    def get(self, key, default=None):
+        return self.__dict__.get(key, default)
+
     @classmethod
     def from_file(cls, path):
         inst = cls()
