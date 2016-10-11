@@ -156,6 +156,12 @@ class Message(SlottedModel):
         """
         return self.client.state.channels.get(self.channel_id)
 
+    def pin(self):
+        return self.channel.create_pin(self)
+
+    def unpin(self):
+        return self.channel.delete_pin(self)
+
     def reply(self, *args, **kwargs):
         """
         Reply to this message (proxys arguments to

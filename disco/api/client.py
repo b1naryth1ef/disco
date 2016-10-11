@@ -185,3 +185,11 @@ class APIClient(LoggingClass):
 
     def guilds_roles_delete(self, guild, role):
         self.http(Routes.GUILDS_ROLES_DELETE, dict(guild=guild, role=role))
+
+    def invites_get(self, invite):
+        r = self.http(Routes.INVITES_GET, dict(invite=invite))
+        return Invite.create(self.client, r.json())
+
+    def invites_delete(self, invite):
+        r = self.http(Routes.INVITES_DELETE, dict(invite=invite))
+        return Invite.create(self.client, r.json())

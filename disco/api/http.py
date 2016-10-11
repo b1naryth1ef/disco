@@ -91,6 +91,11 @@ class Routes(object):
     USERS_ME_CONNECTIONS_LIST = (HTTPMethod.GET, USERS + '/@me/connections')
     USERS_GET = (HTTPMethod.GET, USERS + '/{user}')
 
+    # Invites
+    INVITES = '/invites'
+    INVITES_GET = (HTTPMethod.GET, INVITES + '/{invite}')
+    INVITES_DELETE = (HTTPMethod.DELETE, INVITES + '/{invite}')
+
 
 class APIException(Exception):
     """

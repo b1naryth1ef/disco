@@ -35,7 +35,6 @@ class PermissionOverwrite(ChannelSubType):
     """
     A PermissionOverwrite for a :class:`Channel`
 
-
     Attributes
     ----------
     id : snowflake
@@ -52,11 +51,30 @@ class PermissionOverwrite(ChannelSubType):
     allow = Field(PermissionValue)
     deny = Field(PermissionValue)
 
+    @classmethod
+    def create(cls, channel, entity, allow=0, deny=0):
+        from disco.types.guild import Role
+
+        type = PermissionOverwriteType.ROLE if isinstance(entity, Role) else PermissionOverwriteType.MEMBER
+        return cls(
+            client=channel.client,
+            id=entity.id,
+            type=type,
+            allow=allow,
+            deny=deny,
+            channel_id=channel.id
+        ).save()
+
     def save(self):
-        return self.channel.update_overwrite(self)
+        self.client.api.channels_permissions_modify(self.channel_id,
+            self.id,
+            self.allow.value or 0,
+            self.deny.value or 0,
+            self.type.name)
+        return self
 
     def delete(self):
-        return self.channel.delete_overwrite(self)
+        self.client.api.channels_permissions_delete(self.channel_id, self.id)
 
 
 class Channel(SlottedModel, Permissible):
@@ -152,19 +170,19 @@ class Channel(SlottedModel, Permissible):
         """
         return self.messages_iter()
 
-    def messages_iter(self, **kwargs):
-        """
-        Creates a new :class:`MessageIterator` for the channel with the given
-        keyword arguments
-        """
-        return MessageIterator(self.client, self, **kwargs)
-
     @cached_property
     def guild(self):
         """
         Guild this channel belongs to (if relevant)
         """
         return self.client.state.guilds.get(self.guild_id)
+
+    def messages_iter(self, **kwargs):
+        """
+        Creates a new :class:`MessageIterator` for the channel with the given
+        keyword arguments
+        """
+        return MessageIterator(self.client, self, **kwargs)
 
     def get_invites(self):
         """
@@ -175,6 +193,10 @@ class Channel(SlottedModel, Permissible):
         """
         return self.client.api.channels_invites_list(self.id)
 
+    def create_invite(self, *args, **kwargs):
+        from disco.types.invite import Invite
+        return Invite.create(self, *args, **kwargs)
+
     def get_pins(self):
         """
         Returns
@@ -183,6 +205,12 @@ class Channel(SlottedModel, Permissible):
             All pinned messages for this channel.
         """
         return self.client.api.channels_pins_list(self.id)
+
+    def create_pin(self, message):
+        self.client.api.channels_pins_create(self.id, to_snowflake(message))
+
+    def delete_pin(self, message):
+        self.client.api.channels_pins_delete(self.id, to_snowflake(message))
 
     def send_message(self, content, nonce=None, tts=False):
         """
@@ -213,32 +241,8 @@ class Channel(SlottedModel, Permissible):
         vc.connect(*args, **kwargs)
         return vc
 
-    def create_overwrite(self, entity, allow=0, deny=0):
-        from disco.types.guild import Role
-
-        type = PermissionOverwriteType.ROLE if isinstance(entity, Role) else PermissionOverwriteType.MEMBER
-        ow = PermissionOverwrite(
-            id=entity.id,
-            type=type,
-            allow=allow,
-            deny=deny
-        )
-
-        ow.channel_id = self.id
-        ow.channel = self
-
-        return self.update_overwrite(ow)
-
-    def update_overwrite(self, ow):
-        self.client.api.channels_permissions_modify(self.id,
-            ow.id,
-            ow.allow.value if ow.allow else 0,
-            ow.deny.value if ow.deny else 0,
-            ow.type.name)
-        return ow
-
-    def delete_overwrite(self, ow):
-        self.client.api.channels_permissions_delete(self.id, ow.id)
+    def create_overwrite(self, *args, **kwargs):
+        return PermissionOverwrite.create(self, *args, **kwargs)
 
     def delete_message(self, message):
         """

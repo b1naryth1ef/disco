@@ -1,4 +1,5 @@
 import six
+import gevent
 import inspect
 import functools
 
@@ -184,7 +185,7 @@ class ModelMeta(type):
         fields = {}
 
         for parent in parents:
-            if issubclass(parent, Model) and parent != Model:
+            if Model and issubclass(parent, Model) and parent != Model:
                 fields.update(parent._fields)
 
         for k, v in six.iteritems(dct):
@@ -207,7 +208,13 @@ class ModelMeta(type):
         return super(ModelMeta, cls).__new__(cls, name, parents, dct)
 
 
-class Model(six.with_metaclass(ModelMeta)):
+class AsyncChainable(object):
+    def after(self, delay):
+        gevent.sleep(delay)
+        return self
+
+
+class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
     def __init__(self, *args, **kwargs):
         self.client = kwargs.pop('client', None)
 
