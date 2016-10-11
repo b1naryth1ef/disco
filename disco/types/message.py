@@ -2,7 +2,7 @@ import re
 
 from holster.enum import Enum
 
-from disco.types.base import Model, Field, snowflake, text, lazy_datetime, dictof, listof, enum
+from disco.types.base import SlottedModel, Field, snowflake, text, lazy_datetime, dictof, listof, enum
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
@@ -19,7 +19,7 @@ MessageType = Enum(
 )
 
 
-class MessageEmbed(Model):
+class MessageEmbed(SlottedModel):
     """
     Message embed object
 
@@ -40,7 +40,7 @@ class MessageEmbed(Model):
     url = Field(str)
 
 
-class MessageAttachment(Model):
+class MessageAttachment(SlottedModel):
     """
     Message attachment object
 
@@ -70,7 +70,7 @@ class MessageAttachment(Model):
     width = Field(int)
 
 
-class Message(Model):
+class Message(SlottedModel):
     """
     Represents a Message created within a Channel on Discord.
 

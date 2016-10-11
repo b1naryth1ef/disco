@@ -276,7 +276,10 @@ class State(object):
         if event.guild_id not in self.guilds:
             return
 
-        del self.guilds[event.guild_id].roles[event.role.id]
+        if event.role_id not in self.guilds[event.guild_id].roles:
+            return
+
+        del self.guilds[event.guild_id].roles[event.role_id]
 
     def on_presence_update(self, event):
         if event.user.id in self.users:

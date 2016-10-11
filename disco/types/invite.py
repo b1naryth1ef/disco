@@ -1,10 +1,10 @@
-from disco.types.base import Model, Field, lazy_datetime
+from disco.types.base import SlottedModel, Field, lazy_datetime
 from disco.types.user import User
 from disco.types.guild import Guild
 from disco.types.channel import Channel
 
 
-class Invite(Model):
+class Invite(SlottedModel):
     """
     An invite object
 

@@ -5,6 +5,8 @@ import functools
 from holster.enum import BaseEnumMeta
 from datetime import datetime as real_datetime
 
+from disco.util.functional import CachedSlotProperty
+
 DATETIME_FORMATS = [
     '%Y-%m-%dT%H:%M:%S.%f',
     '%Y-%m-%dT%H:%M:%S'
@@ -24,6 +26,8 @@ class FieldType(object):
             self.typ = typ
         elif isinstance(typ, BaseEnumMeta):
             self.typ = lambda raw, _: typ.get(raw)
+        elif typ is None:
+            self.typ = lambda x, y: None
         else:
             self.typ = lambda raw, _: typ(raw)
 
@@ -192,11 +196,12 @@ class ModelMeta(type):
 
         dct = {k: v for k, v in six.iteritems(dct) if k not in fields}
 
-        if SlottedModel in parents and '__slots__' not in dct:
-            dct['__slots__'] = tuple(fields.keys())
-        elif '__slots__' in dct and Model in parents and SlottedModel:
-            dct['__slots__'] = tuple(dct['__slots__'])
-            parents = tuple([SlottedModel] + [i for i in parents if i != Model])
+        if SlottedModel and any(map(lambda k: issubclass(k, SlottedModel), parents)):
+            bases = set(k for k, v in six.iteritems(dct) if isinstance(v, CachedSlotProperty))
+            if '__slots__' in dct:
+                dct['__slots__'] = tuple(set(dct['__slots__']) | set(fields.keys()) | bases)
+            else:
+                dct['__slots__'] = tuple(fields.keys()) + tuple(bases)
 
         dct['_fields'] = fields
         return super(ModelMeta, cls).__new__(cls, name, parents, dct)

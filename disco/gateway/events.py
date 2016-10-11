@@ -92,6 +92,7 @@ def wraps_model(model, alias=None):
     def deco(cls):
         cls._fields[alias] = Field(model)
         cls._fields[alias].set_name(alias)
+        cls.__slots__ = cls.__slots__ + (alias, )
         cls._wraps_model = (alias, model)
         return cls
     return deco
@@ -247,11 +248,12 @@ class GuildRoleUpdate(GuildRoleCreate):
     pass
 
 
-class GuildRoleDelete(GuildRoleCreate):
+class GuildRoleDelete(GatewayEvent):
     """
     Sent when a role is deleted.
     """
-    pass
+    guild_id = Field(snowflake)
+    role_id = Field(snowflake)
 
 
 @wraps_model(Message)

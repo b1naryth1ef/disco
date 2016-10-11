@@ -1,11 +1,9 @@
 from holster.enum import Enum
 
-from disco.types.base import Model, Field, snowflake, text, binary, with_equality, with_hash
+from disco.types.base import SlottedModel, Field, snowflake, text, binary, with_equality, with_hash
 
 
-class User(Model, with_equality('id'), with_hash('id')):
-    __slots__ = ['id', 'username', 'discriminator', 'avatar', 'verified', 'email', 'presence']
-
+class User(SlottedModel, with_equality('id'), with_hash('id')):
     id = Field(snowflake)
     username = Field(text)
     discriminator = Field(str)
@@ -13,7 +11,7 @@ class User(Model, with_equality('id'), with_hash('id')):
     verified = Field(bool)
     email = Field(str)
 
-    presence = None
+    presence = Field(None)
 
     @property
     def mention(self):
@@ -43,17 +41,13 @@ Status = Enum(
 )
 
 
-class Game(Model):
-    __slots__ = ['type', 'name', 'url']
-
+class Game(SlottedModel):
     type = Field(GameType)
     name = Field(text)
     url = Field(text)
 
 
-class Presence(Model):
-    __slots__ = ['user', 'game', 'status']
-
+class Presence(SlottedModel):
     user = Field(User)
     game = Field(Game)
     status = Field(Status)

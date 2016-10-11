@@ -6,7 +6,7 @@ from disco.gateway.packets import OPCode
 from disco.api.http import APIException
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
-from disco.types.base import Model, Field, snowflake, listof, dictof, lazy_datetime, text, binary, enum
+from disco.types.base import SlottedModel, Field, snowflake, listof, dictof, lazy_datetime, text, binary, enum
 from disco.types.user import User
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
@@ -22,7 +22,15 @@ VerificationLevel = Enum(
 )
 
 
-class Emoji(Model):
+class GuildSubType(SlottedModel):
+    guild_id = Field(None)
+
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
+
+
+class Emoji(GuildSubType):
     """
     An emoji object
 
@@ -39,8 +47,6 @@ class Emoji(Model):
     roles : list(snowflake)
         Roles this emoji is attached to.
     """
-    __slots__ = ['id', 'name', 'require_colons', 'managed', 'roles', 'guild', 'guild_id']
-
     id = Field(snowflake)
     name = Field(text)
     require_colons = Field(bool)
@@ -48,7 +54,7 @@ class Emoji(Model):
     roles = Field(listof(snowflake))
 
 
-class Role(Model):
+class Role(GuildSubType):
     """
     A role object
 
@@ -69,11 +75,6 @@ class Role(Model):
     position : int
         The position of this role in the hierarchy.
     """
-    __slots__ = [
-        'id', 'name', 'hoist', 'managed', 'color', 'permissions', 'position', 'mentionable',
-        'guild', 'guild_id'
-    ]
-
     id = Field(snowflake)
     name = Field(text)
     hoist = Field(bool)
@@ -90,12 +91,8 @@ class Role(Model):
     def mention(self):
         return '<@{}>'.format(self.id)
 
-    @cached_property
-    def guild(self):
-        return self.client.state.guilds.get(self.id)
 
-
-class GuildMember(Model):
+class GuildMember(GuildSubType):
     """
     A GuildMember object
 
@@ -116,10 +113,6 @@ class GuildMember(Model):
     roles : list(snowflake)
         Roles this member is part of.
     """
-    __slots__ = [
-        'user', 'guild_id', 'nick', 'mute', 'deaf', 'joined_at', 'roles', 'guild'
-    ]
-
     user = Field(User)
     guild_id = Field(snowflake)
     nick = Field(text)
@@ -170,21 +163,17 @@ class GuildMember(Model):
         roles = self.roles + [role.id]
         self.client.api.guilds_members_modify(self.guild.id, self.user.id, roles=roles)
 
-    @property
+    @cached_property
     def owner(self):
         return self.guild.owner_id == self.id
 
-    @property
+    @cached_property
     def mention(self):
         if self.nick:
             return '<@!{}>'.format(self.id)
         return self.user.mention
 
     @cached_property
-    def guild(self):
-        return self.client.state.guilds.get(self.guild_id)
-
-    @property
     def id(self):
         """
         Alias to the guild members user id
@@ -192,7 +181,7 @@ class GuildMember(Model):
         return self.user.id
 
 
-class Guild(Model, Permissible):
+class Guild(SlottedModel, Permissible):
     """
     A guild object
 

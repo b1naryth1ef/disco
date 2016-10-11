@@ -5,7 +5,7 @@ from holster.enum import Enum
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property, one_or_many, chunks
 from disco.types.user import User
-from disco.types.base import Model, Field, snowflake, enum, listof, dictof, text
+from disco.types.base import SlottedModel, Field, snowflake, enum, listof, dictof, text
 from disco.types.permissions import Permissions, Permissible, PermissionValue
 from disco.voice.client import VoiceClient
 
@@ -23,7 +23,15 @@ PermissionOverwriteType = Enum(
 )
 
 
-class PermissionOverwrite(Model):
+class ChannelSubType(SlottedModel):
+    channel_id = Field(None)
+
+    @cached_property
+    def channel(self):
+        return self.client.state.channels.get(self.channel_id)
+
+
+class PermissionOverwrite(ChannelSubType):
     """
     A PermissionOverwrite for a :class:`Channel`
 
@@ -39,8 +47,6 @@ class PermissionOverwrite(Model):
     denied : :class:`PermissionValue`
         All denied permissions
     """
-    __slots__ = ['id', 'type', 'allow', 'deny', 'channel', 'channel_id']
-
     id = Field(snowflake)
     type = Field(enum(PermissionOverwriteType))
     allow = Field(PermissionValue)
@@ -53,7 +59,7 @@ class PermissionOverwrite(Model):
         return self.channel.delete_overwrite(self)
 
 
-class Channel(Model, Permissible):
+class Channel(SlottedModel, Permissible):
     """
     Represents a Discord Channel
 
