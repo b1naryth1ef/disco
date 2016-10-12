@@ -26,12 +26,16 @@ class HashMap(IterableUserDict):
     def find_one(self, predicate):
         return next(self.find(predicate), None)
 
-    def select(self, **kwargs):
+    def select(self, *args, **kwargs):
+        if kwargs:
+            args += [kwargs]
+
         for obj in self.values():
-            for k, v in six.iteritems(kwargs):
-                if getattr(obj, k) != v:
-                    continue
-                yield obj
+            for check in args:
+                for k, v in six.iteritems(check):
+                    if getattr(obj, k) != v:
+                        break
+                    yield obj
 
     def select_one(self, **kwargs):
         return next(self.select(**kwargs), None)

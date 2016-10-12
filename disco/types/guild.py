@@ -6,7 +6,7 @@ from disco.gateway.packets import OPCode
 from disco.api.http import APIException
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
-from disco.types.base import SlottedModel, Field, snowflake, listof, dictof, lazy_datetime, text, binary, enum
+from disco.types.base import SlottedModel, Field, snowflake, listof, dictof, text, binary, enum
 from disco.types.user import User
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
@@ -118,7 +118,7 @@ class GuildMember(GuildSubType):
     nick = Field(text)
     mute = Field(bool)
     deaf = Field(bool)
-    joined_at = Field(lazy_datetime)
+    joined_at = Field(str)
     roles = Field(listof(snowflake))
 
     def get_voice_state(self):
