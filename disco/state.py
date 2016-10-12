@@ -141,6 +141,10 @@ class State(object):
         self.me = event.user
         self.guilds_waiting_sync = len(event.guilds)
 
+        for dm in event.private_channels:
+            self.dms[dm.id] = dm
+            self.channels[dm.id] = dm
+
     def on_message_create(self, event):
         if self.config.track_messages:
             self.messages[event.message.channel_id].append(

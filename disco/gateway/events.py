@@ -107,6 +107,7 @@ class Ready(GatewayEvent):
     session_id = Field(str)
     user = Field(User)
     guilds = Field(listof(Guild))
+    private_channels = Field(listof(Channel))
 
 
 class Resumed(GatewayEvent):

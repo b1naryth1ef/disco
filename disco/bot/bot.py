@@ -237,13 +237,17 @@ class Bot(object):
         if self.config.commands_require_mention:
             mention_direct = msg.is_mentioned(self.client.state.me)
             mention_everyone = msg.mention_everyone
-            mention_roles = list(filter(lambda r: msg.is_mentioned(r),
-                msg.guild.get_member(self.client.state.me).roles))
+
+            mention_roles = []
+            if msg.guild:
+                mention_roles = list(filter(lambda r: msg.is_mentioned(r),
+                    msg.guild.get_member(self.client.state.me).roles))
 
             if not any((
                 self.config.commands_mention_rules['user'] and mention_direct,
                 self.config.commands_mention_rules['everyone'] and mention_everyone,
                 self.config.commands_mention_rules['role'] and any(mention_roles),
+                msg.channel.is_dm
             )):
                 raise StopIteration
 

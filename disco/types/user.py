@@ -6,8 +6,9 @@ from disco.types.base import SlottedModel, Field, snowflake, text, binary, with_
 class User(SlottedModel, with_equality('id'), with_hash('id')):
     id = Field(snowflake)
     username = Field(text)
-    discriminator = Field(str)
     avatar = Field(binary)
+    discriminator = Field(str)
+    bot = Field(bool)
     verified = Field(bool)
     email = Field(str)
 
