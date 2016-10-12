@@ -320,3 +320,11 @@ class VoiceServerUpdate(GatewayEvent):
     token = Field(str)
     endpoint = Field(str)
     guild_id = Field(snowflake)
+
+
+class WebhooksUpdate(GatewayEvent):
+    """
+    Sent when a channels webhooks are updated.
+    """
+    channel_id = Field(snowflake)
+    guild_id = Field(snowflake)
