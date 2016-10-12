@@ -7,6 +7,7 @@ from holster.enum import BaseEnumMeta
 from datetime import datetime as real_datetime
 
 from disco.util.functional import CachedSlotProperty
+from disco.util.hashmap import HashMap
 
 DATETIME_FORMATS = [
     '%Y-%m-%dT%H:%M:%S.%f',
@@ -70,7 +71,7 @@ class Field(FieldType):
 
 
 class _Dict(FieldType):
-    default = dict
+    default = HashMap
 
     def __init__(self, typ, key=None):
         super(_Dict, self).__init__(typ)
@@ -79,9 +80,9 @@ class _Dict(FieldType):
     def try_convert(self, raw, client):
         if self.key:
             converted = [self.typ(i, client) for i in raw]
-            return {getattr(i, self.key): i for i in converted}
+            return HashMap({getattr(i, self.key): i for i in converted})
         else:
-            return {k: self.typ(v, client) for k, v in six.iteritems(raw)}
+            return HashMap({k: self.typ(v, client) for k, v in six.iteritems(raw)})
 
 
 class _List(FieldType):

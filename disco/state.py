@@ -1,11 +1,12 @@
 import six
 import inflection
 
-from collections import defaultdict, deque, namedtuple
+from collections import deque, namedtuple
 from weakref import WeakValueDictionary
 from gevent.event import Event
 
 from disco.util.config import Config
+from disco.util.hashmap import HashMap, DefaultHashMap
 
 
 class StackMessage(namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])):
@@ -99,15 +100,15 @@ class State(object):
         self.guilds_waiting_sync = 0
 
         self.me = None
-        self.dms = {}
-        self.guilds = {}
-        self.channels = WeakValueDictionary()
-        self.users = WeakValueDictionary()
-        self.voice_states = WeakValueDictionary()
+        self.dms = HashMap()
+        self.guilds = HashMap()
+        self.channels = HashMap(WeakValueDictionary())
+        self.users = HashMap(WeakValueDictionary())
+        self.voice_states = HashMap(WeakValueDictionary())
 
         # If message tracking is enabled, listen to those events
         if self.config.track_messages:
-            self.messages = defaultdict(lambda: deque(maxlen=self.config.track_messages_size))
+            self.messages = DefaultHashMap(lambda: deque(maxlen=self.config.track_messages_size))
             self.EVENTS += ['MessageDelete', 'MessageDeleteBulk']
 
         # The bound listener objects
