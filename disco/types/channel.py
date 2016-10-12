@@ -51,6 +51,8 @@ class PermissionOverwrite(ChannelSubType):
     allow = Field(PermissionValue)
     deny = Field(PermissionValue)
 
+    channel_id = Field(snowflake)
+
     @classmethod
     def create(cls, channel, entity, allow=0, deny=0):
         from disco.types.guild import Role

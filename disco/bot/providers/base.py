@@ -1,9 +1,7 @@
 import six
 import pickle
 
-from six.moves import map
-
-from UserDict import UserDict
+from six.moves import map, UserDict
 
 
 ROOT_SENTINEL = u'\u200B'

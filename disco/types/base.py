@@ -67,7 +67,7 @@ class Field(FieldType):
         try:
             return self.typ(raw, client)
         except Exception as e:
-            raise ConversionError(self, raw, e)
+            six.raise_from(ConversionError(self, raw, e), e)
 
 
 class _Dict(FieldType):
@@ -159,7 +159,7 @@ def binary(obj):
             return obj.decode('utf-8')
         return unicode(obj)
     else:
-        return bytes(obj)
+        return bytes(obj, 'utf-8')
 
 
 def with_equality(field):
@@ -196,26 +196,33 @@ class ModelMeta(type):
             v.set_name(k)
             fields[k] = v
 
-        dct = {k: v for k, v in six.iteritems(dct) if k not in fields}
-
         if SlottedModel and any(map(lambda k: issubclass(k, SlottedModel), parents)):
-            bases = set(k for k, v in six.iteritems(dct) if isinstance(v, CachedSlotProperty))
+            bases = set(v.stored_name for v in six.itervalues(dct) if isinstance(v, CachedSlotProperty))
+
             if '__slots__' in dct:
                 dct['__slots__'] = tuple(set(dct['__slots__']) | set(fields.keys()) | bases)
             else:
                 dct['__slots__'] = tuple(fields.keys()) + tuple(bases)
+
+            dct = {k: v for k, v in six.iteritems(dct) if k not in dct['__slots__']}
+        else:
+            dct = {k: v for k, v in six.iteritems(dct) if k not in fields}
 
         dct['_fields'] = fields
         return super(ModelMeta, cls).__new__(cls, name, parents, dct)
 
 
 class AsyncChainable(object):
+    __slots__ = []
+
     def after(self, delay):
         gevent.sleep(delay)
         return self
 
 
 class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
+    __slots__ = ['client']
+
     def __init__(self, *args, **kwargs):
         self.client = kwargs.pop('client', None)
 
@@ -257,8 +264,8 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
 
     @classmethod
     def create(cls, client, data, **kwargs):
+        data.update(kwargs)
         inst = cls(data, client)
-        inst.__dict__.update(kwargs)
         return inst
 
     @classmethod
@@ -272,7 +279,6 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
                 try:
                     setattr(item, k, v)
                 except:
-                    # TODO: wtf
                     pass
 
 

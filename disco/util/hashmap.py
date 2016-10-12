@@ -1,11 +1,13 @@
 import six
 
-from six.moves import filter, map
+from six.moves import filter, map, UserDict
 from collections import defaultdict
-from UserDict import IterableUserDict
 
 
-class HashMap(IterableUserDict):
+class HashMap(UserDict):
+    def iter(self):
+        return iter(self.data)
+
     def items(self):
         return six.iteritems(self.data)
 
@@ -28,7 +30,7 @@ class HashMap(IterableUserDict):
 
     def select(self, *args, **kwargs):
         if kwargs:
-            args += [kwargs]
+            args += tuple([kwargs])
 
         for obj in self.values():
             for check in args:

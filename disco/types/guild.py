@@ -84,6 +84,9 @@ class Role(GuildSubType):
     position = Field(int)
     mentionable = Field(bool)
 
+    def delete(self):
+        self.guild.delete_role(self)
+
     def save(self):
         self.guild.update_role(self)
 
@@ -146,7 +149,7 @@ class GuildMember(GuildSubType):
         delete_message_days : int
             The number of days to retroactively delete messages for.
         """
-        self.client.api.guilds_bans_create(self.guild.id, self.user.id, delete_message_days)
+        self.guild.create_ban(self, delete_message_days)
 
     def set_nickname(self, nickname=None):
         """
@@ -173,7 +176,7 @@ class GuildMember(GuildSubType):
             return '<@!{}>'.format(self.id)
         return self.user.mention
 
-    @cached_property
+    @property
     def id(self):
         """
         Alias to the guild members user id
@@ -320,6 +323,12 @@ class Guild(SlottedModel, Permissible):
         """
         return self.client.api.guilds_roles_create(self.id)
 
+    def delete_role(self, role):
+        """
+        Delete a role.
+        """
+        self.client.api.guilds_roles_delete(self.id, to_snowflake(role))
+
     def update_role(self, role):
         return self.client.api.guilds_roles_modify(self.id, role.id, **{
             'name': role.name,
@@ -334,8 +343,18 @@ class Guild(SlottedModel, Permissible):
         if self.synced:
             return
 
+        self.synced = True
         self.client.gw.send(OPCode.REQUEST_GUILD_MEMBERS, {
             'guild_id': self.id,
             'query': '',
             'limit': 0,
         })
+
+    def get_bans(self):
+        return self.client.api.guilds_bans_list(self.id)
+
+    def delete_ban(self, user):
+        self.client.api.guilds_bans_delete(self.id, to_snowflake(user))
+
+    def create_ban(self, user, delete_message_days=0):
+        self.client.api.guilds_bans_create(self.id, to_snowflake(user), delete_message_days)

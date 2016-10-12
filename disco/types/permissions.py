@@ -105,6 +105,8 @@ class PermissionValue(object):
 
 
 class Permissible(object):
+    __slots__ = []
+
     def can(self, user, *args):
         perms = self.get_permissions(user)
         return perms.administrator or perms.can(*args)

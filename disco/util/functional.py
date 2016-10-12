@@ -49,10 +49,10 @@ def one_or_many(f):
 
 
 class CachedSlotProperty(object):
-    __slots__ = ['name', 'function', '__doc__']
+    __slots__ = ['stored_name', 'function', '__doc__']
 
     def __init__(self, name, function):
-        self.name = name
+        self.stored_name = '_' + name
         self.function = function
         self.__doc__ = getattr(function, '__doc__')
 
@@ -60,9 +60,12 @@ class CachedSlotProperty(object):
         if instance is None:
             return self
 
-        value = self.function(instance)
-        setattr(instance, self.name, value)
-        return value
+        try:
+            return getattr(instance, self.stored_name)
+        except AttributeError:
+            value = self.function(instance)
+            setattr(instance, self.stored_name, value)
+            return value
 
 
 def cached_property(f):

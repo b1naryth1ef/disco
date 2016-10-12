@@ -263,7 +263,6 @@ class State(object):
             member.guild_id = guild.id
             guild.members[member.id] = member
             self.users[member.id] = member.user
-        guild.synced = True
 
     def on_guild_role_create(self, event):
         if event.guild_id not in self.guilds:
