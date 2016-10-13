@@ -193,11 +193,6 @@ class Plugin(LoggingClass, PluginDeco):
         """
         Executes a CommandEvent this plugin owns
         """
-        self.ctx['plugin'] = self
-        self.ctx['guild'] = event.guild
-        self.ctx['channel'] = event.channel
-        self.ctx['user'] = event.author
-
         try:
             return event.command.execute(event)
         except CommandError as e:
@@ -213,6 +208,15 @@ class Plugin(LoggingClass, PluginDeco):
         getattr(self, '_' + when)[typ].append(func)
 
     def _dispatch(self, typ, func, event, *args, **kwargs):
+        self.ctx['plugin'] = self
+
+        if hasattr(event, 'guild'):
+            self.ctx['guild'] = event.guild
+        if hasattr(event, 'channel'):
+            self.ctx['channel'] = event.channel
+        if hasattr(event, 'author'):
+            self.ctx['user'] = event.author
+
         for pre in self._pre[typ]:
             event = pre(event, args, kwargs)
 

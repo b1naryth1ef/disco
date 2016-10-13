@@ -418,12 +418,14 @@ class Bot(object):
         """
 
         mod = importlib.import_module(path)
+        loaded = False
 
         for entry in map(lambda i: getattr(mod, i), dir(mod)):
             if inspect.isclass(entry) and issubclass(entry, Plugin) and not entry == Plugin:
+                loaded = True
                 self.add_plugin(entry, config)
-                break
-        else:
+
+        if not loaded:
             raise Exception('Could not find any plugins to load within module {}'.format(path))
 
     def load_plugin_config(self, cls):
