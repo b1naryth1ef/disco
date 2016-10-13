@@ -127,7 +127,6 @@ class HTTPClient(LoggingClass):
         self.limiter = RateLimiter()
         self.headers = {
             'Authorization': 'Bot ' + token,
-            'X-Disable-Ratelimits': '1',
         }
 
     def __call__(self, route, args=None, **kwargs):
