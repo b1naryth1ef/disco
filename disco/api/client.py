@@ -8,6 +8,7 @@ from disco.types.message import Message
 from disco.types.guild import Guild, GuildMember, Role
 from disco.types.channel import Channel
 from disco.types.invite import Invite
+from disco.types.webhook import Webhook
 
 
 def optional(**kwargs):
@@ -115,6 +116,17 @@ class APIClient(LoggingClass):
     def channels_pins_delete(self, channel, message):
         self.http(Routes.CHANNELS_PINS_DELETE, dict(channel=channel, message=message))
 
+    def channels_webhooks_create(self, channel, name=None, avatar=None):
+        r = self.http(Routes.CHANNELS_WEBHOOKS_CREATE, dict(channel=channel), json=optional(
+            name=name,
+            avatar=avatar,
+        ))
+        return Webhook.create(self.client, r.json())
+
+    def channels_webhooks_list(self, channel):
+        r = self.http(Routes.CHANNELS_WEBHOOKS_LIST, dict(channel=channel))
+        return Webhook.create_map(self.client, r.json())
+
     def guilds_get(self, guild):
         r = self.http(Routes.GUILDS_GET, dict(guild=guild))
         return Guild.create(self.client, r.json())
@@ -186,6 +198,10 @@ class APIClient(LoggingClass):
     def guilds_roles_delete(self, guild, role):
         self.http(Routes.GUILDS_ROLES_DELETE, dict(guild=guild, role=role))
 
+    def guilds_webhooks_list(self, guild):
+        r = self.http(Routes.GUILDS_WEBHOOKS_LIST, dict(guild=guild))
+        return Webhook.create_map(self.client, r.json())
+
     def invites_get(self, invite):
         r = self.http(Routes.INVITES_GET, dict(invite=invite))
         return Invite.create(self.client, r.json())
@@ -193,3 +209,37 @@ class APIClient(LoggingClass):
     def invites_delete(self, invite):
         r = self.http(Routes.INVITES_DELETE, dict(invite=invite))
         return Invite.create(self.client, r.json())
+
+    def webhooks_get(self, webhook):
+        r = self.http(Routes.WEBHOOKS_GET, dict(webhook=webhook))
+        return Webhook.create(self.client, r.json())
+
+    def webhooks_modify(self, webhook, name=None, avatar=None):
+        r = self.http(Routes.WEBHOOKS_MODIFY, dict(webhook=webhook), json=optional(
+            name=name,
+            avatar=avatar,
+        ))
+        return Webhook.create(self.client, r.json())
+
+    def webhooks_delete(self, webhook):
+        self.http(Routes.WEBHOOKS_DELETE, dict(webhook=webhook))
+
+    def webhooks_token_get(self, webhook, token):
+        r = self.http(Routes.WEBHOOKS_TOKEN_GET, dict(webhook=webhook, token=token))
+        return Webhook.create(self.client, r.json())
+
+    def webhooks_token_modify(self, webhook, token, name=None, avatar=None):
+        r = self.http(Routes.WEBHOOKS_TOKEN_MODIFY, dict(webhook=webhook, token=token), json=optional(
+            name=name,
+            avatar=avatar,
+        ))
+        return Webhook.create(self.client, r.json())
+
+    def webhooks_token_delete(self, webhook, token):
+        self.http(Routes.WEBHOOKS_TOKEN_DLEETE, dict(webhook=webhook, token=token))
+
+    def webhooks_token_execute(self, webhook, token, data, wait=False):
+        self.http(
+            Routes.WEBHOOKS_TOKEN_EXECUTE,
+            dict(webhook=webhook, token=token),
+            json=optional(**data), params={'wait': int(wait)})

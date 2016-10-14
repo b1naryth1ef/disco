@@ -31,22 +31,21 @@ class Routes(object):
     CHANNELS_GET = (HTTPMethod.GET, CHANNELS)
     CHANNELS_MODIFY = (HTTPMethod.PATCH, CHANNELS)
     CHANNELS_DELETE = (HTTPMethod.DELETE, CHANNELS)
-
     CHANNELS_MESSAGES_LIST = (HTTPMethod.GET, CHANNELS + '/messages')
     CHANNELS_MESSAGES_GET = (HTTPMethod.GET, CHANNELS + '/messages/{message}')
     CHANNELS_MESSAGES_CREATE = (HTTPMethod.POST, CHANNELS + '/messages')
     CHANNELS_MESSAGES_MODIFY = (HTTPMethod.PATCH, CHANNELS + '/messages/{message}')
     CHANNELS_MESSAGES_DELETE = (HTTPMethod.DELETE, CHANNELS + '/messages/{message}')
     CHANNELS_MESSAGES_DELETE_BULK = (HTTPMethod.POST, CHANNELS + '/messages/bulk_delete')
-
     CHANNELS_PERMISSIONS_MODIFY = (HTTPMethod.PUT, CHANNELS + '/permissions/{permission}')
     CHANNELS_PERMISSIONS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/permissions/{permission}')
     CHANNELS_INVITES_LIST = (HTTPMethod.GET, CHANNELS + '/invites')
     CHANNELS_INVITES_CREATE = (HTTPMethod.POST, CHANNELS + '/invites')
-
     CHANNELS_PINS_LIST = (HTTPMethod.GET, CHANNELS + '/pins')
     CHANNELS_PINS_CREATE = (HTTPMethod.PUT, CHANNELS + '/pins/{pin}')
     CHANNELS_PINS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/pins/{pin}')
+    CHANNELS_WEBHOOKS_CREATE = (HTTPMethod.POST, CHANNELS + '/webhooks')
+    CHANNELS_WEBHOOKS_LIST = (HTTPMethod.GET, CHANNELS + '/webhooks')
 
     # Guilds
     GUILDS = '/guilds/{guild}'
@@ -79,6 +78,7 @@ class Routes(object):
     GUILDS_INTEGRATIONS_SYNC = (HTTPMethod.POST, GUILDS + '/integrations/{integration}/sync')
     GUILDS_EMBED_GET = (HTTPMethod.GET, GUILDS + '/embed')
     GUILDS_EMBED_MODIFY = (HTTPMethod.PATCH, GUILDS + '/embed')
+    GUILDS_WEBHOOKS_LIST = (HTTPMethod.GET, GUILDS + '/webhooks')
 
     # Users
     USERS = '/users'
@@ -95,6 +95,16 @@ class Routes(object):
     INVITES = '/invites'
     INVITES_GET = (HTTPMethod.GET, INVITES + '/{invite}')
     INVITES_DELETE = (HTTPMethod.DELETE, INVITES + '/{invite}')
+
+    # Webhooks
+    WEBHOOKS = '/webhooks/{webhook}'
+    WEBHOOKS_GET = (HTTPMethod.GET, WEBHOOKS)
+    WEBHOOKS_MODIFY = (HTTPMethod.PATCH, WEBHOOKS)
+    WEBHOOKS_DELETE = (HTTPMethod.DELETE, WEBHOOKS)
+    WEBHOOKS_TOKEN_GET = (HTTPMethod.GET, WEBHOOKS + '/{token}')
+    WEBHOOKS_TOKEN_MODIFY = (HTTPMethod.PATCH, WEBHOOKS + '/{token}')
+    WEBHOOKS_TOKEN_DELETE = (HTTPMethod.DELETE, WEBHOOKS + '/{token}')
+    WEBHOOKS_TOKEN_EXECUTE = (HTTPMethod.POST, WEBHOOKS + '/{token}')
 
 
 class APIException(Exception):
@@ -201,7 +211,9 @@ class HTTPClient(LoggingClass):
                 raise APIException('Request failed after {} attempts'.format(self.MAX_RETRIES), r.status_code, r.content)
 
             backoff = self.random_backoff()
-            self.log.warning('Request to `{}` failed with code {}, retrying after {}s'.format(url, r.status_code, backoff))
+            self.log.warning('Request to `{}` failed with code {}, retrying after {}s ({})'.format(
+                url, r.status_code, backoff, r.content
+            ))
             gevent.sleep(backoff)
 
             # Otherwise just recurse and try again

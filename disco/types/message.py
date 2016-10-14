@@ -19,6 +19,45 @@ MessageType = Enum(
 )
 
 
+class MessageEmbedFooter(SlottedModel):
+    text = Field(text)
+    icon_url = Field(text)
+    proxy_icon_url = Field(text)
+
+
+class MessageEmbedImage(SlottedModel):
+    url = Field(text)
+    proxy_url = Field(text)
+    width = Field(int)
+    height = Field(int)
+
+
+class MessageEmbedThumbnail(SlottedModel):
+    url = Field(text)
+    proxy_url = Field(text)
+    width = Field(int)
+    height = Field(int)
+
+
+class MessageEmbedVideo(SlottedModel):
+    url = Field(text)
+    height = Field(int)
+    width = Field(int)
+
+
+class MessageEmbedAuthor(SlottedModel):
+    name = Field(text)
+    url = Field(text)
+    icon_url = Field(text)
+    icon_proxy_url = Field(text)
+
+
+class MessageEmbedField(SlottedModel):
+    name = Field(text)
+    value = Field(text)
+    inline = Field(bool)
+
+
 class MessageEmbed(SlottedModel):
     """
     Message embed object
@@ -35,9 +74,17 @@ class MessageEmbed(SlottedModel):
         URL of the embed.
     """
     title = Field(text)
-    type = Field(str)
+    type = Field(str, default='rich')
     description = Field(text)
     url = Field(str)
+    timestamp = Field(lazy_datetime)
+    color = Field(int)
+    footer = Field(MessageEmbedFooter)
+    image = Field(MessageEmbedImage)
+    thumbnail = Field(MessageEmbedThumbnail)
+    video = Field(MessageEmbedVideo)
+    author = Field(MessageEmbedAuthor)
+    fields = Field(listof(MessageEmbedField))
 
 
 class MessageAttachment(SlottedModel):
@@ -109,6 +156,7 @@ class Message(SlottedModel):
     """
     id = Field(snowflake)
     channel_id = Field(snowflake)
+    webhook_id = Field(snowflake)
     type = Field(enum(MessageType))
     author = Field(User)
     content = Field(text)

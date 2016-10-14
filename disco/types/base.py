@@ -104,7 +104,7 @@ def snowflake(data):
 
 def enum(typ):
     def _f(data):
-        return typ.get(data) if data else None
+        return typ.get(data) if data is not None else None
     return _f
 
 

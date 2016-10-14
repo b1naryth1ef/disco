@@ -214,6 +214,12 @@ class Channel(SlottedModel, Permissible):
     def delete_pin(self, message):
         self.client.api.channels_pins_delete(self.id, to_snowflake(message))
 
+    def get_webhooks(self):
+        return self.client.api.channels_webhooks_list(self.id)
+
+    def create_webhook(self, name=None, avatar=None):
+        return self.client.api.channels_webhooks_create(self.id, name, avatar)
+
     def send_message(self, content, nonce=None, tts=False):
         """
         Send a message in this channel
