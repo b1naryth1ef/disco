@@ -239,7 +239,10 @@ class APIClient(LoggingClass):
         self.http(Routes.WEBHOOKS_TOKEN_DLEETE, dict(webhook=webhook, token=token))
 
     def webhooks_token_execute(self, webhook, token, data, wait=False):
-        self.http(
+        obj = self.http(
             Routes.WEBHOOKS_TOKEN_EXECUTE,
             dict(webhook=webhook, token=token),
             json=optional(**data), params={'wait': int(wait)})
+
+        if wait:
+            return Message.create(self.client, obj.json())

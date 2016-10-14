@@ -32,7 +32,7 @@ class Webhook(SlottedModel):
         else:
             return self.client.api.webhooks_modify(self.id, name, avatar)
 
-    def execute(self, content=None, username=None, avatar_url=None, tts=False, file=None, embeds=None, wait=False):
+    def execute(self, content=None, username=None, avatar_url=None, tts=False, file=None, embeds=[], wait=False):
         return self.client.api.webhooks_token_execute(self.id, self.token, {
             'content': content,
             'username': username,
