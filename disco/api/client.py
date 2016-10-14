@@ -236,7 +236,7 @@ class APIClient(LoggingClass):
         return Webhook.create(self.client, r.json())
 
     def webhooks_token_delete(self, webhook, token):
-        self.http(Routes.WEBHOOKS_TOKEN_DLEETE, dict(webhook=webhook, token=token))
+        self.http(Routes.WEBHOOKS_TOKEN_DELETE, dict(webhook=webhook, token=token))
 
     def webhooks_token_execute(self, webhook, token, data, wait=False):
         obj = self.http(
