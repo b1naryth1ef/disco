@@ -140,7 +140,6 @@ class GuildDelete(GatewayEvent):
     unavailable = Field(bool)
 
 
-@debug()
 @wraps_model(Channel)
 class ChannelCreate(GatewayEvent):
     """
