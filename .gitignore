@@ -3,3 +3,4 @@ dist/
 disco*.egg-info/
 docs/_build
 storage.db
+*.dca
