@@ -3,7 +3,6 @@ import socket
 import struct
 import time
 
-from six.moves import queue
 from holster.enum import Enum
 from holster.emitter import Emitter
 
@@ -23,11 +22,6 @@ VoiceState = Enum(
     VOICE_CONNECTED=6,
 )
 
-# TODO:
-#   - player implementation
-#   - encryption
-#   - cleanup
-
 
 class VoiceException(Exception):
     def __init__(self, msg, client):
@@ -45,18 +39,14 @@ class UDPVoiceClient(LoggingClass):
         self.run_task = None
         self.connected = False
 
-        self.seq = 0
-        self.ts = 0
-
-    def send_frame(self, frame):
-        self.seq += 1
-        data = '\x80\x78'
-        data += struct.pack('>H', self.seq)
-        data += struct.pack('>I', self.ts)
-        data += struct.pack('>I', self.vc.ssrc)
-        data += ''.join(frame)
-        self.send(data)
-        self.ts += 960
+    def send_frame(self, frame, sequence, timestamp):
+        data = bytearray(12)
+        data[0] = 0x80
+        data[1] = 0x78
+        struct.pack_into('>H', data, 2, sequence)
+        struct.pack_into('>I', data, 4, timestamp)
+        struct.pack_into('>i', data, 8, self.vc.ssrc)
+        self.send(data + ''.join(frame))
 
     def run(self):
         while True:
@@ -126,7 +116,6 @@ class VoiceClient(LoggingClass):
     def set_state(self, state):
         prev_state = self.state
         self.state = state
-        print 'State Change %s to %s' % (prev_state, state)
         self.state_emitter.emit(state, prev_state)
 
     def heartbeat(self, interval):
@@ -208,7 +197,6 @@ class VoiceClient(LoggingClass):
         self.log.warning('Voice websocket error: {}'.format(err))
 
     def on_open(self):
-        print 'open'
         self.send(VoiceOPCode.IDENTIFY, {
             'server_id': self.channel.guild_id,
             'user_id': self.client.state.me.id,
@@ -217,8 +205,11 @@ class VoiceClient(LoggingClass):
         })
 
     def on_close(self, code, error):
-        # TODO
         self.log.warning('Voice websocket disconnected (%s, %s)', code, error)
+
+        if self.state == VoiceState.CONNECTED:
+            self.log.info('Attempting voice reconnection')
+            self.connect()
 
     def connect(self, timeout=5, mute=False, deaf=False):
         self.set_state(VoiceState.AWAITING_ENDPOINT)
@@ -255,88 +246,5 @@ class VoiceClient(LoggingClass):
             'channel_id': None,
         })
 
-    def send_frame(self, frame):
-        self.udp.send_frame(frame)
-
-
-class OpusItem(object):
-    __slots__ = ('frames', 'idx')
-
-    def __init__(self):
-        self.frames = []
-        self.idx = 0
-
-    @classmethod
-    def from_raw_file(cls, path):
-        inst = cls()
-        obj = open(path, 'r')
-
-        while True:
-            buff = obj.read(2)
-            if not buff:
-                return inst
-            size = struct.unpack('<h', buff)[0]
-            inst.frames.append(obj.read(size))
-
-    def have_frame(self):
-        return self.idx + 1 < len(self.frames)
-
-    def next_frame(self):
-        self.idx += 1
-        return self.frames[self.idx]
-
-
-class Player(object):
-    def __init__(self, client):
-        self.client = client
-        self.queue = queue.Queue()
-        self.playing = True
-        self.run_task = gevent.spawn(self.run)
-        self.paused = None
-        self.complete = gevent.event.Event()
-
-    def disconnect(self):
-        self.client.disconnect()
-
-    def pause(self):
-        if self.paused:
-            return
-        self.paused = gevent.event.Event()
-
-    def resume(self):
-        self.paused.set()
-        self.paused = None
-
-    def play(self, item):
-        start = time.time()
-        loops = 0
-
-        while True:
-            loops += 1
-            if self.paused:
-                self.paused.wait()
-
-            if self.client.state == VoiceState.DISCONNECTED:
-                return
-
-            if self.client.state != VoiceState.CONNECTED:
-                self.client.state_emitter.wait(VoiceState.CONNECTED)
-
-            if not item.have_frame():
-                return
-
-            self.client.send_frame(item.next_frame())
-            next_time = start + 0.02 * loops
-            delay = max(0, 0.02 + (next_time - time.time()))
-            gevent.sleep(delay)
-
-    def run(self):
-        self.client.set_speaking(True)
-        while self.playing:
-            self.play(self.queue.get())
-
-            if self.client.state == VoiceState.DISCONNECTED:
-                self.playing = False
-                self.complete.set()
-                return
-        self.client.set_speaking(False)
+    def send_frame(self, *args, **kwargs):
+        self.udp.send_frame(*args, **kwargs)

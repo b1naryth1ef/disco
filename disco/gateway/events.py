@@ -49,6 +49,8 @@ class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
         """
         Create this GatewayEvent class from data and the client.
         """
+        cls.raw_data = obj
+
         # If this event is wrapping a model, pull its fields
         if hasattr(cls, '_wraps_model'):
             alias, model = cls._wraps_model
