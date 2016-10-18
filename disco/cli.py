@@ -25,8 +25,6 @@ parser.add_argument('--encoder', help='encoder for gateway data', default=None)
 parser.add_argument('--run-bot', help='run a disco bot on this client', action='store_true', default=False)
 parser.add_argument('--plugin', help='load plugins into the bot', nargs='*', default=[])
 
-logging.basicConfig(level=logging.INFO)
-
 
 def disco_main(run=False):
     """
@@ -61,6 +59,8 @@ def disco_main(run=False):
     if args.shard_auto:
         AutoSharder(config).run()
         return
+
+    logging.basicConfig(level=logging.INFO)
 
     client = Client(config)
 

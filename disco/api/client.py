@@ -26,11 +26,11 @@ class APIClient(LoggingClass):
     An abstraction over the :class:`disco.api.http.HTTPClient` that composes requests, and fits
     the models with the returned data.
     """
-    def __init__(self, client):
+    def __init__(self, token, client=None):
         super(APIClient, self).__init__()
 
         self.client = client
-        self.http = HTTPClient(self.client.config.token)
+        self.http = HTTPClient(token)
 
     def gateway_get(self):
         data = self.http(Routes.GATEWAY_GET).json()

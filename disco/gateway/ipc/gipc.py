@@ -1,50 +1,92 @@
 import random
-import gipc
 import gevent
 import string
 import weakref
+import marshal
+import types
+
+from holster.enum import Enum
+
+from disco.util.logging import LoggingClass
 
 
 def get_random_str(size):
-    return ''.join([random.choice(string.ascii_printable) for _ in range(size)])
+    return ''.join([random.choice(string.printable) for _ in range(size)])
 
 
-class GIPCProxy(object):
-    def __init__(self, pipe):
+IPCMessageType = Enum(
+    'CALL_FUNC',
+    'GET_ATTR',
+    'EXECUTE',
+    'RESPONSE',
+)
+
+
+class GIPCProxy(LoggingClass):
+    def __init__(self, obj, pipe):
+        super(GIPCProxy, self).__init__()
+        self.obj = obj
         self.pipe = pipe
         self.results = weakref.WeakValueDictionary()
         gevent.spawn(self.read_loop)
 
-    def read_loop(self):
-        while True:
-            nonce, data = self.pipe.get()
+    def resolve(self, parts):
+        base = self.obj
+        for part in parts:
+            base = getattr(base, part)
+
+        return base
+
+    def send(self, typ, data):
+        self.pipe.put((typ.value, data))
+
+    def handle(self, mtype, data):
+        if mtype == IPCMessageType.CALL_FUNC:
+            nonce, func, args, kwargs = data
+            res = self.resolve(func)(*args, **kwargs)
+            self.send(IPCMessageType.RESPONSE, (nonce, res))
+        elif mtype == IPCMessageType.GET_ATTR:
+            nonce, path = data
+            self.send(IPCMessageType.RESPONSE, (nonce, self.resolve(path)))
+        elif mtype == IPCMessageType.EXECUTE:
+            nonce, raw = data
+            func = types.FunctionType(marshal.loads(raw), globals(), nonce)
+            try:
+                result = func(self.obj)
+            except Exception as e:
+                self.log.exception('Failed to EXECUTE: ')
+                result = None
+
+            self.send(IPCMessageType.RESPONSE, (nonce, result))
+        elif mtype == IPCMessageType.RESPONSE:
+            nonce, res = data
             if nonce in self.results:
-                self.results[nonce].set(data)
-
-    def __getattr__(self, name):
-        def wrapper(*args, **kwargs):
-            nonce = get_random_str()
-            self.results[nonce] = gevent.event.AsyncResult()
-            self.pipe.put(nonce, name, args, kwargs)
-            return self.results[nonce]
-        return wrapper
-
-
-class GIPCObject(object):
-    def __init__(self, inst, pipe):
-        self.inst = inst
-        self.pipe = pipe
-        gevent.spawn(self.read_loop)
+                self.results[nonce].set(res)
 
     def read_loop(self):
         while True:
-            nonce, func, args, kwargs = self.pipe.get()
-            func = getattr(self.inst, func)
-            self.pipe.put((nonce, func(*args, **kwargs)))
+            mtype, data = self.pipe.get()
 
-class IPC(object):
-    def __init__(self, sharder):
-        self.sharder = sharder
+            try:
+                self.handle(mtype, data)
+            except:
+                self.log.exception('Error in GIPCProxy:')
 
-    def get_shards(self):
-        return {}
+    def execute(self, func):
+        nonce = get_random_str(32)
+        raw = marshal.dumps(func.func_code)
+        self.results[nonce] = result = gevent.event.AsyncResult()
+        self.pipe.put((IPCMessageType.EXECUTE.value, (nonce, raw)))
+        return result
+
+    def get(self, path):
+        nonce = get_random_str(32)
+        self.results[nonce] = result = gevent.event.AsyncResult()
+        self.pipe.put((IPCMessageType.GET_ATTR.value, (nonce, path)))
+        return result
+
+    def call(self, path, *args, **kwargs):
+        nonce = get_random_str(32)
+        self.results[nonce] = result = gevent.event.AsyncResult()
+        self.pipe.put((IPCMessageType.CALL_FUNC.value, (nonce, path, args, kwargs)))
+        return result

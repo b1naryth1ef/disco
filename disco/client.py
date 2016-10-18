@@ -82,7 +82,7 @@ class Client(object):
         self.events = Emitter(gevent.spawn)
         self.packets = Emitter(gevent.spawn)
 
-        self.api = APIClient(self)
+        self.api = APIClient(self.config.token, self)
         self.gw = GatewayClient(self, self.config.encoder)
         self.state = State(self, StateConfig(self.config.get('state', {})))
 

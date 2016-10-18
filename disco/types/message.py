@@ -300,3 +300,51 @@ class Message(SlottedModel):
                 return user_replace(self.mentions.get(id))
 
         return re.sub('<@!?([0-9]+)>', replace, self.content)
+
+
+class MessageTable(object):
+    def __init__(self, sep=' | ', codeblock=True, header_break=True):
+        self.header = []
+        self.entries = []
+        self.size_index = {}
+        self.sep = sep
+        self.codeblock = codeblock
+        self.header_break = header_break
+
+    def recalculate_size_index(self, cols):
+        for idx, col in enumerate(cols):
+            if idx not in self.size_index or len(col) > self.size_index[idx]:
+                self.size_index[idx] = len(col)
+
+    def set_header(self, *args):
+        self.header = args
+        self.recalculate_size_index(args)
+
+    def add(self, *args):
+        args = list(map(str, args))
+        self.entries.append(args)
+        self.recalculate_size_index(args)
+
+    def compile_one(self, cols):
+        data = self.sep.lstrip()
+
+        for idx, col in enumerate(cols):
+            padding = ' ' * ((self.size_index[idx] - len(col)))
+            data += col + padding + self.sep
+
+        return data.rstrip()
+
+    def compile(self):
+        data = []
+        data.append(self.compile_one(self.header))
+
+        if self.header_break:
+            data.append('-' * (sum(self.size_index.values()) + (len(self.header) * len(self.sep)) + 1))
+
+        for row in self.entries:
+            data.append(self.compile_one(row))
+
+        if self.codeblock:
+            return '```' + '\n'.join(data) + '```'
+
+        return '\n'.join(data)
