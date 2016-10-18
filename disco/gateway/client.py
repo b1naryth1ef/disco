@@ -17,13 +17,18 @@ class GatewayClient(LoggingClass):
     GATEWAY_VERSION = 6
     MAX_RECONNECTS = 5
 
-    def __init__(self, client, encoder='json'):
+    def __init__(self, client, encoder='json', ipc=None):
         super(GatewayClient, self).__init__()
         self.client = client
         self.encoder = ENCODERS[encoder]
 
         self.events = client.events
         self.packets = client.packets
+
+        # IPC for shards
+        if ipc:
+            self.shards = ipc.get_shards()
+            self.ipc = ipc
 
         # Its actually 60, 120 but lets give ourselves a buffer
         self.limiter = SimpleLimiter(60, 130)
@@ -98,14 +103,17 @@ class GatewayClient(LoggingClass):
         self.session_id = ready.session_id
         self.reconnects = 0
 
-    def connect_and_run(self):
-        if not self._cached_gateway_url:
-            self._cached_gateway_url = self.client.api.gateway(
-                version=self.GATEWAY_VERSION,
-                encoding=self.encoder.TYPE)
+    def connect_and_run(self, gateway_url=None):
+        if not gateway_url:
+            if not self._cached_gateway_url:
+                self._cached_gateway_url = self.client.api.gateway_get()['url']
 
-        self.log.info('Opening websocket connection to URL `%s`', self._cached_gateway_url)
-        self.ws = Websocket(self._cached_gateway_url)
+            gateway_url = self._cached_gateway_url
+
+        gateway_url += '?v={}&encoding={}'.format(self.GATEWAY_VERSION, self.encoder.TYPE)
+
+        self.log.info('Opening websocket connection to URL `%s`', gateway_url)
+        self.ws = Websocket(gateway_url)
         self.ws.emitter.on('on_open', self.on_open)
         self.ws.emitter.on('on_error', self.on_error)
         self.ws.emitter.on('on_close', self.on_close)

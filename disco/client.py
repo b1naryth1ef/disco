@@ -37,7 +37,7 @@ class ClientConfig(LoggingClass, Config):
     shard_id = 0
     shard_count = 1
 
-    manhole_enable = True
+    manhole_enable = False
     manhole_bind = ('127.0.0.1', 8484)
 
     encoder = 'json'

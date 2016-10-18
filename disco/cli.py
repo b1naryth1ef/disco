@@ -18,6 +18,7 @@ parser.add_argument('--config', help='Configuration file', default='config.yaml'
 parser.add_argument('--token', help='Bot Authentication Token', default=None)
 parser.add_argument('--shard-count', help='Total number of shards', default=None)
 parser.add_argument('--shard-id', help='Current shard number/id', default=None)
+parser.add_argument('--shard-auto', help='Automatically run all shards', action='store_true', default=False)
 parser.add_argument('--manhole', action='store_true', help='Enable the manhole', default=None)
 parser.add_argument('--manhole-bind', help='host:port for the manhole to bind too', default=None)
 parser.add_argument('--encoder', help='encoder for gateway data', default=None)
@@ -41,6 +42,7 @@ def disco_main(run=False):
 
     from disco.client import Client, ClientConfig
     from disco.bot import Bot, BotConfig
+    from disco.gateway.sharder import AutoSharder
     from disco.util.token import is_valid_token
 
     if os.path.exists(args.config):
@@ -54,6 +56,10 @@ def disco_main(run=False):
 
     if not is_valid_token(config.token):
         print('Invalid token passed')
+        return
+
+    if args.shard_auto:
+        AutoSharder(config).run()
         return
 
     client = Client(config)

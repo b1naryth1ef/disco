@@ -32,9 +32,13 @@ class APIClient(LoggingClass):
         self.client = client
         self.http = HTTPClient(self.client.config.token)
 
-    def gateway(self, version, encoding):
+    def gateway_get(self):
         data = self.http(Routes.GATEWAY_GET).json()
-        return data['url'] + '?v={}&encoding={}'.format(version, encoding)
+        return data
+
+    def gateway_bot_get(self):
+        data = self.http(Routes.GATEWAY_BOT_GET).json()
+        return data
 
     def channels_get(self, channel):
         r = self.http(Routes.CHANNELS_GET, dict(channel=channel))
@@ -47,6 +51,9 @@ class APIClient(LoggingClass):
     def channels_delete(self, channel):
         r = self.http(Routes.CHANNELS_DELETE, dict(channel=channel))
         return Channel.create(self.client, r.json())
+
+    def channels_typing(self, channel):
+        self.http(Routes.CHANNELS_TYPING, dict(channel=channel))
 
     def channels_messages_list(self, channel, around=None, before=None, after=None, limit=50):
         r = self.http(Routes.CHANNELS_MESSAGES_LIST, dict(channel=channel), params=optional(

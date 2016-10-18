@@ -430,8 +430,8 @@ class Bot(object):
 
     def load_plugin_config(self, cls):
         name = cls.__name__.lower()
-        if name.startswith('plugin'):
-            name = name[6:]
+        if name.endswith('plugin'):
+            name = name[:-6]
 
         path = os.path.join(
             self.config.plugin_config_dir, name) + '.' + self.config.plugin_config_format

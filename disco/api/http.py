@@ -25,12 +25,14 @@ class Routes(object):
     """
     # Gateway
     GATEWAY_GET = (HTTPMethod.GET, '/gateway')
+    GATEWAY_BOT_GET = (HTTPMethod.GET, '/gateway/bot')
 
     # Channels
     CHANNELS = '/channels/{channel}'
     CHANNELS_GET = (HTTPMethod.GET, CHANNELS)
     CHANNELS_MODIFY = (HTTPMethod.PATCH, CHANNELS)
     CHANNELS_DELETE = (HTTPMethod.DELETE, CHANNELS)
+    CHANNELS_TYPING = (HTTPMethod.POST, CHANNELS + '/typing')
     CHANNELS_MESSAGES_LIST = (HTTPMethod.GET, CHANNELS + '/messages')
     CHANNELS_MESSAGES_GET = (HTTPMethod.GET, CHANNELS + '/messages/{message}')
     CHANNELS_MESSAGES_CREATE = (HTTPMethod.POST, CHANNELS + '/messages')
