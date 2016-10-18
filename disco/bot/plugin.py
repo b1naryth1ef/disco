@@ -1,4 +1,5 @@
 import six
+import types
 import gevent
 import inspect
 import weakref
@@ -18,8 +19,8 @@ class PluginDeco(object):
     Prio = Priority
 
     # TODO: dont smash class methods
-    @staticmethod
-    def add_meta_deco(meta):
+    @classmethod
+    def add_meta_deco(cls, meta):
         def deco(f):
             if not hasattr(f, 'meta'):
                 f.meta = []
@@ -153,6 +154,20 @@ class Plugin(LoggingClass, PluginDeco):
         self.storage = bot.storage
         self.config = config
 
+        # This is an array of all meta functions we sniff at init
+        self.meta_funcs = []
+
+        for name, member in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(member, 'meta'):
+                self.meta_funcs.append(member)
+
+                # Unsmash local functions
+                if hasattr(Plugin, name):
+                    method = types.MethodType(getattr(Plugin, name), self, self.__class__)
+                    setattr(self, name, method)
+
+        self.bind_all()
+
     @property
     def name(self):
         return self.__class__.__name__
@@ -166,23 +181,21 @@ class Plugin(LoggingClass, PluginDeco):
         self._pre = {'command': [], 'listener': []}
         self._post = {'command': [], 'listener': []}
 
-        # TODO: when handling events/commands we need to track the greenlet in
-        #  the greenlets set so we can termiante long running commands/listeners
-        #  on reload.
+        for member in self.meta_funcs:
+            for meta in member.meta:
+                self.bind_meta(member, meta)
 
-        for name, member in inspect.getmembers(self, predicate=inspect.ismethod):
-            if hasattr(member, 'meta'):
-                for meta in member.meta:
-                    if meta['type'] == 'listener':
-                        self.register_listener(member, meta['what'], meta['desc'], meta['priority'])
-                    elif meta['type'] == 'command':
-                        meta['kwargs']['update'] = True
-                        self.register_command(member, *meta['args'], **meta['kwargs'])
-                    elif meta['type'] == 'schedule':
-                        self.register_schedule(member, *meta['args'], **meta['kwargs'])
-                    elif meta['type'].startswith('pre_') or meta['type'].startswith('post_'):
-                        when, typ = meta['type'].split('_', 1)
-                        self.register_trigger(typ, when, member)
+    def bind_meta(self, member, meta):
+        if meta['type'] == 'listener':
+            self.register_listener(member, meta['what'], meta['desc'], meta['priority'])
+        elif meta['type'] == 'command':
+            meta['kwargs']['update'] = True
+            self.register_command(member, *meta['args'], **meta['kwargs'])
+        elif meta['type'] == 'schedule':
+            self.register_schedule(member, *meta['args'], **meta['kwargs'])
+        elif meta['type'].startswith('pre_') or meta['type'].startswith('post_'):
+            when, typ = meta['type'].split('_', 1)
+            self.register_trigger(typ, when, member)
 
     def spawn(self, method, *args, **kwargs):
         obj = gevent.spawn(method, *args, **kwargs)
@@ -208,6 +221,7 @@ class Plugin(LoggingClass, PluginDeco):
         getattr(self, '_' + when)[typ].append(func)
 
     def _dispatch(self, typ, func, event, *args, **kwargs):
+        self.greenlets.add(gevent.getcurrent())
         self.ctx['plugin'] = self
 
         if hasattr(event, 'guild'):
@@ -302,13 +316,13 @@ class Plugin(LoggingClass, PluginDeco):
 
         self.schedules[func.__name__] = self.spawn(repeat)
 
-    def load(self):
+    def load(self, ctx):
         """
         Called when the plugin is loaded
         """
-        self.bind_all()
+        pass
 
-    def unload(self):
+    def unload(self, ctx):
         """
         Called when the plugin is unloaded
         """

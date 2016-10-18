@@ -262,7 +262,7 @@ class Bot(object):
                 content = content.replace('@everyone', '', 1)
             else:
                 for role in mention_roles:
-                    content = content.replace(role.mention, '', 1)
+                    content = content.replace('<@{}>'.format(role), '', 1)
 
             content = content.lstrip()
 
@@ -356,7 +356,7 @@ class Bot(object):
 
                 self.last_message_cache[msg.channel_id] = (msg, triggered)
 
-    def add_plugin(self, cls, config=None):
+    def add_plugin(self, cls, config=None, ctx=None):
         """
         Adds and loads a plugin, based on its class.
 
@@ -377,7 +377,7 @@ class Bot(object):
                 config = self.load_plugin_config(cls)
 
         self.plugins[cls.__name__] = cls(self, config)
-        self.plugins[cls.__name__].load()
+        self.plugins[cls.__name__].load(ctx or {})
         self.recompute()
 
     def rmv_plugin(self, cls):
@@ -392,9 +392,11 @@ class Bot(object):
         if cls.__name__ not in self.plugins:
             raise Exception('Cannot remove non-existant plugin: {}'.format(cls.__name__))
 
-        self.plugins[cls.__name__].unload()
+        ctx = {}
+        self.plugins[cls.__name__].unload(ctx)
         del self.plugins[cls.__name__]
         self.recompute()
+        return ctx
 
     def reload_plugin(self, cls):
         """
@@ -402,9 +404,9 @@ class Bot(object):
         """
         config = self.plugins[cls.__name__].config
 
-        self.rmv_plugin(cls)
+        ctx = self.rmv_plugin(cls)
         module = reload_module(inspect.getmodule(cls))
-        self.add_plugin(getattr(module, cls.__name__), config)
+        self.add_plugin(getattr(module, cls.__name__), config, ctx)
 
     def run_forever(self):
         """

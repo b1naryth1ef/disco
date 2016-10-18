@@ -2,8 +2,7 @@ import random
 import gevent
 import string
 import weakref
-import marshal
-import types
+import dill
 
 from holster.enum import Enum
 
@@ -50,10 +49,10 @@ class GIPCProxy(LoggingClass):
             self.send(IPCMessageType.RESPONSE, (nonce, self.resolve(path)))
         elif mtype == IPCMessageType.EXECUTE:
             nonce, raw = data
-            func = types.FunctionType(marshal.loads(raw), globals(), nonce)
+            func = dill.loads(raw)
             try:
                 result = func(self.obj)
-            except Exception as e:
+            except Exception:
                 self.log.exception('Failed to EXECUTE: ')
                 result = None
 
@@ -74,7 +73,7 @@ class GIPCProxy(LoggingClass):
 
     def execute(self, func):
         nonce = get_random_str(32)
-        raw = marshal.dumps(func.func_code)
+        raw = dill.dumps(func)
         self.results[nonce] = result = gevent.event.AsyncResult()
         self.pipe.put((IPCMessageType.EXECUTE.value, (nonce, raw)))
         return result
