@@ -40,7 +40,6 @@ def disco_main(run=False):
 
     from disco.client import Client, ClientConfig
     from disco.bot import Bot, BotConfig
-    from disco.gateway.sharder import AutoSharder
     from disco.util.token import is_valid_token
     from holster.log import set_logging_levels
 
@@ -58,6 +57,7 @@ def disco_main(run=False):
         return
 
     if args.shard_auto:
+        from disco.gateway.sharder import AutoSharder
         AutoSharder(config).run()
         return
 

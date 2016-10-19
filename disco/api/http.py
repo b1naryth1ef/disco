@@ -113,6 +113,12 @@ class APIException(Exception):
     """
     Exception thrown when an HTTP-client level error occurs. Usually this will
     be a non-success status-code, or a transient network issue.
+
+    Attributes
+    ----------
+    status_code : int
+        The status code returned by the API for the request that triggered this
+        error.
     """
     def __init__(self, msg, status_code=0, content=None):
         self.status_code = status_code
@@ -200,7 +206,7 @@ class HTTPClient(LoggingClass):
         # If we got a success status code, just return the data
         if r.status_code < 400:
             return r
-        elif r.status_code != 429 and 400 < r.status_code < 500:
+        elif r.status_code != 429 and 400 <= r.status_code < 500:
             raise APIException('Request failed', r.status_code, r.content)
         else:
             if r.status_code == 429:

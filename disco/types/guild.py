@@ -7,7 +7,7 @@ from disco.api.http import APIException
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.base import SlottedModel, Field, snowflake, listof, dictof, text, binary, enum
-from disco.types.user import User
+from disco.types.user import User, Presence
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
 from disco.types.permissions import PermissionValue, Permissions, Permissible
@@ -246,6 +246,7 @@ class Guild(SlottedModel, Permissible):
     emojis = Field(dictof(Emoji, key='id'))
     voice_states = Field(dictof(VoiceState, key='session_id'))
     member_count = Field(int)
+    presences = Field(listof(Presence))
 
     synced = Field(bool, default=False)
 

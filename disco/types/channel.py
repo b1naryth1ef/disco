@@ -280,12 +280,24 @@ class Channel(SlottedModel, Permissible):
         if not messages:
             return
 
-        if len(messages) <= 2:
-            for msg in messages:
-                self.delete_message(msg)
-        else:
+        if self.can(self.client.state.me, Permissions.MANAGE_MESSAGES) and len(messages) > 2:
             for chunk in chunks(messages, 100):
                 self.client.api.channels_messages_delete_bulk(self.id, chunk)
+        else:
+            for msg in messages:
+                self.delete_message(msg)
+
+    def delete(self):
+        assert (self.is_dm or self.guild.can(self.client.state.me, Permissions.MANAGE_GUILD)), 'Invalid Permissions'
+        self.client.api.channels_delete(self.id)
+
+    def close(self):
+        """
+        Closes a DM channel. This is intended as a safer version of `delete`,
+        enforcing that the channel is actually a DM.
+        """
+        assert self.is_dm, 'Cannot close non-DM channel'
+        self.delete()
 
 
 class MessageIterator(object):
