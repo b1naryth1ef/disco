@@ -245,6 +245,7 @@ class Guild(SlottedModel, Permissible):
     roles = Field(dictof(Role, key='id'))
     emojis = Field(dictof(Emoji, key='id'))
     voice_states = Field(dictof(VoiceState, key='session_id'))
+    member_count = Field(int)
 
     synced = Field(bool, default=False)
 

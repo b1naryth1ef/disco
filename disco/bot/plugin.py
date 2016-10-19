@@ -206,6 +206,8 @@ class Plugin(LoggingClass, PluginDeco):
         """
         Executes a CommandEvent this plugin owns
         """
+        if not event.command.oob:
+            self.greenlets.add(gevent.getcurrent())
         try:
             return event.command.execute(event)
         except CommandError as e:
@@ -221,7 +223,9 @@ class Plugin(LoggingClass, PluginDeco):
         getattr(self, '_' + when)[typ].append(func)
 
     def _dispatch(self, typ, func, event, *args, **kwargs):
-        self.greenlets.add(gevent.getcurrent())
+        # TODO: this is ugly
+        if typ != 'command':
+            self.greenlets.add(gevent.getcurrent())
         self.ctx['plugin'] = self
 
         if hasattr(event, 'guild'):

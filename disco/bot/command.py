@@ -6,7 +6,7 @@ from disco.bot.parser import ArgumentSet, ArgumentError
 from disco.util.functional import cached_property
 
 REGEX_FMT = '({})'
-ARGS_REGEX = '( (.*)$|$)'
+ARGS_REGEX = '( ((?:\n|.)*)$|$)'
 MENTION_RE = re.compile('<@!?([0-9]+)>')
 
 CommandLevels = Enum(
@@ -109,7 +109,7 @@ class Command(object):
         self.triggers = [trigger]
         self.update(*args, **kwargs)
 
-    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None):
+    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False):
         self.triggers += aliases or []
 
         def resolve_role(ctx, id):
@@ -127,6 +127,7 @@ class Command(object):
         self.level = level
         self.group = group
         self.is_regex = is_regex
+        self.oob = oob
 
     @staticmethod
     def mention_type(getters, force=False):

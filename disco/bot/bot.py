@@ -113,6 +113,7 @@ class Bot(object):
     def __init__(self, client, config=None):
         self.client = client
         self.config = config or BotConfig()
+        self.shards = {}
 
         # The context carries information about events in a threadlocal storage
         self.ctx = ThreadLocal()
