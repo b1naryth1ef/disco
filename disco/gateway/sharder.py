@@ -12,7 +12,7 @@ from holster.log import set_logging_levels
 from disco.client import Client
 from disco.bot import Bot, BotConfig
 from disco.api.client import APIClient
-from disco.gateway.ipc.gipc import GIPCProxy
+from disco.gateway.ipc import GIPCProxy
 from disco.util.snowflake import calculate_shard
 
 

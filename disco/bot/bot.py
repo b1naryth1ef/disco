@@ -113,7 +113,9 @@ class Bot(object):
     def __init__(self, client, config=None):
         self.client = client
         self.config = config or BotConfig()
-        self.shards = {}
+
+        # Shard manager
+        self.shards = None
 
         # The context carries information about events in a threadlocal storage
         self.ctx = ThreadLocal()
@@ -123,6 +125,7 @@ class Bot(object):
         if self.config.storage_enabled:
             self.storage = Storage(self.ctx, self.config.from_prefix('storage'))
 
+        # If the manhole is enabled, add this bot as a local
         if self.client.config.manhole_enable:
             self.client.manhole_locals['bot'] = self
 
