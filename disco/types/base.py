@@ -3,7 +3,7 @@ import gevent
 import inspect
 import functools
 
-from holster.enum import BaseEnumMeta
+from holster.enum import BaseEnumMeta, EnumAttr
 from datetime import datetime as real_datetime
 
 from disco.util.functional import CachedSlotProperty
@@ -32,6 +32,14 @@ class FieldType(object):
             self.typ = lambda x, y: None
         else:
             self.typ = lambda raw, _: typ(raw)
+
+    def serialize(self, value):
+        if isinstance(value, EnumAttr):
+            return value.value
+        elif isinstance(value, Model):
+            return value.to_dict()
+        else:
+            return value
 
     def try_convert(self, raw, client):
         pass
@@ -260,7 +268,10 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
                     pass
 
     def to_dict(self):
-        return {k: getattr(self, k) for k in six.iterkeys(self.__class__._fields)}
+        obj = {}
+        for name, field in six.iteritems(self.__class__._fields):
+            obj[name] = field.serialize(getattr(self, name))
+        return obj
 
     @classmethod
     def create(cls, client, data, **kwargs):

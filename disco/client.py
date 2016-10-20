@@ -1,3 +1,4 @@
+import time
 import gevent
 
 from holster.emitter import Emitter
@@ -5,6 +6,8 @@ from holster.emitter import Emitter
 from disco.state import State, StateConfig
 from disco.api.client import APIClient
 from disco.gateway.client import GatewayClient
+from disco.gateway.packets import OPCode
+from disco.types.user import Status, Game
 from disco.util.config import Config
 from disco.util.logging import LoggingClass
 from disco.util.backdoor import DiscoBackdoorServer
@@ -98,6 +101,25 @@ class Client(object):
                 banner='Disco Manhole',
                 localf=lambda: self.manhole_locals)
             self.manhole.start()
+
+    def update_presence(self, game=None, status=None, afk=False, since=0.0):
+        if game and not isinstance(game, Game):
+            raise TypeError('Game must be a Game model')
+
+        if status is Status.IDLE and not since:
+            since = int(time.time() * 1000)
+
+        payload = {
+            'afk': afk,
+            'since': since,
+            'status': status.value,
+            'game': None,
+        }
+
+        if game:
+            payload['game'] = game.to_dict()
+
+        self.gw.send(OPCode.STATUS_UPDATE, payload)
 
     def run(self):
         """

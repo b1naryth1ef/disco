@@ -173,10 +173,16 @@ class GatewayClient(LoggingClass):
             })
 
     def on_close(self, code, reason):
+        # Kill heartbeater, a reconnect/resume will trigger a HELLO which will
+        #  respawn it
+        self._heartbeat_task.kill()
+
+        # If we're quitting, just break out of here
         if self.shutting_down:
             self.log.info('WS Closed: shutting down')
             return
 
+        # Track reconnect attempts
         self.reconnects += 1
         self.log.info('WS Closed: [%s] %s (%s)', code, reason, self.reconnects)
 
