@@ -41,27 +41,27 @@ class PluginDeco(object):
         return deco
 
     @classmethod
-    def listen(cls, event_name, priority=None):
+    def listen(cls, *args, **kwargs):
         """
         Binds the function to listen for a given event name
         """
         return cls.add_meta_deco({
             'type': 'listener',
             'what': 'event',
-            'desc': event_name,
-            'priority': priority
+            'args': args,
+            'kwargs': kwargs,
         })
 
     @classmethod
-    def listen_packet(cls, op, priority=None):
+    def listen_packet(cls, *args, **kwargs):
         """
         Binds the function to listen for a given gateway op code
         """
         return cls.add_meta_deco({
             'type': 'listener',
             'what': 'packet',
-            'desc': op,
-            'priority': priority,
+            'args': args,
+            'kwargs': kwargs,
         })
 
     @classmethod
@@ -187,7 +187,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     def bind_meta(self, member, meta):
         if meta['type'] == 'listener':
-            self.register_listener(member, meta['what'], meta['desc'], meta['priority'])
+            self.register_listener(member, meta['what'], *meta['args'], **meta['kwargs'])
         elif meta['type'] == 'command':
             meta['kwargs']['update'] = True
             self.register_command(member, *meta['args'], **meta['kwargs'])
@@ -248,7 +248,7 @@ class Plugin(LoggingClass, PluginDeco):
 
         return True
 
-    def register_listener(self, func, what, desc, priority):
+    def register_listener(self, func, what, desc, priority=Priority.NONE, conditional=None):
         """
         Registers a listener
 
@@ -265,12 +265,10 @@ class Plugin(LoggingClass, PluginDeco):
         """
         func = functools.partial(self._dispatch, 'listener', func)
 
-        priority = priority or Priority.NONE
-
         if what == 'event':
-            li = self.bot.client.events.on(desc, func, priority=priority)
+            li = self.bot.client.events.on(desc, func, priority=priority, conditional=conditional)
         elif what == 'packet':
-            li = self.bot.client.packets.on(desc, func, priority=priority)
+            li = self.bot.client.packets.on(desc, func, priority=priority, conditional=conditional)
         else:
             raise Exception('Invalid listener what: {}'.format(what))
 

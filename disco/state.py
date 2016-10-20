@@ -185,6 +185,9 @@ class State(object):
         for member in six.itervalues(event.guild.members):
             self.users[member.user.id] = member.user
 
+        for voice_state in six.itervalues(event.guild.voice_states):
+            self.voice_states[voice_state.session_id] = voice_state
+
         if self.config.sync_guild_members:
             event.guild.sync()
 
@@ -225,8 +228,13 @@ class State(object):
                 guild.voice_states[event.state.session_id].update(event.state)
             else:
                 del guild.voice_states[event.state.session_id]
+
+                # Prevent a weird race where events come in before the guild_create (I think...)
+                if event.state.session_id in self.voice_states:
+                    del self.voice_states[event.state.session_id]
         elif event.state.channel_id:
             guild.voice_states[event.state.session_id] = event.state
+            self.voice_states[event.state.session_id] = event.state
 
     def on_guild_member_add(self, event):
         if event.member.user.id not in self.users:
