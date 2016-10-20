@@ -7,7 +7,7 @@ from disco.types.user import User, Presence
 from disco.types.channel import Channel
 from disco.types.message import Message
 from disco.types.voice import VoiceState
-from disco.types.guild import Guild, GuildMember, Role
+from disco.types.guild import Guild, GuildMember, Role, Emoji
 
 from disco.types.base import Model, ModelMeta, Field, snowflake, listof, lazy_datetime
 
@@ -101,6 +101,19 @@ class Ready(GatewayEvent):
     """
     Sent after the initial gateway handshake is complete. Contains data required
     for bootstrapping the client's states.
+
+    Attributes
+    -----
+    version : int
+        The gateway version.
+    session_id : str
+        The session ID.
+    user : :class:`disco.types.user.User`
+        The user object for the authed account.
+    guilds : list[:class:`disco.types.guild.Guild`
+        All guilds this account is a member of. These are shallow guild objects.
+    private_channels list[:class:`disco.types.channel.Channel`]
+        All private channels (DMs) open for this account.
     """
     version = Field(int, alias='v')
     session_id = Field(str)
@@ -119,31 +132,70 @@ class Resumed(GatewayEvent):
 @wraps_model(Guild)
 class GuildCreate(GatewayEvent):
     """
-    Sent when a guild is created, or becomes available.
+    Sent when a guild is joined, or becomes available.
+
+    Attributes
+    -----
+    guild : :class:`disco.types.guild.Guild`
+        The guild being created (e.g. joined)
+    unavailable : bool
+        If false, this guild is coming online from a previously unavailable state,
+        and if None, this is a normal guild join event.
     """
     unavailable = Field(bool)
+
+    @property
+    def created(self):
+        """
+        Shortcut property which is true when we actually joined the guild.
+        """
+        return self.unavailable is None
 
 
 @wraps_model(Guild)
 class GuildUpdate(GatewayEvent):
     """
     Sent when a guild is updated.
+
+    Attributes
+    -----
+    guild : :class:`disco.types.guild.Guild`
+        The updated guild object.
     """
-    pass
 
 
 class GuildDelete(GatewayEvent):
     """
-    Sent when a guild is deleted, or becomes unavailable.
+    Sent when a guild is deleted, left, or becomes unavailable.
+
+    Attributes
+    -----
+    id : snowflake
+        The ID of the guild being deleted.
+    unavailable : bool
+        If true, this guild is becoming unavailable, if None this is a normal
+        guild leave event.
     """
     id = Field(snowflake)
     unavailable = Field(bool)
+
+    @property
+    def deleted(self):
+        """
+        Shortcut property which is true when we actually have left the guild.
+        """
+        return self.unavailable is None
 
 
 @wraps_model(Channel)
 class ChannelCreate(GatewayEvent):
     """
     Sent when a channel is created.
+
+    Attributes
+    -----
+    channel : :class:`disco.types.channel.Channel`
+        The channel which was created.
     """
 
 
@@ -151,21 +203,36 @@ class ChannelCreate(GatewayEvent):
 class ChannelUpdate(ChannelCreate):
     """
     Sent when a channel is updated.
+
+    Attributes
+    -----
+    channel : :class:`disco.types.channel.Channel`
+        The channel which was updated.
     """
-    pass
 
 
 @wraps_model(Channel)
 class ChannelDelete(ChannelCreate):
     """
     Sent when a channel is deleted.
+
+    Attributes
+    -----
+    channel : :class:`disco.types.channel.Channel`
+        The channel being deleted.
     """
-    pass
 
 
 class ChannelPinsUpdate(GatewayEvent):
     """
     Sent when a channel's pins are updated.
+
+    Attributes
+    -----
+    channel_id : snowflake
+        ID of the channel where pins where updated.
+    last_pin_timestap : datetime
+        The time the last message was pinned.
     """
     channel_id = Field(snowflake)
     last_pin_timestamp = Field(lazy_datetime)
@@ -175,35 +242,68 @@ class ChannelPinsUpdate(GatewayEvent):
 class GuildBanAdd(GatewayEvent):
     """
     Sent when a user is banned from a guild.
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild the user is being banned from.
+    user : :class:`disco.types.user.User`
+        The user being banned from the guild.
     """
-    pass
+    guild_id = Field(snowflake)
 
 
 @wraps_model(User)
 class GuildBanRemove(GuildBanAdd):
     """
     Sent when a user is unbanned from a guild.
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild the user is being unbanned from.
+    user : :class:`disco.types.user.User`
+        The user being unbanned from the guild.
     """
-    pass
 
 
 class GuildEmojisUpdate(GatewayEvent):
     """
     Sent when a guild's emojis are updated.
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild the emojis are being updated in.
+    emojis : list[:class:`disco.types.guild.Emoji`]
+        The new set of emojis for the guild
     """
-    pass
+    guild_id = Field(snowflake)
+    emojis = Field(listof(Emoji))
 
 
 class GuildIntegrationsUpdate(GatewayEvent):
     """
     Sent when a guild's integrations are updated.
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild integrations where updated in.
     """
-    pass
+    guild_id = Field(snowflake)
 
 
 class GuildMembersChunk(GatewayEvent):
     """
     Sent in response to a member's chunk request.
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild this member chunk is for.
+    members : list[:class:`disco.types.guild.GuildMember`]
+        The chunk of members.
     """
     guild_id = Field(snowflake)
     members = Field(listof(GuildMember))
@@ -213,13 +313,24 @@ class GuildMembersChunk(GatewayEvent):
 class GuildMemberAdd(GatewayEvent):
     """
     Sent when a user joins a guild.
+
+    Attributes
+    -----
+    member : :class:`disco.types.guild.GuildMember`
+        The member that has joined the guild.
     """
-    pass
 
 
 class GuildMemberRemove(GatewayEvent):
     """
     Sent when a user leaves a guild (via leaving, kicking, or banning).
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild the member left from.
+    user : :class:`disco.types.user.User`
+        The user who was removed from the guild.
     """
     guild_id = Field(snowflake)
     user = Field(User)
@@ -229,13 +340,24 @@ class GuildMemberRemove(GatewayEvent):
 class GuildMemberUpdate(GatewayEvent):
     """
     Sent when a guilds member is updated.
+
+    Attributes
+    -----
+    member : :class:`disco.types.guild.GuildMember`
+        The member being updated
     """
-    pass
 
 
 class GuildRoleCreate(GatewayEvent):
     """
     Sent when a role is created.
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild where the role was created.
+    role : :class:`disco.types.guild.Role`
+        The role that was created.
     """
     guild_id = Field(snowflake)
     role = Field(Role)
@@ -244,13 +366,26 @@ class GuildRoleCreate(GatewayEvent):
 class GuildRoleUpdate(GuildRoleCreate):
     """
     Sent when a role is updated.
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild where the role was created.
+    role : :class:`disco.types.guild.Role`
+        The role that was created.
     """
-    pass
 
 
 class GuildRoleDelete(GatewayEvent):
     """
     Sent when a role is deleted.
+
+    Attributes
+    -----
+    guild_id : snowflake
+        The ID of the guild where the role is being deleted.
+    role_id : snowflake
+        The id of the role being deleted.
     """
     guild_id = Field(snowflake)
     role_id = Field(snowflake)
@@ -260,6 +395,11 @@ class GuildRoleDelete(GatewayEvent):
 class MessageCreate(GatewayEvent):
     """
     Sent when a message is created.
+
+    Attributes
+    -----
+    message : :class:`disco.types.message.Message`
+        The message being created.
     """
 
 
@@ -267,13 +407,24 @@ class MessageCreate(GatewayEvent):
 class MessageUpdate(MessageCreate):
     """
     Sent when a message is updated/edited.
+
+    Attributes
+    -----
+    message : :class:`disco.types.message.Message`
+        The message being updated.
     """
-    pass
 
 
 class MessageDelete(GatewayEvent):
     """
     Sent when a message is deleted.
+
+    Attributes
+    -----
+    id : snowflake
+        The ID of message being deleted.
+    channel_id : snowflake
+        The ID of the channel the message was deleted in.
     """
     id = Field(snowflake)
     channel_id = Field(snowflake)
@@ -282,6 +433,13 @@ class MessageDelete(GatewayEvent):
 class MessageDeleteBulk(GatewayEvent):
     """
     Sent when multiple messages are deleted from a channel.
+
+    Attributes
+    -----
+    channel_id : snowflake
+        The channel the messages are being deleted in.
+    ids : list[snowflake]
+        List of messages being deleted in the channel.
     """
     channel_id = Field(snowflake)
     ids = Field(listof(snowflake))
@@ -291,6 +449,15 @@ class MessageDeleteBulk(GatewayEvent):
 class PresenceUpdate(GatewayEvent):
     """
     Sent when a user's presence is updated.
+
+    Attributes
+    -----
+    presence : :class:`disco.types.user.Presence`
+        The updated presence object.
+    guild_id : snowflake
+        The guild this presence update is for.
+    roles : list[snowflake]
+        List of roles the user from the presence is part of.
     """
     guild_id = Field(snowflake)
     roles = Field(listof(snowflake))
@@ -299,23 +466,45 @@ class PresenceUpdate(GatewayEvent):
 class TypingStart(GatewayEvent):
     """
     Sent when a user begins typing in a channel.
+
+    Attributes
+    -----
+    channel_id : snowflake
+        The ID of the channel where the user is typing.
+    user_id : snowflake
+        The ID of the user who is typing.
+    timestamp : datetime
+        When the user started typing.
     """
     channel_id = Field(snowflake)
     user_id = Field(snowflake)
-    timestamp = Field(snowflake)
+    timestamp = Field(lazy_datetime)
 
 
 @wraps_model(VoiceState, alias='state')
 class VoiceStateUpdate(GatewayEvent):
     """
     Sent when a users voice state changes.
+
+    Attributes
+    -----
+    state : :class:`disco.models.voice.VoiceState`
+        The voice state which was updated.
     """
-    pass
 
 
 class VoiceServerUpdate(GatewayEvent):
     """
     Sent when a voice server is updated.
+
+    Attributes
+    -----
+    token : str
+        The token for the voice server.
+    endpoint : str
+        The endpoint for the voice server.
+    guild_id : snowflake
+        The guild ID this voice server update is for.
     """
     token = Field(str)
     endpoint = Field(str)
@@ -325,6 +514,13 @@ class VoiceServerUpdate(GatewayEvent):
 class WebhooksUpdate(GatewayEvent):
     """
     Sent when a channels webhooks are updated.
+
+    Attributes
+    -----
+    channel_id : snowflake
+        The channel ID this webhooks update is for.
+    guild_id : snowflake
+        The guild ID this webhooks update is for.
     """
     channel_id = Field(snowflake)
     guild_id = Field(snowflake)

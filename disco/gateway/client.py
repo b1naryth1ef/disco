@@ -161,8 +161,8 @@ class GatewayClient(LoggingClass):
                 'compress': True,
                 'large_threshold': 250,
                 'shard': [
-                    self.client.config.shard_id,
-                    self.client.config.shard_count,
+                    int(self.client.config.shard_id),
+                    int(self.client.config.shard_count),
                 ],
                 'properties': {
                     '$os': 'linux',

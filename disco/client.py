@@ -112,7 +112,7 @@ class Client(object):
         payload = {
             'afk': afk,
             'since': since,
-            'status': status.value,
+            'status': status.value.lower(),
             'game': None,
         }
 
