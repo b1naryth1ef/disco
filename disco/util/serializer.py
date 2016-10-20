@@ -68,6 +68,7 @@ def dump_function(func):
         )
 
 
-def load_function((code, name, defaults, closure)):
+def load_function(args):
+    code, name, defaults, closure = args
     closure = tuple(map(load_cell, closure))
     return types.FunctionType(code, globals(), name, defaults, closure)
