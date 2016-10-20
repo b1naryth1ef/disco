@@ -2,11 +2,11 @@ import random
 import gevent
 import string
 import weakref
-import dill
 
 from holster.enum import Enum
 
 from disco.util.logging import LoggingClass
+from disco.util.serializer import dump_function, load_function
 
 
 def get_random_str(size):
@@ -49,7 +49,7 @@ class GIPCProxy(LoggingClass):
             self.send(IPCMessageType.RESPONSE, (nonce, self.resolve(path)))
         elif mtype == IPCMessageType.EXECUTE:
             nonce, raw = data
-            func = dill.loads(raw)
+            func = load_function(raw)
             try:
                 result = func(self.obj)
             except Exception:
@@ -73,7 +73,7 @@ class GIPCProxy(LoggingClass):
 
     def execute(self, func):
         nonce = get_random_str(32)
-        raw = dill.dumps(func)
+        raw = dump_function(func)
         self.results[nonce] = result = gevent.event.AsyncResult()
         self.pipe.put((IPCMessageType.EXECUTE.value, (nonce, raw)))
         return result

@@ -20,6 +20,7 @@ Disco was built to run both as a generic-use library, and a standalone bot toolk
 |requests[security]|adds packages for a proper SSL implementation|
 |ujson|faster json parser, improves performance|
 |erlpack|ETF parser, only Python 2.x, run with the --encoder=etf flag|
+|gipc|Gevent IPC, required for autosharding|
 
 ## Examples
 

@@ -1,11 +1,9 @@
 from __future__ import absolute_import
 
-import six
 import gipc
 import gevent
 import logging
-import dill
-import types
+import marshal
 
 from holster.log import set_logging_levels
 
@@ -14,42 +12,7 @@ from disco.bot import Bot, BotConfig
 from disco.api.client import APIClient
 from disco.gateway.ipc import GIPCProxy
 from disco.util.snowflake import calculate_shard
-
-
-def dump_function(func):
-    if six.PY3:
-        return dill.dumps((
-            func.__code__,
-            func.__name__,
-            func.__defaults__,
-            func.__closure__,
-        ))
-    else:
-        return dill.dumps((
-            func.func_code,
-            func.func_name,
-            func.func_defaults,
-            func.func_closure
-        ))
-
-
-def load_function(func):
-    code, name, defaults, closure = dill.loads(func)
-    return types.FunctionType(code, globals(), name, defaults, closure)
-
-
-def run_on(id, proxy):
-    def f(func):
-        return proxy.call(('run_on', ), id, dump_function(func))
-    return f
-
-
-def run_self(bot):
-    def f(func):
-        result = gevent.event.AsyncResult()
-        result.set(func(bot))
-        return result
-    return f
+from disco.util.serializer import dump_function, load_function
 
 
 def run_shard(config, id, pipe):
@@ -104,7 +67,6 @@ class AutoSharder(object):
 
     def run_on(self, id, raw):
         func = load_function(raw)
-        # func = dill.loads(raw)
         return self.shards[id].execute(func).wait(timeout=15)
 
     def run(self):
@@ -121,6 +83,6 @@ class AutoSharder(object):
         )
 
     def start_shard(self, id):
-        cpipe, ppipe = gipc.pipe(duplex=True, encoder=dill.dumps, decoder=dill.loads)
+        cpipe, ppipe = gipc.pipe(duplex=True, encoder=marshal.dumps, decoder=marshal.loads)
         gipc.start_process(run_shard, (self.config, id, cpipe))
         self.shards[id] = GIPCProxy(self, ppipe)
