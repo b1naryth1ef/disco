@@ -98,6 +98,23 @@ class APIClient(LoggingClass):
     def channels_messages_delete_bulk(self, channel, messages):
         self.http(Routes.CHANNELS_MESSAGES_DELETE_BULK, dict(channel=channel), json={'messages': messages})
 
+    def channels_messages_reactions_get(self, channel, message, emoji):
+        r = self.http(Routes.CHANNELS_MESSAGES_REACTIONS_GET, dict(channel=channel, message=message, emoji=emoji))
+        return User.create_map(self.client, r.json())
+
+    def channels_messages_reactions_create(self, channel, message, emoji):
+        self.http(Routes.CHANNELS_MESSAGES_REACTIONS_CREATE, dict(channel=channel, message=message, emoji=emoji))
+
+    def channels_messages_reactions_delete(self, channel, message, emoji, user=None):
+        route = Routes.CHANNELS_MESSAGES_REACTIONS_DELETE_ME
+        obj = dict(channel=channel, message=message, emoji=emoji)
+
+        if user:
+            route = Routes.CHANNELS_MESSAGES_REACTIONS_DELETE_USER
+            obj['user'] = user
+
+        self.http(route, obj)
+
     def channels_permissions_modify(self, channel, permission, allow, deny, typ):
         self.http(Routes.CHANNELS_PERMISSIONS_MODIFY, dict(channel=channel, permission=permission), json={
             'allow': allow,

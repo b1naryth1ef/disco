@@ -19,6 +19,17 @@ MessageType = Enum(
 )
 
 
+class MessageReactionEmoji(SlottedModel):
+    id = Field(snowflake)
+    name = Field(text)
+
+
+class MessageReaction(SlottedModel):
+    emoji = Field(MessageReactionEmoji)
+    count = Field(int)
+    me = Field(bool)
+
+
 class MessageEmbedFooter(SlottedModel):
     text = Field(text)
     icon_url = Field(text)
@@ -170,6 +181,7 @@ class Message(SlottedModel):
     mention_roles = Field(listof(snowflake))
     embeds = Field(listof(MessageEmbed))
     attachments = Field(dictof(MessageAttachment, key='id'))
+    reactions = Field(listof(MessageReaction))
 
     def __str__(self):
         return '<Message {} ({})>'.format(self.id, self.channel_id)

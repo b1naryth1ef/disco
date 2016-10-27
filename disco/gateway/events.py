@@ -5,7 +5,7 @@ import six
 
 from disco.types.user import User, Presence
 from disco.types.channel import Channel
-from disco.types.message import Message
+from disco.types.message import Message, MessageReactionEmoji
 from disco.types.voice import VoiceState
 from disco.types.guild import Guild, GuildMember, Role, Emoji
 
@@ -524,3 +524,45 @@ class WebhooksUpdate(GatewayEvent):
     """
     channel_id = Field(snowflake)
     guild_id = Field(snowflake)
+
+
+class MessageReactionAdd(GatewayEvent):
+    """
+    Sent when a reaction is added to a message.
+
+    Attributes
+    ----------
+    channel_id : snowflake
+        The channel ID the message is in.
+    messsage_id : snowflake
+        The ID of the message for which the reaction was added too.
+    user_id : snowflake
+        The ID of the user who added the reaction.
+    emoji : :class:`disco.types.message.MessageReactionEmoji`
+        The emoji which was added.
+    """
+    channel_id = Field(snowflake)
+    message_id = Field(snowflake)
+    user_id = Field(snowflake)
+    emoji = Field(MessageReactionEmoji)
+
+
+class MessageReactionRemove(GatewayEvent):
+    """
+    Sent when a reaction is removed from a message.
+
+    Attributes
+    ----------
+    channel_id : snowflake
+        The channel ID the message is in.
+    messsage_id : snowflake
+        The ID of the message for which the reaction was removed from.
+    user_id : snowflake
+        The ID of the user who originally added the reaction.
+    emoji : :class:`disco.types.message.MessageReactionEmoji`
+        The emoji which was removed.
+    """
+    channel_id = Field(snowflake)
+    message_id = Field(snowflake)
+    user_id = Field(snowflake)
+    emoji = Field(MessageReactionEmoji)
