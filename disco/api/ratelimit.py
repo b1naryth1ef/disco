@@ -1,8 +1,10 @@
 import time
 import gevent
 
+from disco.util.logging import LoggingClass
 
-class RouteState(object):
+
+class RouteState(LoggingClass):
     """
     An object which stores ratelimit state for a given method/url route
     combination (as specified in :class:`disco.api.http.Routes`).
@@ -35,6 +37,9 @@ class RouteState(object):
         self.event = None
 
         self.update(response)
+
+    def __repr__(self):
+        return '<RouteState {}>'.format(' '.join(self.route))
 
     @property
     def chilled(self):
@@ -92,12 +97,14 @@ class RouteState(object):
             raise Exception('Cannot cooldown for negative time period; check clock sync')
 
         self.event = gevent.event.Event()
-        gevent.sleep((self.reset_time - time.time()) + .5)
+        delay = (self.reset_time - time.time()) + .5
+        self.log.debug('Cooling down bucket %s for %s seconds', self, delay)
+        gevent.sleep(delay)
         self.event.set()
         self.event = None
 
 
-class RateLimiter(object):
+class RateLimiter(LoggingClass):
     """
     A in-memory store of ratelimit states for all routes we've ever called.
 

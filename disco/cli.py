@@ -41,7 +41,7 @@ def disco_main(run=False):
     from disco.client import Client, ClientConfig
     from disco.bot import Bot, BotConfig
     from disco.util.token import is_valid_token
-    from holster.log import set_logging_levels
+    from disco.util.logging import setup_logging
 
     if os.path.exists(args.config):
         config = ClientConfig.from_file(args.config)
@@ -61,8 +61,8 @@ def disco_main(run=False):
         AutoSharder(config).run()
         return
 
-    logging.basicConfig(level=logging.INFO)
-    set_logging_levels()
+    # TODO: make configurable
+    setup_logging(level=logging.INFO)
 
     client = Client(config)
 

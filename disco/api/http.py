@@ -18,6 +18,12 @@ HTTPMethod = Enum(
 )
 
 
+def to_bytes(obj):
+    if isinstance(obj, six.text_type):
+        return obj.encode('utf-8')
+    return obj
+
+
 class Routes(object):
     """
     Simple Python object-enum of all method/url route combinations available to
@@ -194,6 +200,7 @@ class HTTPClient(LoggingClass):
             kwargs['headers'] = self.headers
 
         # Build the bucket URL
+        args = {to_bytes(k): to_bytes(v) for k, v in six.iteritems(args)}
         filtered = {k: (v if v in ('guild', 'channel') else '') for k, v in six.iteritems(args)}
         bucket = (route[0].value, route[1].format(**filtered))
 
@@ -202,6 +209,7 @@ class HTTPClient(LoggingClass):
 
         # Make the actual request
         url = self.BASE_URL + route[1].format(**args)
+        self.log.info('%s %s', route[0].value, url)
         r = requests.request(route[0].value, url, **kwargs)
 
         # Update rate limiter

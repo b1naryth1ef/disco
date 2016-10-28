@@ -5,22 +5,20 @@ import gevent
 import logging
 import marshal
 
-from holster.log import set_logging_levels
-
 from disco.client import Client
 from disco.bot import Bot, BotConfig
 from disco.api.client import APIClient
 from disco.gateway.ipc import GIPCProxy
+from disco.util.logging import setup_logging
 from disco.util.snowflake import calculate_shard
 from disco.util.serializer import dump_function, load_function
 
 
 def run_shard(config, id, pipe):
-    logging.basicConfig(
+    setup_logging(
         level=logging.INFO,
         format='{} [%(levelname)s] %(asctime)s - %(name)s:%(lineno)d - %(message)s'.format(id)
     )
-    set_logging_levels()
 
     config.shard_id = id
     client = Client(config)

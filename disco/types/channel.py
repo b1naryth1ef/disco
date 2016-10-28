@@ -186,6 +186,9 @@ class Channel(SlottedModel, Permissible):
         """
         return MessageIterator(self.client, self, **kwargs)
 
+    def get_message(self, message):
+        return self.client.api.channels_messages_get(self.id, to_snowflake(message))
+
     def get_invites(self):
         """
         Returns

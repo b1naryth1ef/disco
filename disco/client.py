@@ -13,7 +13,7 @@ from disco.util.logging import LoggingClass
 from disco.util.backdoor import DiscoBackdoorServer
 
 
-class ClientConfig(LoggingClass, Config):
+class ClientConfig(Config):
     """
     Configuration for the :class:`Client`.
 
@@ -46,7 +46,7 @@ class ClientConfig(LoggingClass, Config):
     encoder = 'json'
 
 
-class Client(object):
+class Client(LoggingClass):
     """
     Class representing the base entry point that should be used in almost all
     implementation cases. This class wraps the functionality of both the REST API

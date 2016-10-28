@@ -10,6 +10,7 @@ from disco.types.base import SlottedModel, Field, snowflake, listof, dictof, tex
 from disco.types.user import User, Presence
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
+from disco.types.message import Emoji
 from disco.types.permissions import PermissionValue, Permissions, Permissible
 
 
@@ -22,7 +23,9 @@ VerificationLevel = Enum(
 )
 
 
-class GuildSubType(SlottedModel):
+class GuildSubType(object):
+    __slots__ = []
+
     guild_id = Field(None)
 
     @cached_property
@@ -30,7 +33,7 @@ class GuildSubType(SlottedModel):
         return self.client.state.guilds.get(self.guild_id)
 
 
-class Emoji(GuildSubType):
+class GuildEmoji(Emoji, GuildSubType):
     """
     An emoji object
 
@@ -54,7 +57,7 @@ class Emoji(GuildSubType):
     roles = Field(listof(snowflake))
 
 
-class Role(GuildSubType):
+class Role(SlottedModel, GuildSubType):
     """
     A role object
 
@@ -95,7 +98,7 @@ class Role(GuildSubType):
         return '<@{}>'.format(self.id)
 
 
-class GuildMember(GuildSubType):
+class GuildMember(SlottedModel, GuildSubType):
     """
     A GuildMember object
 
@@ -222,7 +225,7 @@ class Guild(SlottedModel, Permissible):
         All of the guild's channels.
     roles : dict(snowflake, :class:`Role`)
         All of the guild's roles.
-    emojis : dict(snowflake, :class:`Emoji`)
+    emojis : dict(snowflake, :class:`GuildEmoji`)
         All of the guild's emojis.
     voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
         All of the guild's voice states.
@@ -243,7 +246,7 @@ class Guild(SlottedModel, Permissible):
     members = Field(dictof(GuildMember, key='id'))
     channels = Field(dictof(Channel, key='id'))
     roles = Field(dictof(Role, key='id'))
-    emojis = Field(dictof(Emoji, key='id'))
+    emojis = Field(dictof(GuildEmoji, key='id'))
     voice_states = Field(dictof(VoiceState, key='session_id'))
     member_count = Field(int)
     presences = Field(listof(Presence))

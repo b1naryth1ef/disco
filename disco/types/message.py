@@ -19,9 +19,23 @@ MessageType = Enum(
 )
 
 
-class MessageReactionEmoji(SlottedModel):
+class Emoji(SlottedModel):
     id = Field(snowflake)
     name = Field(text)
+
+    def __eq__(self, other):
+        if isinstance(other, Emoji):
+            return self.id == other.id and self.name == other.name
+        raise NotImplementedError
+
+    def to_string(self):
+        if self.id:
+            return '{}:{}'.format(self.name, self.id)
+        return self.name
+
+
+class MessageReactionEmoji(Emoji):
+    pass
 
 
 class MessageReaction(SlottedModel):
@@ -260,6 +274,27 @@ class Message(SlottedModel):
             The deleted message object.
         """
         return self.client.api.channels_messages_delete(self.channel_id, self.id)
+
+    def create_reaction(self, emoji):
+        if isinstance(emoji, Emoji):
+            emoji = emoji.to_string()
+        self.client.api.channels_messages_reactions_create(
+            self.channel_id,
+            self.id,
+            emoji)
+
+    def delete_reaction(self, emoji, user=None):
+        if isinstance(emoji, Emoji):
+            emoji = emoji.to_string()
+
+        if user:
+            user = to_snowflake(user)
+
+        self.client.api.channels_messages_reactions_delete(
+            self.channel_id,
+            self.id,
+            emoji,
+            user)
 
     def is_mentioned(self, entity):
         """

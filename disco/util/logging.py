@@ -3,15 +3,24 @@ from __future__ import absolute_import
 import logging
 
 
-class LoggingClass(object):
-    def __init__(self):
-        self.log = logging.getLogger(self.__class__.__name__)
+LEVEL_OVERRIDES = {
+    'requests': logging.WARNING
+}
 
-    def log_on_error(self, msg, f):
-        def _f(*args, **kwargs):
-            try:
-                return f(*args, **kwargs)
-            except:
-                self.log.exception(msg)
-                raise
-        return _f
+
+def setup_logging(**kwargs):
+    logging.basicConfig(**kwargs)
+    for logger, level in LEVEL_OVERRIDES.items():
+        logging.getLogger(logger).setLevel(level)
+
+
+class LoggingClass(object):
+    __slots__ = ['_log']
+
+    @property
+    def log(self):
+        try:
+            return self._log
+        except AttributeError:
+            self._log = logging.getLogger(self.__class__.__name__)
+            return self._log
