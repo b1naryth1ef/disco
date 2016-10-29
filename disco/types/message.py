@@ -303,8 +303,8 @@ class Message(SlottedModel):
         bool
             Whether the give entity was mentioned.
         """
-        id = to_snowflake(entity)
-        return id in self.mentions or id in self.mention_roles
+        entity = to_snowflake(entity)
+        return entity in self.mentions or entity in self.mention_roles
 
     @cached_property
     def without_mentions(self):
@@ -340,11 +340,11 @@ class Message(SlottedModel):
             return
 
         def replace(match):
-            id = match.group(0)
-            if id in self.mention_roles:
-                return role_replace(id)
+            oid = match.group(0)
+            if oid in self.mention_roles:
+                return role_replace(oid)
             else:
-                return user_replace(self.mentions.get(id))
+                return user_replace(self.mentions.get(oid))
 
         return re.sub('<@!?([0-9]+)>', replace, self.content)
 
@@ -376,14 +376,13 @@ class MessageTable(object):
         data = self.sep.lstrip()
 
         for idx, col in enumerate(cols):
-            padding = ' ' * ((self.size_index[idx] - len(col)))
+            padding = ' ' * (self.size_index[idx] - len(col))
             data += col + padding + self.sep
 
         return data.rstrip()
 
     def compile(self):
-        data = []
-        data.append(self.compile_one(self.header))
+        data = [self.compile_one(self.header)]
 
         if self.header_break:
             data.append('-' * (sum(self.size_index.values()) + (len(self.header) * len(self.sep)) + 1))

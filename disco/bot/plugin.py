@@ -154,6 +154,14 @@ class Plugin(LoggingClass, PluginDeco):
         self.storage = bot.storage
         self.config = config
 
+        # General declartions
+        self.listeners = []
+        self.commands = {}
+        self.schedules = {}
+        self.greenlets = weakref.WeakSet()
+        self._pre = {}
+        self._post = {}
+
         # This is an array of all meta functions we sniff at init
         self.meta_funcs = []
 
@@ -248,7 +256,7 @@ class Plugin(LoggingClass, PluginDeco):
 
         return True
 
-    def register_listener(self, func, what, desc, priority=Priority.NONE, conditional=None):
+    def register_listener(self, func, what, desc, **kwargs):
         """
         Registers a listener
 
@@ -260,15 +268,13 @@ class Plugin(LoggingClass, PluginDeco):
             The function to be registered.
         desc
             The descriptor of the event/packet.
-        priority : Priority
-            The priority of this listener.
         """
         func = functools.partial(self._dispatch, 'listener', func)
 
         if what == 'event':
-            li = self.bot.client.events.on(desc, func, priority=priority, conditional=conditional)
+            li = self.bot.client.events.on(desc, func, **kwargs)
         elif what == 'packet':
-            li = self.bot.client.packets.on(desc, func, priority=priority, conditional=conditional)
+            li = self.bot.client.packets.on(desc, func, **kwargs)
         else:
             raise Exception('Invalid listener what: {}'.format(what))
 
@@ -305,8 +311,13 @@ class Plugin(LoggingClass, PluginDeco):
             The function to be registered.
         interval : int
             Interval (in seconds) to repeat the function on.
+        repeat : bool
+            Whether this schedule is repeating (or one time).
+        init : bool
+            Whether to run this schedule once immediatly, or wait for the first
+            scheduled iteration.
         """
-        def repeat():
+        def func():
             if init:
                 func()
 

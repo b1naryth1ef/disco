@@ -179,7 +179,7 @@ def with_equality(field):
 
 def with_hash(field):
     class T(object):
-        def __hash__(self, other):
+        def __hash__(self):
             return hash(getattr(self, field))
     return T
 
@@ -190,7 +190,7 @@ SlottedModel = None
 
 
 class ModelMeta(type):
-    def __new__(cls, name, parents, dct):
+    def __new__(mcs, name, parents, dct):
         fields = {}
 
         for parent in parents:
@@ -217,7 +217,7 @@ class ModelMeta(type):
             dct = {k: v for k, v in six.iteritems(dct) if k not in fields}
 
         dct['_fields'] = fields
-        return super(ModelMeta, cls).__new__(cls, name, parents, dct)
+        return super(ModelMeta, mcs).__new__(mcs, name, parents, dct)
 
 
 class AsyncChainable(object):
@@ -280,8 +280,8 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
         return inst
 
     @classmethod
-    def create_map(cls, client, data):
-        return list(map(functools.partial(cls.create, client), data))
+    def create_map(cls, client, data, **kwargs):
+        return list(map(functools.partial(cls.create, client, **kwargs), data))
 
     @classmethod
     def attach(cls, it, data):

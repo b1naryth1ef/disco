@@ -57,11 +57,11 @@ class PermissionOverwrite(ChannelSubType):
     def create(cls, channel, entity, allow=0, deny=0):
         from disco.types.guild import Role
 
-        type = PermissionOverwriteType.ROLE if isinstance(entity, Role) else PermissionOverwriteType.MEMBER
+        ptype = PermissionOverwriteType.ROLE if isinstance(entity, Role) else PermissionOverwriteType.MEMBER
         return cls(
             client=channel.client,
             id=entity.id,
-            type=type,
+            type=ptype,
             allow=allow,
             deny=deny,
             channel_id=channel.id
@@ -69,10 +69,10 @@ class PermissionOverwrite(ChannelSubType):
 
     def save(self):
         self.client.api.channels_permissions_modify(self.channel_id,
-            self.id,
-            self.allow.value or 0,
-            self.deny.value or 0,
-            self.type.name)
+                                                    self.id,
+                                                    self.allow.value or 0,
+                                                    self.deny.value or 0,
+                                                    self.type.name)
         return self
 
     def delete(self):

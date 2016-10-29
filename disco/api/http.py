@@ -48,7 +48,8 @@ class Routes(object):
     CHANNELS_MESSAGES_REACTIONS_GET = (HTTPMethod.GET, CHANNELS + '/messages/{message}/reactions/{emoji}')
     CHANNELS_MESSAGES_REACTIONS_CREATE = (HTTPMethod.PUT, CHANNELS + '/messages/{message}/reactions/{emoji}/@me')
     CHANNELS_MESSAGES_REACTIONS_DELETE_ME = (HTTPMethod.DELETE, CHANNELS + '/messages/{message}/reactions/{emoji}/@me')
-    CHANNELS_MESSAGES_REACTIONS_DELETE_USER = (HTTPMethod.DELETE, CHANNELS + '/messages/{message}/reactions/{emoji}/{user}')
+    CHANNELS_MESSAGES_REACTIONS_DELETE_USER = (HTTPMethod.DELETE,
+                                               CHANNELS + '/messages/{message}/reactions/{emoji}/{user}')
     CHANNELS_PERMISSIONS_MODIFY = (HTTPMethod.PUT, CHANNELS + '/permissions/{permission}')
     CHANNELS_PERMISSIONS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/permissions/{permission}')
     CHANNELS_INVITES_LIST = (HTTPMethod.GET, CHANNELS + '/invites')
@@ -222,13 +223,15 @@ class HTTPClient(LoggingClass):
             raise APIException('Request failed', r.status_code, r.content)
         else:
             if r.status_code == 429:
-                self.log.warning('Request responded w/ 429, retrying (but this should not happen, check your clock sync')
+                self.log.warning(
+                    'Request responded w/ 429, retrying (but this should not happen, check your clock sync')
 
             # If we hit the max retries, throw an error
             retry += 1
             if retry > self.MAX_RETRIES:
                 self.log.error('Failing request, hit max retries')
-                raise APIException('Request failed after {} attempts'.format(self.MAX_RETRIES), r.status_code, r.content)
+                raise APIException(
+                    'Request failed after {} attempts'.format(self.MAX_RETRIES), r.status_code, r.content)
 
             backoff = self.random_backoff()
             self.log.warning('Request to `{}` failed with code {}, retrying after {}s ({})'.format(

@@ -41,6 +41,7 @@ class GuildEmoji(Emoji):
         Roles this emoji is attached to.
     """
     id = Field(snowflake)
+    guild_id = Field(snowflake)
     name = Field(text)
     require_colons = Field(bool)
     managed = Field(bool)
@@ -73,6 +74,7 @@ class Role(SlottedModel):
         The position of this role in the hierarchy.
     """
     id = Field(snowflake)
+    guild_id = Field(snowflake)
     name = Field(text)
     hoist = Field(bool)
     managed = Field(bool)

@@ -88,8 +88,8 @@ class APIClient(LoggingClass):
 
     def channels_messages_modify(self, channel, message, content):
         r = self.http(Routes.CHANNELS_MESSAGES_MODIFY,
-                dict(channel=channel, message=message),
-                json={'content': content})
+                      dict(channel=channel, message=message),
+                      json={'content': content})
         return Message.create(self.client, r.json())
 
     def channels_messages_delete(self, channel, message):

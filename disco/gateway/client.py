@@ -81,15 +81,15 @@ class GatewayClient(LoggingClass):
         self.log.debug('Dispatching %s', obj.__class__.__name__)
         self.client.events.emit(obj.__class__.__name__, obj)
 
-    def handle_heartbeat(self, packet):
+    def handle_heartbeat(self, _):
         self._send(OPCode.HEARTBEAT, self.seq)
 
-    def handle_reconnect(self, packet):
+    def handle_reconnect(self, _):
         self.log.warning('Received RECONNECT request, forcing a fresh reconnect')
         self.session_id = None
         self.ws.close()
 
-    def handle_invalid_session(self, packet):
+    def handle_invalid_session(self, _):
         self.log.warning('Recieved INVALID_SESSION, forcing a fresh reconnect')
         self.session_id = None
         self.ws.close()

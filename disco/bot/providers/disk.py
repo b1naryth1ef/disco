@@ -13,6 +13,7 @@ class DiskProvider(BaseProvider):
         self.fsync = config.get('fsync', False)
         self.fsync_changes = config.get('fsync_changes', 1)
 
+        self.autosave_task = None
         self.change_count = 0
 
     def autosave_loop(self, interval):

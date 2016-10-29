@@ -10,8 +10,9 @@ from .base import BaseProvider, SEP_SENTINEL
 
 class RedisProvider(BaseProvider):
     def __init__(self, config):
-        self.config = config
+        super(RedisProvider, self).__init__(config)
         self.format = config.get('format', 'pickle')
+        self.conn = None
 
     def load(self):
         self.conn = redis.Redis(
@@ -39,5 +40,5 @@ class RedisProvider(BaseProvider):
     def set(self, key, value):
         self.conn.set(key, Serializer.dumps(self.format, value))
 
-    def delete(self, key, value):
+    def delete(self, key):
         self.conn.delete(key)

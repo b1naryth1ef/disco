@@ -98,8 +98,8 @@ class Client(LoggingClass):
             }
 
             self.manhole = DiscoBackdoorServer(self.config.manhole_bind,
-                banner='Disco Manhole',
-                localf=lambda: self.manhole_locals)
+                                               banner='Disco Manhole',
+                                               localf=lambda: self.manhole_locals)
             self.manhole.start()
 
     def update_presence(self, game=None, status=None, afk=False, since=0.0):

@@ -107,16 +107,23 @@ class Command(object):
         self.plugin = plugin
         self.func = func
         self.triggers = [trigger]
+
+        self.args = None
+        self.level = None
+        self.group = None
+        self.is_regex = None
+        self.oob = False
+
         self.update(*args, **kwargs)
 
     def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False):
         self.triggers += aliases or []
 
-        def resolve_role(ctx, id):
-            return ctx.msg.guild.roles.get(id)
+        def resolve_role(ctx, rid):
+            return ctx.msg.guild.roles.get(rid)
 
-        def resolve_user(ctx, id):
-            return ctx.msg.mentions.get(id)
+        def resolve_user(ctx, uid):
+            return ctx.msg.mentions.get(uid)
 
         self.args = ArgumentSet.from_string(args or '', {
             'mention': self.mention_type([resolve_role, resolve_user]),
@@ -136,17 +143,17 @@ class Command(object):
             if not res:
                 raise TypeError('Invalid mention: {}'.format(i))
 
-            id = int(res.group(1))
+            mid = int(res.group(1))
 
             for getter in getters:
-                obj = getter(ctx, id)
+                obj = getter(ctx, mid)
                 if obj:
                     return obj
 
             if force:
                 raise TypeError('Cannot resolve mention: {}'.format(id))
 
-            return id
+            return mid
         return _f
 
     @cached_property

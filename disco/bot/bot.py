@@ -245,7 +245,7 @@ class Bot(object):
             mention_roles = []
             if msg.guild:
                 mention_roles = list(filter(lambda r: msg.is_mentioned(r),
-                    msg.guild.get_member(self.client.state.me).roles))
+                                            msg.guild.get_member(self.client.state.me).roles))
 
             if not any((
                 self.config.commands_mention_rules['user'] and mention_direct,
@@ -370,6 +370,9 @@ class Bot(object):
             Plugin class to initialize and load.
         config : Optional
             The configuration to load the plugin with.
+        ctx : Optional[dict]
+            Context (previous state) to pass the plugin. Usually used along w/
+            unload.
         """
         if cls.__name__ in self.plugins:
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))

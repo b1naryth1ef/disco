@@ -16,8 +16,8 @@ EVENTS_MAP = {}
 
 
 class GatewayEventMeta(ModelMeta):
-    def __new__(cls, name, parents, dct):
-        obj = super(GatewayEventMeta, cls).__new__(cls, name, parents, dct)
+    def __new__(mcs, name, parents, dct):
+        obj = super(GatewayEventMeta, mcs).__new__(mcs, name, parents, dct)
 
         if name != 'GatewayEvent':
             EVENTS_MAP[inflection.underscore(name).upper()] = obj
