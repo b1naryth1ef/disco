@@ -18,10 +18,10 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
     def mention(self):
         return '<@{}>'.format(self.id)
 
-    def to_string(self):
+    def __str__(self):
         return '{}#{}'.format(self.username, self.discriminator)
 
-    def __str__(self):
+    def __repr__(self):
         return '<User {} ({})>'.format(self.id, self.to_string())
 
     def on_create(self):

@@ -62,11 +62,9 @@ class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
         return cls(obj, client)
 
     def __getattr__(self, name):
-        if hasattr(self, '_wraps_model'):
-            modname, _ = self._wraps_model
-            if hasattr(self, modname) and hasattr(getattr(self, modname), name):
-                return getattr(getattr(self, modname), name)
-        raise AttributeError(name)
+        if hasattr(self, '_proxy'):
+            return getattr(getattr(self, self._proxy), name)
+        return object.__getattribute__(self, name)
 
 
 def debug(func=None):
@@ -93,6 +91,14 @@ def wraps_model(model, alias=None):
         cls._fields[alias] = Field(model)
         cls._fields[alias].set_name(alias)
         cls._wraps_model = (alias, model)
+        cls._proxy = alias
+        return cls
+    return deco
+
+
+def proxy(field):
+    def deco(cls):
+        cls._proxy = field
         return cls
     return deco
 
@@ -252,6 +258,10 @@ class GuildBanAdd(GatewayEvent):
     """
     guild_id = Field(snowflake)
 
+    @property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
+
 
 @wraps_model(User)
 class GuildBanRemove(GuildBanAdd):
@@ -265,6 +275,10 @@ class GuildBanRemove(GuildBanAdd):
     user : :class:`disco.types.user.User`
         The user being unbanned from the guild.
     """
+
+    @property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
 
 class GuildEmojisUpdate(GatewayEvent):
@@ -308,6 +322,10 @@ class GuildMembersChunk(GatewayEvent):
     guild_id = Field(snowflake)
     members = Field(listof(GuildMember))
 
+    @property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
+
 
 @wraps_model(GuildMember, alias='member')
 class GuildMemberAdd(GatewayEvent):
@@ -321,6 +339,7 @@ class GuildMemberAdd(GatewayEvent):
     """
 
 
+@proxy('user')
 class GuildMemberRemove(GatewayEvent):
     """
     Sent when a user leaves a guild (via leaving, kicking, or banning).
@@ -332,8 +351,12 @@ class GuildMemberRemove(GatewayEvent):
     user : :class:`disco.types.user.User`
         The user who was removed from the guild.
     """
-    guild_id = Field(snowflake)
     user = Field(User)
+    guild_id = Field(snowflake)
+
+    @property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
 
 @wraps_model(GuildMember, alias='member')
@@ -348,6 +371,7 @@ class GuildMemberUpdate(GatewayEvent):
     """
 
 
+@proxy('role')
 class GuildRoleCreate(GatewayEvent):
     """
     Sent when a role is created.
@@ -359,10 +383,15 @@ class GuildRoleCreate(GatewayEvent):
     role : :class:`disco.types.guild.Role`
         The role that was created.
     """
-    guild_id = Field(snowflake)
     role = Field(Role)
+    guild_id = Field(snowflake)
+
+    @property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
 
+@proxy('role')
 class GuildRoleUpdate(GuildRoleCreate):
     """
     Sent when a role is updated.
@@ -374,6 +403,10 @@ class GuildRoleUpdate(GuildRoleCreate):
     role : :class:`disco.types.guild.Role`
         The role that was created.
     """
+
+    @property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
 
 class GuildRoleDelete(GatewayEvent):
@@ -389,6 +422,10 @@ class GuildRoleDelete(GatewayEvent):
     """
     guild_id = Field(snowflake)
     role_id = Field(snowflake)
+
+    @property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
 
 @wraps_model(Message)

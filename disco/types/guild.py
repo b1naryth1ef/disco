@@ -23,17 +23,7 @@ VerificationLevel = Enum(
 )
 
 
-class GuildSubType(object):
-    __slots__ = []
-
-    guild_id = Field(None)
-
-    @cached_property
-    def guild(self):
-        return self.client.state.guilds.get(self.guild_id)
-
-
-class GuildEmoji(Emoji, GuildSubType):
+class GuildEmoji(Emoji):
     """
     An emoji object
 
@@ -56,8 +46,12 @@ class GuildEmoji(Emoji, GuildSubType):
     managed = Field(bool)
     roles = Field(listof(snowflake))
 
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
-class Role(SlottedModel, GuildSubType):
+
+class Role(SlottedModel):
     """
     A role object
 
@@ -87,6 +81,9 @@ class Role(SlottedModel, GuildSubType):
     position = Field(int)
     mentionable = Field(bool)
 
+    def __str__(self):
+        return self.name
+
     def delete(self):
         self.guild.delete_role(self)
 
@@ -97,8 +94,12 @@ class Role(SlottedModel, GuildSubType):
     def mention(self):
         return '<@{}>'.format(self.id)
 
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
-class GuildMember(SlottedModel, GuildSubType):
+
+class GuildMember(SlottedModel):
     """
     A GuildMember object
 
@@ -126,6 +127,9 @@ class GuildMember(SlottedModel, GuildSubType):
     deaf = Field(bool)
     joined_at = Field(str)
     roles = Field(listof(snowflake))
+
+    def __str__(self):
+        return self.user.__str__()
 
     def get_voice_state(self):
         """
@@ -185,6 +189,10 @@ class GuildMember(SlottedModel, GuildSubType):
         Alias to the guild members user id
         """
         return self.user.id
+
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
 
 class Guild(SlottedModel, Permissible):

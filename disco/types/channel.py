@@ -145,6 +145,10 @@ class Channel(SlottedModel, Permissible):
         return base
 
     @property
+    def mention(self):
+        return '<#{}>'.format(self.id)
+
+    @property
     def is_guild(self):
         """
         Whether this channel belongs to a guild
