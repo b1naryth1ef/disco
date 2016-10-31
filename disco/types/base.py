@@ -1,4 +1,5 @@
 import six
+import sys
 import gevent
 import inspect
 import functools
@@ -19,49 +20,31 @@ class ConversionError(Exception):
     def __init__(self, field, raw, e):
         super(ConversionError, self).__init__(
             'Failed to convert `{}` (`{}`) to {}: {}'.format(
-                str(raw)[:144], field.src_name, field.typ, e))
+                str(raw)[:144], field.src_name, field.deserializer, e))
 
 
-class FieldType(object):
-    def __init__(self, typ):
-        if isinstance(typ, FieldType) or inspect.isclass(typ) and issubclass(typ, Model):
-            self.typ = typ
-        elif isinstance(typ, BaseEnumMeta):
-            self.typ = lambda raw, _: typ.get(raw)
-        elif typ is None:
-            self.typ = lambda x, y: None
-        else:
-            self.typ = lambda raw, _: typ(raw)
-
-    def serialize(self, value):
-        if isinstance(value, EnumAttr):
-            return value.value
-        elif isinstance(value, Model):
-            return value.to_dict()
-        else:
-            return value
-
-    def try_convert(self, raw, client):
-        pass
-
-    def __call__(self, raw, client):
-        return self.try_convert(raw, client)
-
-
-class Field(FieldType):
-    def __init__(self, typ, alias=None, default=None):
-        super(Field, self).__init__(typ)
-
-        # Set names
+class Field(object):
+    def __init__(self, value_type, alias=None, default=None):
         self.src_name = alias
         self.dst_name = None
 
-        self.default = default
+        if not hasattr(self, 'default'):
+            self.default = default
 
-        if isinstance(self.typ, FieldType):
-            self.default = self.typ.default
+        self.deserializer = None
 
-    def set_name(self, name):
+        if value_type:
+            self.deserializer = self.type_to_deserializer(value_type)
+
+            if isinstance(self.deserializer, Field):
+                self.default = self.deserializer.default
+
+    @property
+    def name(self):
+        return None
+
+    @name.setter
+    def name(self, name):
         if not self.dst_name:
             self.dst_name = name
 
@@ -73,31 +56,68 @@ class Field(FieldType):
 
     def try_convert(self, raw, client):
         try:
-            return self.typ(raw, client)
+            return self.deserializer(raw, client)
         except Exception as e:
-            six.raise_from(ConversionError(self, raw, e), e)
+            exc_info = sys.exc_info()
+            raise ConversionError(self, raw, e), exc_info[1], exc_info[2]
+
+    @staticmethod
+    def type_to_deserializer(typ):
+        if isinstance(typ, Field) or inspect.isclass(typ) and issubclass(typ, Model):
+            return typ
+        elif isinstance(typ, BaseEnumMeta):
+            return lambda raw, _: typ.get(raw)
+        elif typ is None:
+            return lambda x, y: None
+        else:
+            return lambda raw, _: typ(raw)
+
+    @staticmethod
+    def serialize(value):
+        if isinstance(value, EnumAttr):
+            return value.value
+        elif isinstance(value, Model):
+            return value.to_dict()
+        else:
+            return value
+
+    def __call__(self, raw, client):
+        return self.try_convert(raw, client)
 
 
-class _Dict(FieldType):
+class DictField(Field):
     default = HashMap
 
-    def __init__(self, typ, key=None):
-        super(_Dict, self).__init__(typ)
-        self.key = key
+    def __init__(self, key_type, value_type=None, **kwargs):
+        super(DictField, self).__init__(None, **kwargs)
+        self.key_de = self.type_to_deserializer(key_type)
+        self.value_de = self.type_to_deserializer(value_type or key_type)
 
     def try_convert(self, raw, client):
-        if self.key:
-            converted = [self.typ(i, client) for i in raw]
-            return HashMap({getattr(i, self.key): i for i in converted})
-        else:
-            return HashMap({k: self.typ(v, client) for k, v in six.iteritems(raw)})
+        return HashMap({
+            self.key_de(k, client): self.value_de(v, client) for k, v in six.iteritems(raw)
+        })
 
 
-class _List(FieldType):
+class ListField(Field):
     default = list
 
     def try_convert(self, raw, client):
-        return [self.typ(i, client) for i in raw]
+        return [self.deserializer(i, client) for i in raw]
+
+
+class AutoDictField(Field):
+    default = HashMap
+
+    def __init__(self, value_type, key, **kwargs):
+        super(AutoDictField, self).__init__(None, **kwargs)
+        self.value_de = self.type_to_deserializer(value_type)
+        self.key = key
+
+    def try_convert(self, raw, client):
+        return HashMap({
+            getattr(b, self.key): b for b in (self.value_de(a, client) for a in raw)
+        })
 
 
 def _make(typ, data, client):
@@ -114,14 +134,6 @@ def enum(typ):
     def _f(data):
         return typ.get(data) if data is not None else None
     return _f
-
-
-def listof(*args, **kwargs):
-    return _List(*args, **kwargs)
-
-
-def dictof(*args, **kwargs):
-    return _Dict(*args, **kwargs)
 
 
 def lazy_datetime(data):
@@ -201,7 +213,7 @@ class ModelMeta(type):
             if not isinstance(v, Field):
                 continue
 
-            v.set_name(k)
+            v.name = k
             fields[k] = v
 
         if SlottedModel and any(map(lambda k: issubclass(k, SlottedModel), parents)):

@@ -71,6 +71,7 @@ class Routes(object):
     GUILDS_MEMBERS_LIST = (HTTPMethod.GET, GUILDS + '/members')
     GUILDS_MEMBERS_GET = (HTTPMethod.GET, GUILDS + '/members/{member}')
     GUILDS_MEMBERS_MODIFY = (HTTPMethod.PATCH, GUILDS + '/members/{member}')
+    GUILDS_MEMBERS_ME_NICK = (HTTPMethod.PATCH, GUILDS + '/members/@me/nick')
     GUILDS_MEMBERS_KICK = (HTTPMethod.DELETE, GUILDS + '/members/{member}')
     GUILDS_BANS_LIST = (HTTPMethod.GET, GUILDS + '/bans')
     GUILDS_BANS_CREATE = (HTTPMethod.PUT, GUILDS + '/bans/{user}')

@@ -6,7 +6,9 @@ from disco.gateway.packets import OPCode
 from disco.api.http import APIException
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
-from disco.types.base import SlottedModel, Field, snowflake, listof, dictof, text, binary, enum
+from disco.types.base import (
+    SlottedModel, Field, ListField, AutoDictField, snowflake, text, binary, enum
+)
 from disco.types.user import User, Presence
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
@@ -45,7 +47,7 @@ class GuildEmoji(Emoji):
     name = Field(text)
     require_colons = Field(bool)
     managed = Field(bool)
-    roles = Field(listof(snowflake))
+    roles = ListField(snowflake)
 
     @cached_property
     def guild(self):
@@ -128,7 +130,7 @@ class GuildMember(SlottedModel):
     mute = Field(bool)
     deaf = Field(bool)
     joined_at = Field(str)
-    roles = Field(listof(snowflake))
+    roles = ListField(snowflake)
 
     def __str__(self):
         return self.user.__str__()
@@ -169,7 +171,10 @@ class GuildMember(SlottedModel):
         nickname : Optional[str]
             The nickname (or none to reset) to set.
         """
-        self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
+        if self.client.state.me.id == self.user.id:
+            self.client.api.guilds_members_me_nick(self.guild.id, nick=nickname or '')
+        else:
+            self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
 
     def add_role(self, role):
         roles = self.roles + [role.id]
@@ -195,6 +200,10 @@ class GuildMember(SlottedModel):
     @cached_property
     def guild(self):
         return self.client.state.guilds.get(self.guild_id)
+
+    @cached_property
+    def permissions(self):
+        return self.guild.get_permissions(self)
 
 
 class Guild(SlottedModel, Permissible):
@@ -252,14 +261,14 @@ class Guild(SlottedModel, Permissible):
     embed_enabled = Field(bool)
     verification_level = Field(enum(VerificationLevel))
     mfa_level = Field(int)
-    features = Field(listof(str))
-    members = Field(dictof(GuildMember, key='id'))
-    channels = Field(dictof(Channel, key='id'))
-    roles = Field(dictof(Role, key='id'))
-    emojis = Field(dictof(GuildEmoji, key='id'))
-    voice_states = Field(dictof(VoiceState, key='session_id'))
+    features = ListField(str)
+    members = AutoDictField(GuildMember, 'id')
+    channels = AutoDictField(Channel, 'id')
+    roles = AutoDictField(Role, 'id')
+    emojis = AutoDictField(GuildEmoji, 'id')
+    voice_states = AutoDictField(VoiceState, 'session_id')
     member_count = Field(int)
-    presences = Field(listof(Presence))
+    presences = ListField(Presence)
 
     synced = Field(bool, default=False)
 
@@ -272,7 +281,7 @@ class Guild(SlottedModel, Permissible):
         self.attach(six.itervalues(self.emojis), {'guild_id': self.id})
         self.attach(six.itervalues(self.voice_states), {'guild_id': self.id})
 
-    def get_permissions(self, user):
+    def get_permissions(self, member):
         """
         Get the permissions a user has in this guild.
 
@@ -281,10 +290,13 @@ class Guild(SlottedModel, Permissible):
         :class:`disco.types.permissions.PermissionValue`
             Computed permission value for the user.
         """
-        if self.owner_id == user.id:
+        if not isinstance(member, GuildMember):
+            member = self.get_member(member)
+
+        # Owner has all permissions
+        if self.owner_id == member.id:
             return PermissionValue(Permissions.ADMINISTRATOR)
 
-        member = self.get_member(user)
         value = PermissionValue(self.roles.get(self.id).permissions)
 
         for role in map(self.roles.get, member.roles):

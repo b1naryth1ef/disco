@@ -2,7 +2,10 @@ import re
 
 from holster.enum import Enum
 
-from disco.types.base import SlottedModel, Field, snowflake, text, lazy_datetime, dictof, listof, enum
+from disco.types.base import (
+    SlottedModel, Field, ListField, AutoDictField, snowflake, text,
+    lazy_datetime, enum
+)
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
@@ -109,7 +112,7 @@ class MessageEmbed(SlottedModel):
     thumbnail = Field(MessageEmbedThumbnail)
     video = Field(MessageEmbedVideo)
     author = Field(MessageEmbedAuthor)
-    fields = Field(listof(MessageEmbedField))
+    fields = ListField(MessageEmbedField)
 
 
 class MessageAttachment(SlottedModel):
@@ -191,11 +194,11 @@ class Message(SlottedModel):
     tts = Field(bool)
     mention_everyone = Field(bool)
     pinned = Field(bool)
-    mentions = Field(dictof(User, key='id'))
-    mention_roles = Field(listof(snowflake))
-    embeds = Field(listof(MessageEmbed))
-    attachments = Field(dictof(MessageAttachment, key='id'))
-    reactions = Field(listof(MessageReaction))
+    mentions = AutoDictField(User, 'id')
+    mention_roles = ListField(snowflake)
+    embeds = ListField(MessageEmbed)
+    attachments = AutoDictField(MessageAttachment, 'id')
+    reactions = ListField(MessageReaction)
 
     def __str__(self):
         return '<Message {} ({})>'.format(self.id, self.channel_id)

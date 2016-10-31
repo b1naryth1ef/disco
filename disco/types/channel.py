@@ -5,7 +5,7 @@ from holster.enum import Enum
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property, one_or_many, chunks
 from disco.types.user import User
-from disco.types.base import SlottedModel, Field, snowflake, enum, listof, dictof, text
+from disco.types.base import SlottedModel, Field, ListField, AutoDictField, snowflake, enum, text
 from disco.types.permissions import Permissions, Permissible, PermissionValue
 from disco.voice.client import VoiceClient
 
@@ -111,14 +111,17 @@ class Channel(SlottedModel, Permissible):
     last_message_id = Field(snowflake)
     position = Field(int)
     bitrate = Field(int)
-    recipients = Field(listof(User))
+    recipients = ListField(User)
     type = Field(enum(ChannelType))
-    overwrites = Field(dictof(PermissionOverwrite, key='id'), alias='permission_overwrites')
+    overwrites = AutoDictField(PermissionOverwrite, 'id', alias='permission_overwrites')
 
     def __init__(self, *args, **kwargs):
         super(Channel, self).__init__(*args, **kwargs)
 
         self.attach(six.itervalues(self.overwrites), {'channel_id': self.id, 'channel': self})
+
+    def __str__(self):
+        return '#{}'.format(self.name)
 
     def get_permissions(self, user):
         """

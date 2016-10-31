@@ -9,7 +9,7 @@ from disco.types.message import Message, MessageReactionEmoji
 from disco.types.voice import VoiceState
 from disco.types.guild import Guild, GuildMember, Role, Emoji
 
-from disco.types.base import Model, ModelMeta, Field, snowflake, listof, lazy_datetime
+from disco.types.base import Model, ModelMeta, Field, ListField, snowflake, lazy_datetime
 
 # Mapping of discords event name to our event classes
 EVENTS_MAP = {}
@@ -89,7 +89,7 @@ def wraps_model(model, alias=None):
 
     def deco(cls):
         cls._fields[alias] = Field(model)
-        cls._fields[alias].set_name(alias)
+        cls._fields[alias].name = alias
         cls._wraps_model = (alias, model)
         cls._proxy = alias
         return cls
@@ -124,8 +124,8 @@ class Ready(GatewayEvent):
     version = Field(int, alias='v')
     session_id = Field(str)
     user = Field(User)
-    guilds = Field(listof(Guild))
-    private_channels = Field(listof(Channel))
+    guilds = ListField(Guild)
+    private_channels = ListField(Guild)
 
 
 class Resumed(GatewayEvent):
@@ -293,7 +293,7 @@ class GuildEmojisUpdate(GatewayEvent):
         The new set of emojis for the guild
     """
     guild_id = Field(snowflake)
-    emojis = Field(listof(Emoji))
+    emojis = ListField(Emoji)
 
 
 class GuildIntegrationsUpdate(GatewayEvent):
@@ -320,7 +320,7 @@ class GuildMembersChunk(GatewayEvent):
         The chunk of members.
     """
     guild_id = Field(snowflake)
-    members = Field(listof(GuildMember))
+    members = ListField(GuildMember)
 
     @property
     def guild(self):
@@ -466,6 +466,14 @@ class MessageDelete(GatewayEvent):
     id = Field(snowflake)
     channel_id = Field(snowflake)
 
+    @property
+    def channel(self):
+        return self.client.state.channels.get(self.channel_id)
+
+    @property
+    def guild(self):
+        return self.channel.guild
+
 
 class MessageDeleteBulk(GatewayEvent):
     """
@@ -479,7 +487,7 @@ class MessageDeleteBulk(GatewayEvent):
         List of messages being deleted in the channel.
     """
     channel_id = Field(snowflake)
-    ids = Field(listof(snowflake))
+    ids = ListField(snowflake)
 
 
 @wraps_model(Presence)
@@ -497,7 +505,7 @@ class PresenceUpdate(GatewayEvent):
         List of roles the user from the presence is part of.
     """
     guild_id = Field(snowflake)
-    roles = Field(listof(snowflake))
+    roles = ListField(snowflake)
 
 
 class TypingStart(GatewayEvent):
