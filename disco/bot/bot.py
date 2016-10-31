@@ -177,7 +177,7 @@ class Bot(object):
     @property
     def commands(self):
         """
-        Generator of all commands this bots plugins have defined
+        Generator of all commands this bots plugins have defined.
         """
         for plugin in six.itervalues(self.plugins):
             for command in six.itervalues(plugin.commands):
@@ -194,7 +194,7 @@ class Bot(object):
 
     def compute_group_abbrev(self):
         """
-        Computes all possible abbreviations for a command grouping
+        Computes all possible abbreviations for a command grouping.
         """
         self.group_abbrev = {}
         groups = set(command.group for command in self.commands if command.group)
@@ -417,7 +417,7 @@ class Bot(object):
 
     def run_forever(self):
         """
-        Runs this bots core loop forever
+        Runs this bots core loop forever.
         """
         self.client.run_forever()
 

@@ -48,28 +48,28 @@ class CommandEvent(object):
     @cached_property
     def member(self):
         """
-        Guild member (if relevant) for the user that created the message
+        Guild member (if relevant) for the user that created the message.
         """
         return self.guild.get_member(self.author)
 
     @property
     def channel(self):
         """
-        Channel the message was created in
+        Channel the message was created in.
         """
         return self.msg.channel
 
     @property
     def guild(self):
         """
-        Guild (if relevant) the message was created in
+        Guild (if relevant) the message was created in.
         """
         return self.msg.guild
 
     @property
     def author(self):
         """
-        Author of the message
+        Author of the message.
         """
         return self.msg.author
 
@@ -159,14 +159,14 @@ class Command(object):
     @cached_property
     def compiled_regex(self):
         """
-        A compiled version of this command's regex
+        A compiled version of this command's regex.
         """
         return re.compile(self.regex)
 
     @property
     def regex(self):
         """
-        The regex string that defines/triggers this command
+        The regex string that defines/triggers this command.
         """
         if self.is_regex:
             return REGEX_FMT.format('|'.join(self.triggers))

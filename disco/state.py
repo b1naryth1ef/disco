@@ -117,7 +117,7 @@ class State(object):
 
     def unbind(self):
         """
-        Unbinds all bound event listeners for this state object
+        Unbinds all bound event listeners for this state object.
         """
         map(lambda k: k.unbind(), self.listeners)
         self.listeners = []

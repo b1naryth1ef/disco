@@ -44,7 +44,7 @@ class RouteState(LoggingClass):
     @property
     def chilled(self):
         """
-        Whether this route is currently being cooldown (aka waiting until reset_time)
+        Whether this route is currently being cooldown (aka waiting until reset_time).
         """
         return self.event is not None
 
@@ -74,7 +74,7 @@ class RouteState(LoggingClass):
 
     def wait(self, timeout=None):
         """
-        Waits until this route is no longer under a cooldown
+        Waits until this route is no longer under a cooldown.
 
         Parameters
         ----------
@@ -85,13 +85,13 @@ class RouteState(LoggingClass):
         Returns
         -------
         bool
-            False if the timeout period expired before the cooldown was finished
+            False if the timeout period expired before the cooldown was finished.
         """
         return self.event.wait(timeout)
 
     def cooldown(self):
         """
-        Waits for the current route to be cooled-down (aka waiting until reset time)
+        Waits for the current route to be cooled-down (aka waiting until reset time).
         """
         if self.reset_time - time.time() < 0:
             raise Exception('Cannot cooldown for negative time period; check clock sync')

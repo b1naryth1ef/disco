@@ -20,7 +20,7 @@ class ClientConfig(Config):
     Attributes
     ----------
     token : str
-        Discord authentication token, ca be validated using the
+        Discord authentication token, can be validated using the
         :func:`disco.util.token.is_valid_token` function.
     shard_id : int
         The shard ID for the current client instance.
@@ -123,12 +123,12 @@ class Client(LoggingClass):
 
     def run(self):
         """
-        Run the client (e.g. the :class:`GatewayClient`) in a new greenlet
+        Run the client (e.g. the :class:`GatewayClient`) in a new greenlet.
         """
         return gevent.spawn(self.gw.run)
 
     def run_forever(self):
         """
-        Run the client (e.g. the :class:`GatewayClient`) in the current greenlet
+        Run the client (e.g. the :class:`GatewayClient`) in the current greenlet.
         """
         return self.gw.run()

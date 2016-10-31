@@ -47,13 +47,13 @@ class Argument(object):
     @property
     def true_count(self):
         """
-        The true number of raw arguments this argument takes
+        The true number of raw arguments this argument takes.
         """
         return self.count or 1
 
     def parse(self, raw):
         """
-        Attempts to parse arguments from their raw form
+        Attempts to parse arguments from their raw form.
         """
         prefix, part = raw
 
@@ -78,7 +78,7 @@ class Argument(object):
 
 class ArgumentSet(object):
     """
-    A set of :class:`Argument` instances which forms a larger argument specification
+    A set of :class:`Argument` instances which forms a larger argument specification.
 
     Attributes
     ----------
@@ -95,7 +95,7 @@ class ArgumentSet(object):
     @classmethod
     def from_string(cls, line, custom_types=None):
         """
-        Creates a new :class:`ArgumentSet` from a given argument string specification
+        Creates a new :class:`ArgumentSet` from a given argument string specification.
         """
         args = cls(custom_types=custom_types)
 
@@ -131,7 +131,7 @@ class ArgumentSet(object):
 
     def append(self, arg):
         """
-        Add a new :class:`Argument` to this argument specification/set
+        Add a new :class:`Argument` to this argument specification/set.
         """
         if self.args and not self.args[-1].required and arg.required:
             raise Exception('Required argument cannot come after an optional argument')
@@ -178,13 +178,13 @@ class ArgumentSet(object):
     @property
     def length(self):
         """
-        The number of arguments in this set/specification
+        The number of arguments in this set/specification.
         """
         return len(self.args)
 
     @property
     def required_length(self):
         """
-        The number of required arguments to compile this set/specificaiton
+        The number of required arguments to compile this set/specificaiton.
         """
         return sum([i.true_count for i in self.args if i.required])

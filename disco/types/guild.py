@@ -27,7 +27,7 @@ VerificationLevel = Enum(
 
 class GuildEmoji(Emoji):
     """
-    An emoji object
+    An emoji object.
 
     Attributes
     ----------
@@ -56,7 +56,7 @@ class GuildEmoji(Emoji):
 
 class Role(SlottedModel):
     """
-    A role object
+    A role object.
 
     Attributes
     ----------
@@ -105,7 +105,7 @@ class Role(SlottedModel):
 
 class GuildMember(SlottedModel):
     """
-    A GuildMember object
+    A GuildMember object.
 
     Attributes
     ----------
@@ -193,7 +193,7 @@ class GuildMember(SlottedModel):
     @property
     def id(self):
         """
-        Alias to the guild members user id
+        Alias to the guild members user id.
         """
         return self.user.id
 
@@ -208,7 +208,7 @@ class GuildMember(SlottedModel):
 
 class Guild(SlottedModel, Permissible):
     """
-    A guild object
+    A guild object.
 
     Attributes
     ----------

@@ -33,7 +33,7 @@ class ChannelSubType(SlottedModel):
 
 class PermissionOverwrite(ChannelSubType):
     """
-    A PermissionOverwrite for a :class:`Channel`
+    A PermissionOverwrite for a :class:`Channel`.
 
     Attributes
     ----------
@@ -81,7 +81,7 @@ class PermissionOverwrite(ChannelSubType):
 
 class Channel(SlottedModel, Permissible):
     """
-    Represents a Discord Channel
+    Represents a Discord Channel.
 
     Attributes
     ----------
@@ -125,7 +125,7 @@ class Channel(SlottedModel, Permissible):
 
     def get_permissions(self, user):
         """
-        Get the permissions a user has in the channel
+        Get the permissions a user has in the channel.
 
         Returns
         -------
@@ -154,42 +154,42 @@ class Channel(SlottedModel, Permissible):
     @property
     def is_guild(self):
         """
-        Whether this channel belongs to a guild
+        Whether this channel belongs to a guild.
         """
         return self.type in (ChannelType.GUILD_TEXT, ChannelType.GUILD_VOICE)
 
     @property
     def is_dm(self):
         """
-        Whether this channel is a DM (does not belong to a guild)
+        Whether this channel is a DM (does not belong to a guild).
         """
         return self.type in (ChannelType.DM, ChannelType.GROUP_DM)
 
     @property
     def is_voice(self):
         """
-        Whether this channel supports voice
+        Whether this channel supports voice.
         """
         return self.type in (ChannelType.GUILD_VOICE, ChannelType.GROUP_DM)
 
     @property
     def messages(self):
         """
-        a default :class:`MessageIterator` for the channel
+        a default :class:`MessageIterator` for the channel.
         """
         return self.messages_iter()
 
     @cached_property
     def guild(self):
         """
-        Guild this channel belongs to (if relevant)
+        Guild this channel belongs to (if relevant).
         """
         return self.client.state.guilds.get(self.guild_id)
 
     def messages_iter(self, **kwargs):
         """
         Creates a new :class:`MessageIterator` for the channel with the given
-        keyword arguments
+        keyword arguments.
         """
         return MessageIterator(self.client, self, **kwargs)
 
@@ -232,7 +232,7 @@ class Channel(SlottedModel, Permissible):
 
     def send_message(self, content, nonce=None, tts=False):
         """
-        Send a message in this channel
+        Send a message in this channel.
 
         Parameters
         ----------
@@ -252,7 +252,7 @@ class Channel(SlottedModel, Permissible):
 
     def connect(self, *args, **kwargs):
         """
-        Connect to this channel over voice
+        Connect to this channel over voice.
         """
         assert self.is_voice, 'Channel must support voice to connect'
         vc = VoiceClient(self)
@@ -351,7 +351,7 @@ class MessageIterator(object):
 
     def fill(self):
         """
-        Fills the internal buffer up with :class:`disco.types.message.Message` objects from the API
+        Fills the internal buffer up with :class:`disco.types.message.Message` objects from the API.
         """
         self._buffer = self.client.api.channels_messages_list(
                 self.channel.id,

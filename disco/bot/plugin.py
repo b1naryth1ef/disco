@@ -43,7 +43,7 @@ class PluginDeco(object):
     @classmethod
     def listen(cls, *args, **kwargs):
         """
-        Binds the function to listen for a given event name
+        Binds the function to listen for a given event name.
         """
         return cls.add_meta_deco({
             'type': 'listener',
@@ -55,7 +55,7 @@ class PluginDeco(object):
     @classmethod
     def listen_packet(cls, *args, **kwargs):
         """
-        Binds the function to listen for a given gateway op code
+        Binds the function to listen for a given gateway op code.
         """
         return cls.add_meta_deco({
             'type': 'listener',
@@ -67,7 +67,7 @@ class PluginDeco(object):
     @classmethod
     def command(cls, *args, **kwargs):
         """
-        Creates a new command attached to the function
+        Creates a new command attached to the function.
         """
         return cls.add_meta_deco({
             'type': 'command',
@@ -78,7 +78,7 @@ class PluginDeco(object):
     @classmethod
     def pre_command(cls):
         """
-        Runs a function before a command is triggered
+        Runs a function before a command is triggered.
         """
         return cls.add_meta_deco({
             'type': 'pre_command',
@@ -87,7 +87,7 @@ class PluginDeco(object):
     @classmethod
     def post_command(cls):
         """
-        Runs a function after a command is triggered
+        Runs a function after a command is triggered.
         """
         return cls.add_meta_deco({
             'type': 'post_command',
@@ -96,7 +96,7 @@ class PluginDeco(object):
     @classmethod
     def pre_listener(cls):
         """
-        Runs a function before a listener is triggered
+        Runs a function before a listener is triggered.
         """
         return cls.add_meta_deco({
             'type': 'pre_listener',
@@ -105,7 +105,7 @@ class PluginDeco(object):
     @classmethod
     def post_listener(cls):
         """
-        Runs a function after a listener is triggered
+        Runs a function after a listener is triggered.
         """
         return cls.add_meta_deco({
             'type': 'post_listener',
@@ -114,7 +114,7 @@ class PluginDeco(object):
     @classmethod
     def schedule(cls, *args, **kwargs):
         """
-        Runs a function repeatedly, waiting for a specified interval
+        Runs a function repeatedly, waiting for a specified interval.
         """
         return cls.add_meta_deco({
             'type': 'schedule',
@@ -212,7 +212,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     def execute(self, event):
         """
-        Executes a CommandEvent this plugin owns
+        Executes a CommandEvent this plugin owns.
         """
         if not event.command.oob:
             self.greenlets.add(gevent.getcurrent())
@@ -226,7 +226,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     def register_trigger(self, typ, when, func):
         """
-        Registers a trigger
+        Registers a trigger.
         """
         getattr(self, '_' + when)[typ].append(func)
 
@@ -258,7 +258,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     def register_listener(self, func, what, desc, **kwargs):
         """
-        Registers a listener
+        Registers a listener.
 
         Parameters
         ----------
@@ -282,7 +282,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     def register_command(self, func, *args, **kwargs):
         """
-        Registers a command
+        Registers a command.
 
         Parameters
         ----------
@@ -331,13 +331,13 @@ class Plugin(LoggingClass, PluginDeco):
 
     def load(self, ctx):
         """
-        Called when the plugin is loaded
+        Called when the plugin is loaded.
         """
         pass
 
     def unload(self, ctx):
         """
-        Called when the plugin is unloaded
+        Called when the plugin is unloaded.
         """
         for greenlet in self.greenlets:
             greenlet.kill()

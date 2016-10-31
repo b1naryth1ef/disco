@@ -6,7 +6,7 @@ from disco.types.channel import Channel
 
 class Invite(SlottedModel):
     """
-    An invite object
+    An invite object.
 
     Attributes
     ----------
