@@ -22,21 +22,27 @@ class ConversionError(Exception):
             'Failed to convert `{}` (`{}`) to {}: {}'.format(
                 str(raw)[:144], field.src_name, field.deserializer, e))
 
+        if six.PY3:
+            self.__cause__ = e
+
 
 class Field(object):
-    def __init__(self, value_type, alias=None, default=None):
+    def __init__(self, value_type, alias=None, default=None, test=0):
         self.src_name = alias
         self.dst_name = None
+        self.test = test
 
-        if not hasattr(self, 'default'):
+        if default is not None:
             self.default = default
+        elif not hasattr(self, 'default'):
+            self.default = None
 
         self.deserializer = None
 
         if value_type:
             self.deserializer = self.type_to_deserializer(value_type)
 
-            if isinstance(self.deserializer, Field):
+            if isinstance(self.deserializer, Field) and self.default is None:
                 self.default = self.deserializer.default
 
     @property
@@ -58,8 +64,13 @@ class Field(object):
         try:
             return self.deserializer(raw, client)
         except Exception as e:
-            exc_info = sys.exc_info()
-            raise ConversionError(self, raw, e), exc_info[1], exc_info[2]
+            err = ConversionError(self, raw, e)
+
+            if six.PY2:
+                exc_info = sys.exc_info()
+                raise ConversionError, err, exc_info[2]
+            else:
+                raise err
 
     @staticmethod
     def type_to_deserializer(typ):
@@ -132,6 +143,8 @@ def snowflake(data):
 
 def enum(typ):
     def _f(data):
+        if isinstance(data, str):
+            data = data.lower()
         return typ.get(data) if data is not None else None
     return _f
 
