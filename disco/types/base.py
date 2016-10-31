@@ -1,5 +1,4 @@
 import six
-import sys
 import gevent
 import inspect
 import functools
@@ -64,13 +63,7 @@ class Field(object):
         try:
             return self.deserializer(raw, client)
         except Exception as e:
-            err = ConversionError(self, raw, e)
-
-            if six.PY2:
-                exc_info = sys.exc_info()
-                raise ConversionError, err, exc_info[2]
-            else:
-                raise err
+            six.reraise(ConversionError, ConversionError(self, raw, e))
 
     @staticmethod
     def type_to_deserializer(typ):
