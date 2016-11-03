@@ -147,6 +147,8 @@ class GatewayClient(LoggingClass):
         raise Exception('WS recieved error: %s', error)
 
     def on_open(self):
+        self.log.info('Opened, headers: %s', self.ws.sock.headers)
+
         if self.seq and self.session_id:
             self.log.info('WS Opened: attempting resume w/ SID: %s SEQ: %s', self.session_id, self.seq)
             self.send(OPCode.RESUME, {
@@ -175,7 +177,8 @@ class GatewayClient(LoggingClass):
     def on_close(self, code, reason):
         # Kill heartbeater, a reconnect/resume will trigger a HELLO which will
         #  respawn it
-        self._heartbeat_task.kill()
+        if self._heartbeat_task:
+            self._heartbeat_task.kill()
 
         # If we're quitting, just break out of here
         if self.shutting_down:
