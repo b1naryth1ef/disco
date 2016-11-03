@@ -8,7 +8,7 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
     username = Field(text)
     avatar = Field(binary)
     discriminator = Field(str)
-    bot = Field(bool)
+    bot = Field(bool, default=False)
     verified = Field(bool)
     email = Field(str)
 

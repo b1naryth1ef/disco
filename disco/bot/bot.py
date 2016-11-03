@@ -431,6 +431,8 @@ class Bot(object):
 
         for entry in map(lambda i: getattr(mod, i), dir(mod)):
             if inspect.isclass(entry) and issubclass(entry, Plugin) and not entry == Plugin:
+                if getattr(entry, '_shallow', False) and Plugin in entry.__bases__:
+                    continue
                 loaded = True
                 self.add_plugin(entry, config)
 
