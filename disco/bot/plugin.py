@@ -300,7 +300,8 @@ class Plugin(LoggingClass, PluginDeco):
             self.commands[name].update(*args, **kwargs)
         else:
             wrapped = functools.partial(self._dispatch, 'command', func)
-            self.commands[name] = Command(self, wrapped, *args, **kwargs)
+            kwargs.setdefault('dispatch_func', wrapped)
+            self.commands[name] = Command(self, func, *args, **kwargs)
 
     def register_schedule(self, func, interval, repeat=True, init=True):
         """

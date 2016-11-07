@@ -108,6 +108,7 @@ class Command(object):
         self.func = func
         self.triggers = [trigger]
 
+        self.dispatch_func = None
         self.args = None
         self.level = None
         self.group = None
@@ -117,7 +118,10 @@ class Command(object):
 
         self.update(*args, **kwargs)
 
-    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None):
+    def get_docstring(self):
+        return (self.func.__doc__ or '').format(**self.context)
+
+    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None, dispatch_func=None):
         self.triggers += aliases or []
 
         def resolve_role(ctx, rid):
@@ -137,6 +141,7 @@ class Command(object):
         self.is_regex = is_regex
         self.oob = oob
         self.context = context or {}
+        self.dispatch_func = dispatch_func
 
     @staticmethod
     def mention_type(getters, force=False):
@@ -203,4 +208,4 @@ class Command(object):
         except ArgumentError as e:
             raise CommandError(e.message)
 
-        return self.func(event, *args, **self.context)
+        return (self.dispatch_func or self.func)(event, *args, **self.context)
