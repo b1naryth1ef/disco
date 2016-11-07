@@ -31,6 +31,10 @@ class RedisProvider(BaseProvider):
                 yield key
 
     def get_many(self, keys):
+        keys = list(keys)
+        if not len(keys):
+            raise StopIteration
+
         for key, value in izip(keys, self.conn.mget(keys)):
             yield (key, Serializer.loads(self.format, value))
 

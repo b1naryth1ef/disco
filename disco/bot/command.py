@@ -113,10 +113,11 @@ class Command(object):
         self.group = None
         self.is_regex = None
         self.oob = False
+        self.context = {}
 
         self.update(*args, **kwargs)
 
-    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False):
+    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None):
         self.triggers += aliases or []
 
         def resolve_role(ctx, rid):
@@ -135,6 +136,7 @@ class Command(object):
         self.group = group
         self.is_regex = is_regex
         self.oob = oob
+        self.context = context or {}
 
     @staticmethod
     def mention_type(getters, force=False):
@@ -201,4 +203,4 @@ class Command(object):
         except ArgumentError as e:
             raise CommandError(e.message)
 
-        return self.func(event, *args)
+        return self.func(event, *args, **self.context)

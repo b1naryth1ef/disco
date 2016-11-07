@@ -371,7 +371,8 @@ class MessageTable(object):
         self.recalculate_size_index(args)
 
     def add(self, *args):
-        args = list(map(str, args))
+        convert = lambda v: v if isinstance(v, basestring) else str(v)
+        args = list(map(convert, args))
         self.entries.append(args)
         self.recalculate_size_index(args)
 

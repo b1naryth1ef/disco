@@ -383,9 +383,10 @@ class Bot(object):
             else:
                 config = self.load_plugin_config(cls)
 
-        self.plugins[cls.__name__] = cls(self, config)
+        self.ctx['plugin'] = self.plugins[cls.__name__] = cls(self, config)
         self.plugins[cls.__name__].load(ctx or {})
         self.recompute()
+        self.ctx.drop()
 
     def rmv_plugin(self, cls):
         """

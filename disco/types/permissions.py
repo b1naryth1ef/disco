@@ -76,13 +76,13 @@ class PermissionValue(object):
         return self.sub(other)
 
     def __getattribute__(self, name):
-        if name in Permissions.attrs:
+        if name in Permissions.keys_:
             return (self.value & Permissions[name].value) == Permissions[name].value
         else:
             return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
-        if name not in Permissions.attrs:
+        if name not in Permissions.keys_:
             return super(PermissionValue, self).__setattr__(name, value)
 
         if value:

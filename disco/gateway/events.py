@@ -591,6 +591,14 @@ class MessageReactionAdd(GatewayEvent):
     user_id = Field(snowflake)
     emoji = Field(MessageReactionEmoji)
 
+    @property
+    def channel(self):
+        return self.client.state.channels.get(self.channel_id)
+
+    @property
+    def guild(self):
+        return self.channel.guild
+
 
 class MessageReactionRemove(GatewayEvent):
     """
@@ -611,3 +619,11 @@ class MessageReactionRemove(GatewayEvent):
     message_id = Field(snowflake)
     user_id = Field(snowflake)
     emoji = Field(MessageReactionEmoji)
+
+    @property
+    def channel(self):
+        return self.client.state.channels.get(self.channel_id)
+
+    @property
+    def guild(self):
+        return self.channel.guild

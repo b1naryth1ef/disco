@@ -256,7 +256,7 @@ class Plugin(LoggingClass, PluginDeco):
 
         return True
 
-    def register_listener(self, func, what, desc, **kwargs):
+    def register_listener(self, func, what, *args, **kwargs):
         """
         Registers a listener.
 
@@ -269,12 +269,12 @@ class Plugin(LoggingClass, PluginDeco):
         desc
             The descriptor of the event/packet.
         """
-        func = functools.partial(self._dispatch, 'listener', func)
+        args = list(args) + [functools.partial(self._dispatch, 'listener', func)]
 
         if what == 'event':
-            li = self.bot.client.events.on(desc, func, **kwargs)
+            li = self.bot.client.events.on(*args, **kwargs)
         elif what == 'packet':
-            li = self.bot.client.packets.on(desc, func, **kwargs)
+            li = self.bot.client.packets.on(*args, **kwargs)
         else:
             raise Exception('Invalid listener what: {}'.format(what))
 
@@ -294,11 +294,13 @@ class Plugin(LoggingClass, PluginDeco):
             Keyword arguments to pass onto the :class:`disco.bot.command.Command`
             object.
         """
-        if kwargs.pop('update', False) and func.__name__ in self.commands:
-            self.commands[func.__name__].update(*args, **kwargs)
+        name = args[0]
+
+        if kwargs.pop('update', False) and name in self.commands:
+            self.commands[name].update(*args, **kwargs)
         else:
             wrapped = functools.partial(self._dispatch, 'command', func)
-            self.commands[func.__name__] = Command(self, wrapped, *args, **kwargs)
+            self.commands[name] = Command(self, wrapped, *args, **kwargs)
 
     def register_schedule(self, func, interval, repeat=True, init=True):
         """
