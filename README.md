@@ -49,7 +49,7 @@ class SimplePlugin(Plugin):
 
 Using the default bot configuration, we can now run this script like so:
 
-`python -m disco.cli --token="MY_DISCORD_TOKEN" --bot --plugin simpleplugin`
+`python -m disco.cli --token="MY_DISCORD_TOKEN" --run-bot --plugin simpleplugin`
 
 And commands can be triggered by mentioning the bot (configued by the BotConfig.command\_require\_mention flag):
 
