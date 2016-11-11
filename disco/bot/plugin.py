@@ -156,7 +156,7 @@ class Plugin(LoggingClass, PluginDeco):
 
         # General declartions
         self.listeners = []
-        self.commands = {}
+        self.commands = []
         self.schedules = {}
         self.greenlets = weakref.WeakSet()
         self._pre = {}
@@ -182,7 +182,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     def bind_all(self):
         self.listeners = []
-        self.commands = {}
+        self.commands = []
         self.schedules = {}
         self.greenlets = weakref.WeakSet()
 
@@ -197,7 +197,7 @@ class Plugin(LoggingClass, PluginDeco):
         if meta['type'] == 'listener':
             self.register_listener(member, meta['what'], *meta['args'], **meta['kwargs'])
         elif meta['type'] == 'command':
-            meta['kwargs']['update'] = True
+            # meta['kwargs']['update'] = True
             self.register_command(member, *meta['args'], **meta['kwargs'])
         elif meta['type'] == 'schedule':
             self.register_schedule(member, *meta['args'], **meta['kwargs'])
@@ -205,10 +205,24 @@ class Plugin(LoggingClass, PluginDeco):
             when, typ = meta['type'].split('_', 1)
             self.register_trigger(typ, when, member)
 
-    def spawn(self, method, *args, **kwargs):
-        obj = gevent.spawn(method, *args, **kwargs)
+    def spawn_wrap(self, spawner, method, *args, **kwargs):
+        def wrapped(*args, **kwargs):
+            self.ctx['plugin'] = self
+            try:
+                res = method(*args, **kwargs)
+                return res
+            finally:
+                self.ctx.drop()
+
+        obj = spawner(wrapped, *args, **kwargs)
         self.greenlets.add(obj)
         return obj
+
+    def spawn(self, *args, **kwargs):
+        return self.spawn_wrap(gevent.spawn, *args, **kwargs)
+
+    def spawn_later(self, delay, *args, **kwargs):
+        return self.spawn_wrap(functools.partial(gevent.spawn_later, delay), *args, **kwargs)
 
     def execute(self, event):
         """
@@ -294,14 +308,14 @@ class Plugin(LoggingClass, PluginDeco):
             Keyword arguments to pass onto the :class:`disco.bot.command.Command`
             object.
         """
-        name = args[0]
+        # name = args[0]
 
-        if kwargs.pop('update', False) and name in self.commands:
-            self.commands[name].update(*args, **kwargs)
-        else:
-            wrapped = functools.partial(self._dispatch, 'command', func)
-            kwargs.setdefault('dispatch_func', wrapped)
-            self.commands[name] = Command(self, func, *args, **kwargs)
+        # if kwargs.pop('update', False) and name in self.commands:
+        #    self.commands[name].update(*args, **kwargs)
+        # else:
+        wrapped = functools.partial(self._dispatch, 'command', func)
+        kwargs.setdefault('dispatch_func', wrapped)
+        self.commands.append(Command(self, func, *args, **kwargs))
 
     def register_schedule(self, func, interval, repeat=True, init=True):
         """
@@ -320,7 +334,7 @@ class Plugin(LoggingClass, PluginDeco):
             Whether to run this schedule once immediatly, or wait for the first
             scheduled iteration.
         """
-        def func():
+        def repeat_func():
             if init:
                 func()
 
@@ -330,7 +344,7 @@ class Plugin(LoggingClass, PluginDeco):
                 if not repeat:
                     break
 
-        self.schedules[func.__name__] = self.spawn(repeat)
+        self.schedules[func.__name__] = self.spawn(repeat_func)
 
     def load(self, ctx):
         """

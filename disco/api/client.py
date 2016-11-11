@@ -77,12 +77,22 @@ class APIClient(LoggingClass):
         r = self.http(Routes.CHANNELS_MESSAGES_GET, dict(channel=channel, message=message))
         return Message.create(self.client, r.json())
 
-    def channels_messages_create(self, channel, content, nonce=None, tts=False):
-        r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), json={
+    def channels_messages_create(self, channel, content, nonce=None, tts=False, attachment=None, embed=None):
+        payload = {
             'content': content,
             'nonce': nonce,
             'tts': tts,
-        })
+        }
+
+        if embed:
+            payload['embed'] = embed.to_dict()
+
+        if attachment:
+            r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), data=payload, files={
+                'file': (attachment[0], attachment[1])
+            })
+        else:
+            r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), json=payload)
 
         return Message.create(self.client, r.json())
 

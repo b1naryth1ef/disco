@@ -15,6 +15,14 @@ DATETIME_FORMATS = [
 ]
 
 
+class Unset(object):
+    def __nonzero__(self):
+        return False
+
+
+UNSET = Unset()
+
+
 class ConversionError(Exception):
     def __init__(self, field, raw, e):
         super(ConversionError, self).__init__(
@@ -26,10 +34,9 @@ class ConversionError(Exception):
 
 
 class Field(object):
-    def __init__(self, value_type, alias=None, default=None, test=0):
+    def __init__(self, value_type, alias=None, default=None):
         self.src_name = alias
         self.dst_name = None
-        self.test = test
 
         if default is not None:
             self.default = default
@@ -97,6 +104,10 @@ class DictField(Field):
         self.key_de = self.type_to_deserializer(key_type)
         self.value_de = self.type_to_deserializer(value_type or key_type)
 
+    @staticmethod
+    def serialize(value):
+        return {Field.serialize(k): Field.serialize(v) for k, v in six.iteritems(value)}
+
     def try_convert(self, raw, client):
         return HashMap({
             self.key_de(k, client): self.value_de(v, client) for k, v in six.iteritems(raw)
@@ -105,6 +116,10 @@ class DictField(Field):
 
 class ListField(Field):
     default = list
+
+    @staticmethod
+    def serialize(value):
+        return list(map(Field.serialize, value))
 
     def try_convert(self, raw, client):
         return [self.deserializer(i, client) for i in raw]
@@ -265,7 +280,7 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
                 if field.has_default():
                     default = field.default() if callable(field.default) else field.default
                 else:
-                    default = None
+                    default = UNSET
                 setattr(self, field.dst_name, default)
                 continue
 
@@ -274,9 +289,8 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
 
     def update(self, other):
         for name in six.iterkeys(self.__class__._fields):
-            value = getattr(other, name)
-            if value:
-                setattr(self, name, value)
+            if hasattr(other, name) and not getattr(other, name) is UNSET:
+                setattr(self, name, getattr(other, name))
 
         # Clear cached properties
         for name in dir(type(self)):
@@ -289,6 +303,8 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
     def to_dict(self):
         obj = {}
         for name, field in six.iteritems(self.__class__._fields):
+            if getattr(self, name) == UNSET:
+                continue
             obj[name] = field.serialize(getattr(self, name))
         return obj
 

@@ -121,7 +121,10 @@ class Channel(SlottedModel, Permissible):
         self.attach(six.itervalues(self.overwrites), {'channel_id': self.id, 'channel': self})
 
     def __str__(self):
-        return '#{}'.format(self.name)
+        return u'#{}'.format(self.name)
+
+    def __repr__(self):
+        return u'<Channel {} ({})>'.format(self.id, self)
 
     def get_permissions(self, user):
         """
@@ -230,7 +233,7 @@ class Channel(SlottedModel, Permissible):
     def create_webhook(self, name=None, avatar=None):
         return self.client.api.channels_webhooks_create(self.id, name, avatar)
 
-    def send_message(self, content, nonce=None, tts=False):
+    def send_message(self, content, nonce=None, tts=False, attachment=None, embed=None):
         """
         Send a message in this channel.
 
@@ -248,7 +251,7 @@ class Channel(SlottedModel, Permissible):
         :class:`disco.types.message.Message`
             The created message.
         """
-        return self.client.api.channels_messages_create(self.id, content, nonce, tts)
+        return self.client.api.channels_messages_create(self.id, content, nonce, tts, attachment, embed)
 
     def connect(self, *args, **kwargs):
         """

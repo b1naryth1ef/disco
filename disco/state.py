@@ -1,8 +1,8 @@
 import six
+import weakref
 import inflection
 
 from collections import deque, namedtuple
-from weakref import WeakValueDictionary
 from gevent.event import Event
 
 from disco.util.config import Config
@@ -102,9 +102,9 @@ class State(object):
         self.me = None
         self.dms = HashMap()
         self.guilds = HashMap()
-        self.channels = HashMap(WeakValueDictionary())
-        self.users = HashMap(WeakValueDictionary())
-        self.voice_states = HashMap(WeakValueDictionary())
+        self.channels = HashMap(weakref.WeakValueDictionary())
+        self.users = HashMap(weakref.WeakValueDictionary())
+        self.voice_states = HashMap(weakref.WeakValueDictionary())
 
         # If message tracking is enabled, listen to those events
         if self.config.track_messages:
@@ -298,4 +298,14 @@ class State(object):
 
     def on_presence_update(self, event):
         if event.user.id in self.users:
+            self.users[event.user.id].update(event.presence.user)
             self.users[event.user.id].presence = event.presence
+            event.presence.user = self.users[event.user.id]
+
+        if event.guild_id not in self.guilds:
+            return
+
+        if event.user.id not in self.guilds[event.guild_id].members:
+            return
+
+        self.guilds[event.guild_id].members[event.user.id].user.update(event.user)

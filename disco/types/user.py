@@ -15,17 +15,23 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
     presence = Field(None)
 
     @property
+    def avatar_url(self):
+        if not self.avatar:
+            return None
+
+        return 'https://discordapp.com/api/users/{}/avatars/{}.jpg'.format(
+            self.id,
+            self.avatar)
+
+    @property
     def mention(self):
         return '<@{}>'.format(self.id)
 
     def __str__(self):
-        return '{}#{}'.format(self.username, self.discriminator)
+        return u'{}#{}'.format(self.username, self.discriminator)
 
     def __repr__(self):
-        return '<User {} ({})>'.format(self.id, self.to_string())
-
-    def on_create(self):
-        self.client.state.users[self.id] = self
+        return u'<User {} ({})>'.format(self.id, self)
 
 
 GameType = Enum(
@@ -49,6 +55,6 @@ class Game(SlottedModel):
 
 
 class Presence(SlottedModel):
-    user = Field(User)
+    user = Field(User, alias='user')
     game = Field(Game)
     status = Field(Status)

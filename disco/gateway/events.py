@@ -67,15 +67,16 @@ class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
         return object.__getattribute__(self, name)
 
 
-def debug(func=None):
+def debug(func=None, match=None):
     def deco(cls):
         old_init = cls.__init__
 
         def new_init(self, obj, *args, **kwargs):
-            if func:
-                print(func(obj))
-            else:
-                print(obj)
+            if not match or match(obj):
+                if func:
+                    print(func(obj))
+                else:
+                    print(obj)
 
             old_init(self, obj, *args, **kwargs)
 
@@ -244,7 +245,7 @@ class ChannelPinsUpdate(GatewayEvent):
     last_pin_timestamp = Field(lazy_datetime)
 
 
-@wraps_model(User)
+@proxy(User)
 class GuildBanAdd(GatewayEvent):
     """
     Sent when a user is banned from a guild.
@@ -257,13 +258,14 @@ class GuildBanAdd(GatewayEvent):
         The user being banned from the guild.
     """
     guild_id = Field(snowflake)
+    user = Field(User)
 
     @property
     def guild(self):
         return self.client.state.guilds.get(self.guild_id)
 
 
-@wraps_model(User)
+@proxy(User)
 class GuildBanRemove(GuildBanAdd):
     """
     Sent when a user is unbanned from a guild.
@@ -506,6 +508,10 @@ class PresenceUpdate(GatewayEvent):
     """
     guild_id = Field(snowflake)
     roles = ListField(snowflake)
+
+    @property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
 
 class TypingStart(GatewayEvent):

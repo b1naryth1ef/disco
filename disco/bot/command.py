@@ -45,6 +45,18 @@ class CommandEvent(object):
         self.name = self.match.group(1)
         self.args = [i for i in self.match.group(2).strip().split(' ') if i]
 
+    @property
+    def codeblock(self):
+        _, src = self.msg.content.split('`', 1)
+        src = '`' + src
+
+        if src.startswith('```') and src.endswith('```'):
+            src = src[3:-3]
+        elif src.startswith('`') and src.endswith('`'):
+            src = src[1:-1]
+
+        return src
+
     @cached_property
     def member(self):
         """
@@ -146,11 +158,15 @@ class Command(object):
     @staticmethod
     def mention_type(getters, force=False):
         def _f(ctx, i):
-            res = MENTION_RE.match(i)
-            if not res:
-                raise TypeError('Invalid mention: {}'.format(i))
+            # TODO: support full discrim format? make this betteR?
+            if i.isdigit():
+                mid = int(i)
+            else:
+                res = MENTION_RE.match(i)
+                if not res:
+                    raise TypeError('Invalid mention: {}'.format(i))
 
-            mid = int(res.group(1))
+                mid = int(res.group(1))
 
             for getter in getters:
                 obj = getter(ctx, mid)

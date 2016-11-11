@@ -180,7 +180,7 @@ class Bot(object):
         Generator of all commands this bots plugins have defined.
         """
         for plugin in six.itervalues(self.plugins):
-            for command in six.itervalues(plugin.commands):
+            for command in plugin.commands:
                 yield command
 
     def recompute(self):
