@@ -73,6 +73,7 @@ class Field(object):
         try:
             return self.deserializer(raw, client)
         except Exception as e:
+            raise
             six.reraise(ConversionError, ConversionError(self, raw, e))
 
     @staticmethod
@@ -281,11 +282,11 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
         self.load(obj)
 
     @property
-    def fields(self):
+    def _fields(self):
         return self.__class__._fields
 
     def load(self, obj, consume=False, skip=None):
-        for name, field in six.iteritems(self.fields):
+        for name, field in six.iteritems(self._fields):
             should_skip = skip and name in skip
 
             if consume and not should_skip:
@@ -305,7 +306,7 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
             setattr(self, field.dst_name, value)
 
     def update(self, other):
-        for name in six.iterkeys(self.fields):
+        for name in six.iterkeys(self._fields):
             if hasattr(other, name) and not getattr(other, name) is UNSET:
                 setattr(self, name, getattr(other, name))
 
