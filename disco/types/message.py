@@ -1,4 +1,5 @@
 import re
+import functools
 
 from holster.enum import Enum
 
@@ -310,18 +311,33 @@ class Message(SlottedModel):
         return entity in self.mentions or entity in self.mention_roles
 
     @cached_property
-    def without_mentions(self):
+    def without_mentions(self, valid_only=False):
         """
         Returns
         -------
         str
-            the message contents with all valid mentions removed.
+            the message contents with all mentions removed.
         """
         return self.replace_mentions(
             lambda u: '',
-            lambda r: '')
+            lambda r: '',
+            lambda c: '',
+            nonexistant=not valid_only)
 
-    def replace_mentions(self, user_replace, role_replace):
+    @cached_property
+    def with_proper_mentions(self):
+        def replace_user(u):
+            return '@' + str(u)
+
+        def replace_role(r):
+            return '@' + str(r)
+
+        def replace_channel(c):
+            return str(c)
+
+        return self.replace_mentions(replace_user, replace_role, replace_channel)
+
+    def replace_mentions(self, user_replace=None, role_replace=None, channel_replace=None, nonexistant=False):
         """
         Replaces user and role mentions with the result of a given lambda/function.
 
@@ -339,17 +355,30 @@ class Message(SlottedModel):
         str
             The message contents with all valid mentions replaced.
         """
-        if not self.mentions and not self.mention_roles:
-            return
+        def replace(getter, func, match):
+            oid = int(match.group(2))
+            obj = getter(oid)
 
-        def replace(match):
-            oid = match.group(0)
-            if oid in self.mention_roles:
-                return role_replace(oid)
-            else:
-                return user_replace(self.mentions.get(oid))
+            if obj or nonexistant:
+                return func(obj or oid) or match.group(0)
 
-        return re.sub('<@!?([0-9]+)>', replace, self.content)
+            return match.group(0)
+
+        content = self.content
+
+        if user_replace:
+            replace_user = functools.partial(replace, self.mentions.get, user_replace)
+            content = re.sub('(<@!?([0-9]+)>)', replace_user, self.content)
+
+        if role_replace:
+            replace_role = functools.partial(replace, lambda v: (self.guild and self.guild.roles.get(v)), role_replace)
+            content = re.sub('(<@&([0-9]+)>)', replace_role, content)
+
+        if channel_replace:
+            replace_channel = functools.partial(replace, self.client.state.channels.get, channel_replace)
+            content = re.sub('(<#([0-9]+)>)', replace_channel, content)
+
+        return content
 
 
 class MessageTable(object):
@@ -371,8 +400,7 @@ class MessageTable(object):
         self.recalculate_size_index(args)
 
     def add(self, *args):
-        convert = lambda v: v if isinstance(v, basestring) else str(v)
-        args = list(map(convert, args))
+        args = list(map(lambda v: v if isinstance(v, basestring) else str(v), args))
         self.entries.append(args)
         self.recalculate_size_index(args)
 

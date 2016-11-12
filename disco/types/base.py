@@ -34,9 +34,10 @@ class ConversionError(Exception):
 
 
 class Field(object):
-    def __init__(self, value_type, alias=None, default=None):
+    def __init__(self, value_type, alias=None, default=None, **kwargs):
         self.src_name = alias
         self.dst_name = None
+        self.metadata = kwargs
 
         if default is not None:
             self.default = default
@@ -50,6 +51,8 @@ class Field(object):
 
             if isinstance(self.deserializer, Field) and self.default is None:
                 self.default = self.deserializer.default
+            elif inspect.isclass(self.deserializer) and issubclass(self.deserializer, Model) and self.default is None:
+                self.default = self.deserializer
 
     @property
     def name(self):
@@ -275,8 +278,22 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
         else:
             obj = kwargs
 
-        for name, field in six.iteritems(self.__class__._fields):
-            if field.src_name not in obj or obj[field.src_name] is None:
+        self.load(obj)
+
+    @property
+    def fields(self):
+        return self.__class__._fields
+
+    def load(self, obj, consume=False, skip=None):
+        for name, field in six.iteritems(self.fields):
+            should_skip = skip and name in skip
+
+            if consume and not should_skip:
+                raw = obj.pop(field.src_name, None)
+            else:
+                raw = obj.get(field.src_name, None)
+
+            if raw is None or should_skip:
                 if field.has_default():
                     default = field.default() if callable(field.default) else field.default
                 else:
@@ -284,11 +301,11 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
                 setattr(self, field.dst_name, default)
                 continue
 
-            value = field.try_convert(obj[field.src_name], self.client)
+            value = field.try_convert(raw, self.client)
             setattr(self, field.dst_name, value)
 
     def update(self, other):
-        for name in six.iterkeys(self.__class__._fields):
+        for name in six.iterkeys(self.fields):
             if hasattr(other, name) and not getattr(other, name) is UNSET:
                 setattr(self, name, getattr(other, name))
 

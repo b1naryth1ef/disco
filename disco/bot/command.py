@@ -140,11 +140,14 @@ class Command(object):
             return ctx.msg.guild.roles.get(rid)
 
         def resolve_user(ctx, uid):
-            return ctx.msg.mentions.get(uid)
+            if isinstance(uid, int):
+                return ctx.msg.mentions.get(uid)
+            else:
+                return ctx.msg.mentions.select_one(username=uid[0], discriminator=uid[1])
 
         self.args = ArgumentSet.from_string(args or '', {
             'mention': self.mention_type([resolve_role, resolve_user]),
-            'user': self.mention_type([resolve_user], force=True),
+            'user': self.mention_type([resolve_user], force=True, user=True),
             'role': self.mention_type([resolve_role], force=True),
         })
 
@@ -156,27 +159,29 @@ class Command(object):
         self.dispatch_func = dispatch_func
 
     @staticmethod
-    def mention_type(getters, force=False):
-        def _f(ctx, i):
-            # TODO: support full discrim format? make this betteR?
-            if i.isdigit():
-                mid = int(i)
+    def mention_type(getters, force=False, user=False):
+        def _f(ctx, raw):
+            if raw.isdigit():
+                resolved = int(raw)
+            elif user and raw.count('#') == 1 and raw.split('#')[-1].isdigit():
+                username, discrim = raw.split('#')
+                resolved = (username, int(discrim))
             else:
-                res = MENTION_RE.match(i)
+                res = MENTION_RE.match(raw)
                 if not res:
-                    raise TypeError('Invalid mention: {}'.format(i))
+                    raise TypeError('Invalid mention: {}'.format(raw))
 
-                mid = int(res.group(1))
+                resolved = int(res.group(1))
 
             for getter in getters:
-                obj = getter(ctx, mid)
+                obj = getter(ctx, resolved)
                 if obj:
                     return obj
 
             if force:
-                raise TypeError('Cannot resolve mention: {}'.format(id))
+                raise TypeError('Cannot resolve mention: {}'.format(raw))
 
-            return mid
+            return resolved
         return _f
 
     @cached_property

@@ -221,7 +221,7 @@ class Bot(object):
         else:
             self.command_matches_re = None
 
-    def get_commands_for_message(self, msg):
+    def get_commands_for_message(self, require_mention, mention_rules, prefix, msg):
         """
         Generator of all commands that a given message object triggers, based on
         the bots plugins and configuration.
@@ -238,7 +238,7 @@ class Bot(object):
         """
         content = msg.content
 
-        if self.config.commands_require_mention:
+        if require_mention:
             mention_direct = msg.is_mentioned(self.client.state.me)
             mention_everyone = msg.mention_everyone
 
@@ -248,9 +248,9 @@ class Bot(object):
                                             msg.guild.get_member(self.client.state.me).roles))
 
             if not any((
-                self.config.commands_mention_rules['user'] and mention_direct,
-                self.config.commands_mention_rules['everyone'] and mention_everyone,
-                self.config.commands_mention_rules['role'] and any(mention_roles),
+                mention_rules.get('user', True) and mention_direct,
+                mention_rules.get('everyone', False) and mention_everyone,
+                mention_rules.get('role', False) and any(mention_roles),
                 msg.channel.is_dm
             )):
                 raise StopIteration
@@ -270,10 +270,10 @@ class Bot(object):
 
             content = content.lstrip()
 
-        if self.config.commands_prefix and not content.startswith(self.config.commands_prefix):
+        if prefix and not content.startswith(prefix):
             raise StopIteration
         else:
-            content = content[len(self.config.commands_prefix):]
+            content = content[len(prefix):]
 
         if not self.command_matches_re or not self.command_matches_re.match(content):
             raise StopIteration
@@ -324,19 +324,24 @@ class Bot(object):
         bool
             whether any commands where successfully triggered by the message
         """
-        commands = list(self.get_commands_for_message(msg))
+        commands = list(self.get_commands_for_message(
+            self.config.commands_require_mention,
+            self.config.commands_mention_rules,
+            self.config.commands_prefix,
+            msg
+        ))
 
-        if len(commands):
-            result = False
-            for command, match in commands:
-                if not self.check_command_permissions(command, msg):
-                    continue
+        if not len(commands):
+            return False
 
-                if command.plugin.execute(CommandEvent(command, msg, match)):
-                    result = True
-            return result
+        result = False
+        for command, match in commands:
+            if not self.check_command_permissions(command, msg):
+                continue
 
-        return False
+            if command.plugin.execute(CommandEvent(command, msg, match)):
+                result = True
+        return result
 
     def on_message_create(self, event):
         if event.message.author.id == self.client.state.me.id:
