@@ -147,9 +147,12 @@ class Command(object):
 
         def resolve_user(ctx, uid):
             if isinstance(uid, int):
-                return ctx.msg.mentions.get(uid)
+                if uid in ctx.msg.mentions:
+                    return ctx.msg.mentions.get(uid)
+                else:
+                    return ctx.msg.client.state.users.get(uid)
             else:
-                return ctx.msg.mentions.select_one(username=uid[0], discriminator=uid[1])
+                return ctx.msg.client.state.users.select_one(username=uid[0], discriminator=uid[1])
 
         def resolve_channel(ctx, cid):
             return ctx.msg.guild.channels.get(cid)
