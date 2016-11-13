@@ -202,7 +202,7 @@ class HTTPClient(LoggingClass):
             kwargs['headers'] = self.headers
 
         # Build the bucket URL
-        args = {to_bytes(k): to_bytes(v) for k, v in six.iteritems(args)}
+        args = {k: to_bytes(v) for k, v in six.iteritems(args)}
         filtered = {k: (v if k in ('guild', 'channel') else '') for k, v in six.iteritems(args)}
         bucket = (route[0].value, route[1].format(**filtered))
 
