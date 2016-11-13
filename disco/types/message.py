@@ -368,7 +368,7 @@ class Message(SlottedModel):
 
         if user_replace:
             replace_user = functools.partial(replace, self.mentions.get, user_replace)
-            content = re.sub('(<@!?([0-9]+)>)', replace_user, self.content)
+            content = re.sub('(<@!?([0-9]+)>)', replace_user, content)
 
         if role_replace:
             replace_role = functools.partial(replace, lambda v: (self.guild and self.guild.roles.get(v)), role_replace)

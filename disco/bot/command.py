@@ -50,6 +50,9 @@ class CommandEvent(object):
 
     @property
     def codeblock(self):
+        if '`' not in self.msg.content:
+            return ' '.join(self.args)
+
         _, src = self.msg.content.split('`', 1)
         src = '`' + src
 

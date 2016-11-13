@@ -203,7 +203,7 @@ class Bot(object):
             grp = group
             while grp:
                 # If the group already exists, means someone else thought they
-                #  could use it so we need to
+                #  could use it so we need yank it from them (and not use it)
                 if grp in list(six.itervalues(self.group_abbrev)):
                     self.group_abbrev = {k: v for k, v in six.iteritems(self.group_abbrev) if v != grp}
                 else:

@@ -23,16 +23,26 @@ def optional(**kwargs):
 
 class APIClient(LoggingClass):
     """
-    An abstraction over the :class:`disco.api.http.HTTPClient` that composes requests, and fits
-    the models with the returned data.
+    An abstraction over a :class:`disco.api.http.HTTPClient`, which composes
+    requests from provided data, and fits models with the returned data. The APIClient
+    is the only path to the API used within models/other interfaces, and it's
+    the recommended path for all third-party users/implementations.
 
     Args
     ----
     token : str
         The Discord authentication token (without prefixes) to be used for all
         HTTP requests.
-    client : :class:`disco.client.Client`
-        The base disco client which will be used when constructing models.
+    client : Optional[:class:`disco.client.Client`]
+        The Disco client this APIClient is a member of. This is used when constructing
+        and fitting models from response data.
+
+    Attributes
+    ----------
+    client : Optional[:class:`disco.client.Client`]
+        The Disco client this APIClient is a member of.
+    http : :class:`disco.http.HTTPClient`
+        The HTTPClient this APIClient uses for all requests.
     """
     def __init__(self, token, client=None):
         super(APIClient, self).__init__()
