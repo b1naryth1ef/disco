@@ -46,7 +46,10 @@ class CommandEvent(object):
         self.msg = msg
         self.match = match
         self.name = self.match.group(1)
-        self.args = [i for i in self.match.group(2).strip().split(' ') if i]
+        self.args = []
+
+        if self.match.group(2):
+            self.args = [i for i in self.match.group(2).strip().split(' ') if i]
 
     @property
     def codeblock(self):
@@ -133,13 +136,17 @@ class Command(object):
         self.is_regex = None
         self.oob = False
         self.context = {}
+        self.metadata = {}
 
         self.update(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
 
     def get_docstring(self):
         return (self.func.__doc__ or '').format(**self.context)
 
-    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None, dispatch_func=None):
+    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None, **kwargs):
         self.triggers += aliases or []
 
         def resolve_role(ctx, rid):
@@ -168,7 +175,7 @@ class Command(object):
         self.is_regex = is_regex
         self.oob = oob
         self.context = context or {}
-        self.dispatch_func = dispatch_func
+        self.metadata = kwargs
 
     @staticmethod
     def mention_type(getters, reg, user=False):
@@ -198,7 +205,7 @@ class Command(object):
         """
         A compiled version of this command's regex.
         """
-        return re.compile(self.regex)
+        return re.compile(self.regex, re.I)
 
     @property
     def regex(self):
@@ -238,4 +245,4 @@ class Command(object):
         except ArgumentError as e:
             raise CommandError(e.message)
 
-        return (self.dispatch_func or self.func)(event, *args, **self.context)
+        return self.plugin.dispatch('command', self, event, *args, **self.context)

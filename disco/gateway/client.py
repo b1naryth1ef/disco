@@ -147,8 +147,6 @@ class GatewayClient(LoggingClass):
         raise Exception('WS recieved error: %s', error)
 
     def on_open(self):
-        self.log.info('Opened, headers: %s', self.ws.sock.headers)
-
         if self.seq and self.session_id:
             self.log.info('WS Opened: attempting resume w/ SID: %s SEQ: %s', self.session_id, self.seq)
             self.send(OPCode.RESUME, {

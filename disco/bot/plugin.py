@@ -244,7 +244,7 @@ class Plugin(LoggingClass, PluginDeco):
         """
         getattr(self, '_' + when)[typ].append(func)
 
-    def _dispatch(self, typ, func, event, *args, **kwargs):
+    def dispatch(self, typ, func, event, *args, **kwargs):
         # TODO: this is ugly
         if typ != 'command':
             self.greenlets.add(gevent.getcurrent())
@@ -283,7 +283,7 @@ class Plugin(LoggingClass, PluginDeco):
         desc
             The descriptor of the event/packet.
         """
-        args = list(args) + [functools.partial(self._dispatch, 'listener', func)]
+        args = list(args) + [functools.partial(self.dispatch, 'listener', func)]
 
         if what == 'event':
             li = self.bot.client.events.on(*args, **kwargs)
@@ -308,13 +308,6 @@ class Plugin(LoggingClass, PluginDeco):
             Keyword arguments to pass onto the :class:`disco.bot.command.Command`
             object.
         """
-        # name = args[0]
-
-        # if kwargs.pop('update', False) and name in self.commands:
-        #    self.commands[name].update(*args, **kwargs)
-        # else:
-        wrapped = functools.partial(self._dispatch, 'command', func)
-        kwargs.setdefault('dispatch_func', wrapped)
         self.commands.append(Command(self, func, *args, **kwargs))
 
     def register_schedule(self, func, interval, repeat=True, init=True):

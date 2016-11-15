@@ -64,7 +64,6 @@ class BotConfig(Config):
         The directory plugin configuration is located within.
     """
     levels = {}
-    plugins = []
 
     commands_enabled = True
     commands_require_mention = True

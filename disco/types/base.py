@@ -34,7 +34,8 @@ class ConversionError(Exception):
 
 
 class Field(object):
-    def __init__(self, value_type, alias=None, default=None, **kwargs):
+    def __init__(self, value_type, alias=None, default=None, create=True, **kwargs):
+        # TODO: fix default bullshit
         self.src_name = alias
         self.dst_name = None
         self.metadata = kwargs
@@ -51,7 +52,7 @@ class Field(object):
 
             if isinstance(self.deserializer, Field) and self.default is None:
                 self.default = self.deserializer.default
-            elif inspect.isclass(self.deserializer) and issubclass(self.deserializer, Model) and self.default is None:
+            elif inspect.isclass(self.deserializer) and issubclass(self.deserializer, Model) and self.default is None and create:
                 self.default = self.deserializer
 
     @property
