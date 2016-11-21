@@ -258,7 +258,7 @@ class Plugin(LoggingClass, PluginDeco):
             self.ctx['user'] = event.author
 
         for pre in self._pre[typ]:
-            event = pre(event, args, kwargs)
+            event = pre(func, event, args, kwargs)
 
         if event is None:
             return False
@@ -266,7 +266,7 @@ class Plugin(LoggingClass, PluginDeco):
         result = func(event, *args, **kwargs)
 
         for post in self._post[typ]:
-            post(event, args, kwargs, result)
+            post(func, event, args, kwargs, result)
 
         return True
 

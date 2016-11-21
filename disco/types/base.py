@@ -74,7 +74,6 @@ class Field(object):
         try:
             return self.deserializer(raw, client)
         except Exception as e:
-            raise
             six.reraise(ConversionError, ConversionError(self, raw, e))
 
     @staticmethod
@@ -336,6 +335,12 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
     @classmethod
     def create_map(cls, client, data, **kwargs):
         return list(map(functools.partial(cls.create, client, **kwargs), data))
+
+    @classmethod
+    def create_hash(cls, client, key, data, **kwargs):
+        return HashMap({
+            getattr(item, key): cls.create(client, item, **kwargs) for item in data
+        })
 
     @classmethod
     def attach(cls, it, data):

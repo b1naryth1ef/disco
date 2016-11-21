@@ -211,7 +211,7 @@ class HTTPClient(LoggingClass):
 
         # Make the actual request
         url = self.BASE_URL + route[1].format(**args)
-        self.log.info('%s %s', route[0].value, url)
+        self.log.info('%s %s (%s)', route[0].value, url, kwargs.get('params'))
         r = requests.request(route[0].value, url, **kwargs)
 
         # Update rate limiter

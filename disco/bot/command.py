@@ -5,7 +5,7 @@ from holster.enum import Enum
 from disco.bot.parser import ArgumentSet, ArgumentError
 from disco.util.functional import cached_property
 
-REGEX_FMT = '({})'
+REGEX_FMT = '{}'
 ARGS_REGEX = '( ((?:\n|.)*)$|$)'
 
 USER_MENTION_RE = re.compile('<@!?([0-9]+)>')

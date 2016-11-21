@@ -193,7 +193,7 @@ class APIClient(LoggingClass):
 
     def guilds_channels_list(self, guild):
         r = self.http(Routes.GUILDS_CHANNELS_LIST, dict(guild=guild))
-        return Channel.create_map(self.client, r.json(), guild_id=guild)
+        return Channel.create_hash(self.client, 'id', r.json(), guild_id=guild)
 
     def guilds_channels_create(self, guild, **kwargs):
         r = self.http(Routes.GUILDS_CHANNELS_CREATE, dict(guild=guild), json=kwargs)
@@ -207,7 +207,7 @@ class APIClient(LoggingClass):
 
     def guilds_members_list(self, guild):
         r = self.http(Routes.GUILDS_MEMBERS_LIST, dict(guild=guild))
-        return GuildMember.create_map(self.client, r.json(), guild_id=guild)
+        return GuildMember.create_hash(self.client, 'id', r.json(), guild_id=guild)
 
     def guilds_members_get(self, guild, member):
         r = self.http(Routes.GUILDS_MEMBERS_GET, dict(guild=guild, member=member))
@@ -224,7 +224,7 @@ class APIClient(LoggingClass):
 
     def guilds_bans_list(self, guild):
         r = self.http(Routes.GUILDS_BANS_LIST, dict(guild=guild))
-        return User.create_map(self.client, r.json())
+        return User.create_hash(self.client, 'id', r.json())
 
     def guilds_bans_create(self, guild, user, delete_message_days):
         self.http(Routes.GUILDS_BANS_CREATE, dict(guild=guild, user=user), params={

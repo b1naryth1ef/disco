@@ -214,7 +214,8 @@ class Bot(object):
         """
         Computes a single regex which matches all possible command combinations.
         """
-        re_str = '|'.join(command.regex for command in self.commands)
+        commands = list(self.commands)
+        re_str = '|'.join(command.regex for command in commands)
         if re_str:
             self.command_matches_re = re.compile(re_str)
         else:

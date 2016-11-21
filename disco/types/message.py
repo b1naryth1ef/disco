@@ -1,5 +1,7 @@
 import re
+import six
 import functools
+import unicodedata
 
 from holster.enum import Enum
 
@@ -105,7 +107,7 @@ class MessageEmbed(SlottedModel):
     title = Field(text)
     type = Field(str, default='rich')
     description = Field(text)
-    url = Field(str)
+    url = Field(text)
     timestamp = Field(lazy_datetime)
     color = Field(int)
     footer = Field(MessageEmbedFooter)
@@ -139,8 +141,8 @@ class MessageAttachment(SlottedModel):
     """
     id = Field(str)
     filename = Field(text)
-    url = Field(str)
-    proxy_url = Field(str)
+    url = Field(text)
+    proxy_url = Field(text)
     size = Field(int)
     height = Field(int)
     width = Field(int)
@@ -327,13 +329,13 @@ class Message(SlottedModel):
     @cached_property
     def with_proper_mentions(self):
         def replace_user(u):
-            return '@' + str(u)
+            return u'@' + six.text_type(u)
 
         def replace_role(r):
-            return '@' + str(r)
+            return u'@' + six.text_type(r)
 
         def replace_channel(c):
-            return str(c)
+            return six.text_type(c)
 
         return self.replace_mentions(replace_user, replace_role, replace_channel)
 
@@ -382,25 +384,28 @@ class Message(SlottedModel):
 
 
 class MessageTable(object):
-    def __init__(self, sep=' | ', codeblock=True, header_break=True):
+    def __init__(self, sep=' | ', codeblock=True, header_break=True, language=None):
         self.header = []
         self.entries = []
         self.size_index = {}
         self.sep = sep
         self.codeblock = codeblock
         self.header_break = header_break
+        self.language = language
 
     def recalculate_size_index(self, cols):
         for idx, col in enumerate(cols):
-            if idx not in self.size_index or len(col) > self.size_index[idx]:
-                self.size_index[idx] = len(col)
+            size = len(unicodedata.normalize('NFC', col))
+            if idx not in self.size_index or size > self.size_index[idx]:
+                self.size_index[idx] = size
 
     def set_header(self, *args):
+        args = list(map(six.text_type, args))
         self.header = args
         self.recalculate_size_index(args)
 
     def add(self, *args):
-        args = list(map(lambda v: v if isinstance(v, basestring) else str(v), args))
+        args = list(map(six.text_type, args))
         self.entries.append(args)
         self.recalculate_size_index(args)
 
@@ -414,15 +419,17 @@ class MessageTable(object):
         return data.rstrip()
 
     def compile(self):
-        data = [self.compile_one(self.header)]
+        data = []
+        if self.header:
+            data = [self.compile_one(self.header)]
 
-        if self.header_break:
+        if self.header and self.header_break:
             data.append('-' * (sum(self.size_index.values()) + (len(self.header) * len(self.sep)) + 1))
 
         for row in self.entries:
             data.append(self.compile_one(row))
 
         if self.codeblock:
-            return '```' + '\n'.join(data) + '```'
+            return '```{}'.format(self.language if self.language else '') + '\n'.join(data) + '```'
 
         return '\n'.join(data)

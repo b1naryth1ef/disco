@@ -28,7 +28,7 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
         return '<@{}>'.format(self.id)
 
     def __str__(self):
-        return u'{}#{}'.format(self.username, self.discriminator)
+        return u'{}#{}'.format(self.username, str(self.discriminator).zfill(4))
 
     def __repr__(self):
         return u'<User {} ({})>'.format(self.id, self)
