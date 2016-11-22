@@ -177,8 +177,10 @@ class GuildMember(SlottedModel):
             self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
 
     def add_role(self, role):
-        roles = self.roles + [role.id]
-        self.client.api.guilds_members_modify(self.guild.id, self.user.id, roles=roles)
+        self.client.api.guilds_members_roles_add(self.guild.id, self.user.id, to_snowflake(role))
+
+    def remove_role(self, role):
+        self.clients.api.guilds_members_roles_remove(self.guild.id, self.user.id, to_snowflake(role))
 
     @cached_property
     def owner(self):

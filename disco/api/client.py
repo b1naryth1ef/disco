@@ -216,6 +216,12 @@ class APIClient(LoggingClass):
     def guilds_members_modify(self, guild, member, **kwargs):
         self.http(Routes.GUILDS_MEMBERS_MODIFY, dict(guild=guild, member=member), json=kwargs)
 
+    def guilds_members_roles_add(self, guild, member, role):
+        self.http(Routes.GUILDS_MEMBERS_ROLES_ADD, dict(guild=guild, member=member, role=role))
+
+    def guilds_members_roles_remove(self, guild, member, role):
+        self.http(Routes.GUILDS_MEMBERS_ROLES_REMOVE, dict(guild=guild, member=member, role=role))
+
     def guilds_members_me_nick(self, guild, nick):
         self.http(Routes.GUILDS_MEMBERS_ME_NICK, dict(guild=guild), json={'nick': nick})
 
