@@ -2,9 +2,12 @@ import requests
 import random
 import gevent
 import six
+import sys
 
 from holster.enum import Enum
 
+from disco import VERSION as disco_version
+from requests import __version__ as requests_version
 from disco.util.logging import LoggingClass
 from disco.api.ratelimit import RateLimiter
 
@@ -156,9 +159,18 @@ class HTTPClient(LoggingClass):
     def __init__(self, token):
         super(HTTPClient, self).__init__()
 
+        py_version = '{}.{}.{}'.format(
+            sys.version_info.major,
+            sys.version_info.minor,
+            sys.version_info.micro)
+
         self.limiter = RateLimiter()
         self.headers = {
             'Authorization': 'Bot ' + token,
+            'User-Agent': 'DiscordBot (https://github.com/b1naryth1ef/disco {}) Python/{} requests/{}'.format(
+                disco_version,
+                py_version,
+                requests_version),
         }
 
     def __call__(self, route, args=None, **kwargs):
