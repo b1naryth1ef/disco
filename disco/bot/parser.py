@@ -145,7 +145,7 @@ class ArgumentSet(object):
         """
         Parse a string of raw arguments into this argument specification.
         """
-        parsed = []
+        parsed = {}
 
         for index, arg in enumerate(self.args):
             if not arg.required and index + arg.true_count > len(rawargs):
@@ -171,7 +171,7 @@ class ArgumentSet(object):
             if (not arg.types or arg.types == ['str']) and isinstance(raw, list):
                 raw = ' '.join(raw)
 
-            parsed.append(raw)
+            parsed[arg.name] = raw
 
         return parsed
 

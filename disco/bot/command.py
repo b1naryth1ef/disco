@@ -241,8 +241,11 @@ class Command(object):
             ))
 
         try:
-            args = self.args.parse(event.args, ctx=event)
+            parsed_args = self.args.parse(event.args, ctx=event)
         except ArgumentError as e:
             raise CommandError(e.message)
 
-        return self.plugin.dispatch('command', self, event, *args, **self.context)
+        kwargs = {}
+        kwargs.update(self.context)
+        kwargs.update(parsed_args)
+        return self.plugin.dispatch('command', self, event, **kwargs)
