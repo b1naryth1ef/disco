@@ -4,7 +4,9 @@ import copy
 
 
 # Regex which splits out argument parts
-PARTS_RE = re.compile('(\<|\[)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\])')
+PARTS_RE = re.compile('(\<|\[|\{)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\]|\})')
+
+BOOL_OPTS = {'yes': True, 'no': False, 'true': True, 'False': False, '1': True, '0': False}
 
 # Mapping of types
 TYPE_MAP = {
@@ -13,6 +15,14 @@ TYPE_MAP = {
     'float': lambda ctx, data: int(data),
     'snowflake': lambda ctx, data: int(data),
 }
+
+
+def to_bool(ctx, data):
+    if data in BOOL_OPTS:
+        return BOOL_OPTS[data]
+    raise TypeError
+
+TYPE_MAP['bool'] = to_bool
 
 
 class ArgumentError(Exception):
@@ -41,6 +51,7 @@ class Argument(object):
         self.name = None
         self.count = 1
         self.required = False
+        self.flag = False
         self.types = None
         self.parse(raw)
 
@@ -62,12 +73,16 @@ class Argument(object):
         else:
             self.required = False
 
-        if part.endswith('...'):
-            part = part[:-3]
-            self.count = 0
-        elif ' ' in part:
-            split = part.split(' ', 1)
-            part, self.count = split[0], int(split[1])
+        # Whether this is a flag
+        self.flag = (prefix == '{')
+
+        if not self.flag:
+            if part.endswith('...'):
+                part = part[:-3]
+                self.count = 0
+            elif ' ' in part:
+                split = part.split(' ', 1)
+                part, self.count = split[0], int(split[1])
 
         if ':' in part:
             part, typeinfo = part.split(':')
@@ -156,7 +171,15 @@ class ArgumentSet(object):
             else:
                 raw = rawargs[index:index + arg.true_count]
 
-            if arg.types:
+            if arg.flag:
+                raw = raw[0].lstrip('-')
+                if raw == arg.name:
+                    raw = [True]
+                elif '=' in raw:
+                    raw = [self.convert(ctx, arg.types, raw.split('=', 1)[-1])]
+                else:
+                    continue
+            elif arg.types:
                 for idx, r in enumerate(raw):
                     try:
                         raw[idx] = self.convert(ctx, arg.types, r)
