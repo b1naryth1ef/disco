@@ -88,7 +88,7 @@ class State(object):
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
         'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
-        'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
+        'GuildEmojisUpdate', 'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
         'PresenceUpdate'
     ]
 
@@ -295,6 +295,12 @@ class State(object):
             return
 
         del self.guilds[event.guild_id].roles[event.role_id]
+
+    def on_guild_emojis_update(self, event):
+        if event.guild_id not in self.guilds:
+            return
+
+        self.guilds[event.guild_id].emojis = HashMap({i.id: i for i in event.emojis})
 
     def on_presence_update(self, event):
         if event.user.id in self.users:
