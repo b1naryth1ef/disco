@@ -79,14 +79,16 @@ class Argument(object):
         if not self.flag:
             if part.endswith('...'):
                 part = part[:-3]
-                self.count = 0
+
+                if self.flag:
+                    raise TypeError('Cannot use nargs on flag')
             elif ' ' in part:
                 split = part.split(' ', 1)
                 part, self.count = split[0], int(split[1])
 
-        if ':' in part:
-            part, typeinfo = part.split(':')
-            self.types = typeinfo.split('|')
+            if ':' in part:
+                part, typeinfo = part.split(':')
+                self.types = typeinfo.split('|')
 
         self.name = part.strip()
 
@@ -162,7 +164,22 @@ class ArgumentSet(object):
         """
         parsed = {}
 
-        for index, arg in enumerate(self.args):
+        flags = {i.name: i for i in self.args if i.flag}
+        if not flags:
+            return parsed
+
+        new_rawargs = []
+
+        for offset, raw in enumerate(rawargs):
+            if raw.startswith('-'):
+                raw = raw.lstrip('-')
+                if raw in flags:
+                    parsed[raw] = True
+                    continue
+            new_rawargs.append(raw)
+
+        rawargs = new_rawargs
+        for index, arg in enumerate((arg for arg in self.args if not arg.flag)):
             if not arg.required and index + arg.true_count > len(rawargs):
                 continue
 
@@ -171,15 +188,7 @@ class ArgumentSet(object):
             else:
                 raw = rawargs[index:index + arg.true_count]
 
-            if arg.flag:
-                raw = raw[0].lstrip('-')
-                if raw == arg.name:
-                    raw = [True]
-                elif '=' in raw:
-                    raw = [self.convert(ctx, arg.types, raw.split('=', 1)[-1])]
-                else:
-                    continue
-            elif arg.types:
+            if arg.types:
                 for idx, r in enumerate(raw):
                     try:
                         raw[idx] = self.convert(ctx, arg.types, r)
