@@ -98,6 +98,10 @@ class Routes(object):
     GUILDS_EMBED_GET = (HTTPMethod.GET, GUILDS + '/embed')
     GUILDS_EMBED_MODIFY = (HTTPMethod.PATCH, GUILDS + '/embed')
     GUILDS_WEBHOOKS_LIST = (HTTPMethod.GET, GUILDS + '/webhooks')
+    GUILDS_EMOJIS_LIST = (HTTPMethod.GET, GUILDS + '/emojis')
+    GUILDS_EMOJIS_CREATE = (HTTPMethod.POST, GUILDS + '/emojis')
+    GUILDS_EMOJIS_MODIFY = (HTTPMethod.PATCH, GUILDS + '/emojis/{emoji}')
+    GUILDS_EMOJIS_DELETE = (HTTPMethod.DELETE, GUILDS + '/emojis/{emoji}')
 
     # Users
     USERS = '/users'

@@ -5,7 +5,7 @@ from disco.util.logging import LoggingClass
 
 from disco.types.user import User
 from disco.types.message import Message
-from disco.types.guild import Guild, GuildMember, Role
+from disco.types.guild import Guild, GuildMember, Role, GuildEmoji
 from disco.types.channel import Channel
 from disco.types.invite import Invite
 from disco.types.webhook import Webhook
@@ -262,6 +262,21 @@ class APIClient(LoggingClass):
     def guilds_webhooks_list(self, guild):
         r = self.http(Routes.GUILDS_WEBHOOKS_LIST, dict(guild=guild))
         return Webhook.create_map(self.client, r.json())
+
+    def guilds_emojis_list(self, guild):
+        r = self.http(Routes.GUILDS_EMOJIS_LIST, dict(guild=guild))
+        return GuildEmoji.create_map(self.client, r.json())
+
+    def guilds_emojis_create(self, guild, **kwargs):
+        r = self.http(Routes.GUILDS_EMOJIS_CREATE, dict(guild=guild), json=kwargs)
+        return GuildEmoji.create(self.client, r.json())
+
+    def guilds_emojis_modify(self, guild, emoji, **kwargs):
+        r = self.http(Routes.GUILDS_EMOJIS_MODIFY, dict(guild=guild, emoji=emoji), json=kwargs)
+        return GuildEmoji.create(self.client, r.json())
+
+    def guilds_emojis_delete(self, guild, emoji):
+        self.http(Routes.GUILDS_EMOJIS_DELETE, dict(guild=guild, emoji=emoji))
 
     def invites_get(self, invite):
         r = self.http(Routes.INVITES_GET, dict(invite=invite))
