@@ -165,20 +165,19 @@ class ArgumentSet(object):
         parsed = {}
 
         flags = {i.name: i for i in self.args if i.flag}
-        if not flags:
-            return parsed
+        if flags:
+            new_rawargs = []
 
-        new_rawargs = []
+            for offset, raw in enumerate(rawargs):
+                if raw.startswith('-'):
+                    raw = raw.lstrip('-')
+                    if raw in flags:
+                        parsed[raw] = True
+                        continue
+                new_rawargs.append(raw)
 
-        for offset, raw in enumerate(rawargs):
-            if raw.startswith('-'):
-                raw = raw.lstrip('-')
-                if raw in flags:
-                    parsed[raw] = True
-                    continue
-            new_rawargs.append(raw)
+            rawargs = new_rawargs
 
-        rawargs = new_rawargs
         for index, arg in enumerate((arg for arg in self.args if not arg.flag)):
             if not arg.required and index + arg.true_count > len(rawargs):
                 continue
