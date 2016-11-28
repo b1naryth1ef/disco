@@ -49,6 +49,9 @@ class GuildEmoji(Emoji):
     managed = Field(bool)
     roles = ListField(snowflake)
 
+    def __str__(self):
+        return u'<:{}:{}>'.format(self.name, self.id)
+
     @property
     def url(self):
         return 'https://discordapp.com/api/emojis/{}.png'.format(self.id)

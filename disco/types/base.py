@@ -290,16 +290,19 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
             should_skip = skip and name in skip
 
             if consume and not should_skip:
-                raw = obj.pop(field.src_name, None)
+                raw = obj.pop(field.src_name, UNSET)
             else:
-                raw = obj.get(field.src_name, None)
+                raw = obj.get(field.src_name, UNSET)
 
-            if raw is None or should_skip:
-                if field.has_default():
-                    default = field.default() if callable(field.default) else field.default
-                else:
-                    default = UNSET
+            # If the field is unset/none, and we have a default we need to set it
+            if (raw in (None, UNSET) or should_skip) and field.has_default():
+                default = field.default() if callable(field.default) else field.default
                 setattr(self, field.dst_name, default)
+                continue
+
+            # Otherwise if the field is UNSET and has no default, skip conversion
+            if raw is UNSET or should_skip:
+                setattr(self, field.dst_name, raw)
                 continue
 
             value = field.try_convert(raw, self.client)

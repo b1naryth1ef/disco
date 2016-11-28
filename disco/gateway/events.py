@@ -7,7 +7,7 @@ from disco.types.user import User, Presence
 from disco.types.channel import Channel
 from disco.types.message import Message, MessageReactionEmoji
 from disco.types.voice import VoiceState
-from disco.types.guild import Guild, GuildMember, Role, Emoji
+from disco.types.guild import Guild, GuildMember, Role, GuildEmoji
 
 from disco.types.base import Model, ModelMeta, Field, ListField, snowflake, lazy_datetime
 
@@ -295,7 +295,7 @@ class GuildEmojisUpdate(GatewayEvent):
         The new set of emojis for the guild
     """
     guild_id = Field(snowflake)
-    emojis = ListField(Emoji)
+    emojis = ListField(GuildEmoji)
 
 
 class GuildIntegrationsUpdate(GatewayEvent):
