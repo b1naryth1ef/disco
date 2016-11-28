@@ -169,6 +169,12 @@ class GuildMember(SlottedModel):
         """
         self.guild.create_ban(self, delete_message_days)
 
+    def unban(self):
+        """
+        Unbans the member from the guild.
+        """
+        self.guild.delete_ban(self)
+
     def set_nickname(self, nickname=None):
         """
         Sets the member's nickname (or clears it if None).
