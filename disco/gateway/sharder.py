@@ -63,8 +63,6 @@ class AutoSharder(object):
         self.client = APIClient(config.token)
         self.shards = {}
         self.config.shard_count = self.client.gateway_bot_get()['shards']
-        if self.config.shard_count > 1:
-            self.config.shard_count = 10
 
     def run_on(self, sid, raw):
         func = load_function(raw)

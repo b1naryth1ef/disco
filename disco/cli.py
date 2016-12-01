@@ -69,7 +69,10 @@ def disco_main(run=False):
     bot = None
     if args.run_bot or hasattr(config, 'bot'):
         bot_config = BotConfig(config.bot) if hasattr(config, 'bot') else BotConfig()
-        bot_config.plugins += args.plugin
+        if not hasattr(bot_config, 'plugins'):
+            bot_config.plugins = args.plugin
+        else:
+            bot_config.plugins += args.plugin
         bot = Bot(client, bot_config)
 
     if run:

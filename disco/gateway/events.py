@@ -633,3 +633,18 @@ class MessageReactionRemove(GatewayEvent):
     @property
     def guild(self):
         return self.channel.guild
+
+
+class MessageReactionRemoveAll(GatewayEvent):
+    """
+    Sent when all reactions are removed from a message.
+
+    Attributes
+    ----------
+    channel_id : snowflake
+        The channel ID the message is in.
+    message_id : snowflake
+        The ID of the message for which the reactions where removed from.
+    """
+    channel_id = Field(snowflake)
+    message_id = Field(snowflake)
