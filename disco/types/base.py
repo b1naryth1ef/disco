@@ -34,10 +34,11 @@ class ConversionError(Exception):
 
 
 class Field(object):
-    def __init__(self, value_type, alias=None, default=None, create=True, **kwargs):
+    def __init__(self, value_type, alias=None, default=None, create=True, ignore_dump=None, **kwargs):
         # TODO: fix default bullshit
         self.src_name = alias
         self.dst_name = None
+        self.ignore_dump = ignore_dump or []
         self.metadata = kwargs
 
         if default is not None:
@@ -88,11 +89,11 @@ class Field(object):
             return lambda raw, _: typ(raw)
 
     @staticmethod
-    def serialize(value):
+    def serialize(value, inst=None):
         if isinstance(value, EnumAttr):
             return value.value
         elif isinstance(value, Model):
-            return value.to_dict()
+            return value.to_dict(ignore=(inst.ignore_dump if inst else []))
         else:
             return value
 
@@ -109,8 +110,11 @@ class DictField(Field):
         self.value_de = self.type_to_deserializer(value_type or key_type)
 
     @staticmethod
-    def serialize(value):
-        return {Field.serialize(k): Field.serialize(v) for k, v in six.iteritems(value)}
+    def serialize(value, inst=None):
+        return {
+            Field.serialize(k): Field.serialize(v) for k, v in six.iteritems(value)
+            if k not in (inst.ignore_dump if inst else [])
+        }
 
     def try_convert(self, raw, client):
         return HashMap({
@@ -122,7 +126,7 @@ class ListField(Field):
     default = list
 
     @staticmethod
-    def serialize(value):
+    def serialize(value, inst=None):
         return list(map(Field.serialize, value))
 
     def try_convert(self, raw, client):
@@ -211,7 +215,10 @@ def binary(obj):
 def with_equality(field):
     class T(object):
         def __eq__(self, other):
-            return getattr(self, field) == getattr(other, field)
+            if isinstance(other, self.__class__):
+                return getattr(self, field) == getattr(other, field)
+            else:
+                return getattr(self, field) == other
     return T
 
 
@@ -321,12 +328,15 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
                 except:
                     pass
 
-    def to_dict(self):
+    def to_dict(self, ignore=None):
         obj = {}
         for name, field in six.iteritems(self.__class__._fields):
+            if ignore and name in ignore:
+                continue
+
             if getattr(self, name) == UNSET:
                 continue
-            obj[name] = field.serialize(getattr(self, name))
+            obj[name] = field.serialize(getattr(self, name), field)
         return obj
 
     @classmethod

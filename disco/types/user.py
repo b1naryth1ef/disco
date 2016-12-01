@@ -55,6 +55,6 @@ class Game(SlottedModel):
 
 
 class Presence(SlottedModel):
-    user = Field(User, alias='user')
+    user = Field(User, alias='user', ignore_dump=['presence'])
     game = Field(Game)
     status = Field(Status)
