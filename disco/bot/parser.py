@@ -79,9 +79,7 @@ class Argument(object):
         if not self.flag:
             if part.endswith('...'):
                 part = part[:-3]
-
-                if self.flag:
-                    raise TypeError('Cannot use nargs on flag')
+                self.count = 0
             elif ' ' in part:
                 split = part.split(' ', 1)
                 part, self.count = split[0], int(split[1])
