@@ -12,6 +12,7 @@ from disco.bot.plugin import Plugin
 from disco.bot.command import CommandEvent, CommandLevels
 from disco.bot.storage import Storage
 from disco.util.config import Config
+from disco.util.logging import LoggingClass
 from disco.util.serializer import Serializer
 
 
@@ -87,7 +88,7 @@ class BotConfig(Config):
     storage_config = {}
 
 
-class Bot(object):
+class Bot(LoggingClass):
     """
     Disco's implementation of a simple but extendable Discord bot. Bots consist
     of a set of plugins, and a Disco client.
@@ -380,6 +381,7 @@ class Bot(object):
             unload.
         """
         if cls.__name__ in self.plugins:
+            self.log.warning('Attempted to add already added plugin %s', cls.__name__)
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
 
         if not config:
@@ -431,7 +433,7 @@ class Bot(object):
         """
         Adds and loads a plugin, based on its module path.
         """
-
+        self.log.info('Adding plugin module at path "%s"', path)
         mod = importlib.import_module(path)
         loaded = False
 

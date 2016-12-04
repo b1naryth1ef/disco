@@ -205,6 +205,9 @@ class Plugin(LoggingClass, PluginDeco):
             when, typ = meta['type'].split('_', 1)
             self.register_trigger(typ, when, member)
 
+    def handle_exception(self, greenlet, event):
+        pass
+
     def spawn_wrap(self, spawner, method, *args, **kwargs):
         def wrapped(*args, **kwargs):
             self.ctx['plugin'] = self
@@ -245,9 +248,13 @@ class Plugin(LoggingClass, PluginDeco):
         getattr(self, '_' + when)[typ].append(func)
 
     def dispatch(self, typ, func, event, *args, **kwargs):
+        # Link the greenlet with our exception handler
+        gevent.getcurrent().link_exception(lambda g: self.handle_exception(g, event))
+
         # TODO: this is ugly
         if typ != 'command':
             self.greenlets.add(gevent.getcurrent())
+
         self.ctx['plugin'] = self
 
         if hasattr(event, 'guild'):
