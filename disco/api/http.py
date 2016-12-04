@@ -141,13 +141,27 @@ class APIException(Exception):
         The status code returned by the API for the request that triggered this
         error.
     """
-    def __init__(self, msg, status_code=0, content=None):
-        self.status_code = status_code
-        self.content = content
-        self.msg = msg
+    def __init__(self, response, retries=None):
+        self.response = response
+        self.code = 0
+        self.msg = 'Request Failed ({})'.format(response.status_code)
 
-        if self.status_code:
-            self.msg += ' code: {}'.format(status_code)
+        # Try to decode JSON, and extract params
+        try:
+            data = self.response.json()
+
+            if 'code' in data:
+                self.code = data['code']
+                self.msg = data['message']
+            elif len(data) == 1:
+                key, value = list(data.items())[0]
+                self.msg = 'Request Failed: {}: {}'.format(key, ', '.join(value))
+        except ValueError:
+            pass
+
+        # DEPRECATED: left for backwards compat
+        self.status_code = response.status_code
+        self.content = response.content
 
         super(APIException, self).__init__(self.msg)
 
@@ -239,7 +253,7 @@ class HTTPClient(LoggingClass):
         if r.status_code < 400:
             return r
         elif r.status_code != 429 and 400 <= r.status_code < 500:
-            raise APIException('Request failed', r.status_code, r.content)
+            raise APIException(r)
         else:
             if r.status_code == 429:
                 self.log.warning(
@@ -249,8 +263,7 @@ class HTTPClient(LoggingClass):
             retry += 1
             if retry > self.MAX_RETRIES:
                 self.log.error('Failing request, hit max retries')
-                raise APIException(
-                    'Request failed after {} attempts'.format(self.MAX_RETRIES), r.status_code, r.content)
+                raise APIException(r, retries=self.MAX_RETRIES)
 
             backoff = self.random_backoff()
             self.log.warning('Request to `{}` failed with code {}, retrying after {}s ({})'.format(
