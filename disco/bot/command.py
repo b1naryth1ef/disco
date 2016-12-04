@@ -164,10 +164,14 @@ class Command(object):
         def resolve_channel(ctx, cid):
             return ctx.msg.guild.channels.get(cid)
 
+        def resolve_guild(ctx, gid):
+            return ctx.msg.client.state.guilds.get(gid)
+
         self.args = ArgumentSet.from_string(args or '', {
             'user': self.mention_type([resolve_user], USER_MENTION_RE, user=True),
             'role': self.mention_type([resolve_role], ROLE_MENTION_RE),
             'channel': self.mention_type([resolve_channel], CHANNEL_MENTION_RE),
+            'guild': self.mention_type([resolve_guild]),
         })
 
         self.level = level
@@ -178,19 +182,21 @@ class Command(object):
         self.metadata = kwargs
 
     @staticmethod
-    def mention_type(getters, reg, user=False):
+    def mention_type(getters, reg=None, user=False):
         def _f(ctx, raw):
             if raw.isdigit():
                 resolved = int(raw)
             elif user and raw.count('#') == 1 and raw.split('#')[-1].isdigit():
                 username, discrim = raw.split('#')
                 resolved = (username, int(discrim))
-            else:
+            elif reg:
                 res = reg.match(raw)
                 if not res:
                     raise TypeError('Invalid mention: {}'.format(raw))
 
                 resolved = int(res.group(1))
+            else:
+                raise TypeError('Invalid mention: {}'.format(raw))
 
             for getter in getters:
                 obj = getter(ctx, resolved)
