@@ -143,8 +143,13 @@ class APIException(Exception):
     """
     def __init__(self, response, retries=None):
         self.response = response
+        self.retries = retries
+
         self.code = 0
         self.msg = 'Request Failed ({})'.format(response.status_code)
+
+        if self.retries:
+            self.msg += " after {} retries".format(self.retries)
 
         # Try to decode JSON, and extract params
         try:
