@@ -42,6 +42,7 @@ class GatewayClient(LoggingClass):
 
         # Bind to ready payload
         self.events.on('Ready', self.on_ready)
+        self.events.on('Resumed', self.on_resumed)
 
         # Websocket connection
         self.ws = None
@@ -101,6 +102,10 @@ class GatewayClient(LoggingClass):
     def on_ready(self, ready):
         self.log.info('Recieved READY')
         self.session_id = ready.session_id
+        self.reconnects = 0
+
+    def on_resumed(self, _):
+        self.log.info('Recieved RESUMED')
         self.reconnects = 0
 
     def connect_and_run(self, gateway_url=None):
@@ -188,7 +193,7 @@ class GatewayClient(LoggingClass):
         self.log.info('WS Closed: [%s] %s (%s)', code, reason, self.reconnects)
 
         if self.MAX_RECONNECTS and self.reconnects > self.MAX_RECONNECTS:
-            raise Exception('Failed to reconect after {} attempts, giving up'.format(self.MAX_RECONNECTS))
+            raise Exception('Failed to reconnect after {} attempts, giving up'.format(self.MAX_RECONNECTS))
 
         # Don't resume for these error codes
         if code and 4000 <= code <= 4010:
