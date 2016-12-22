@@ -15,11 +15,11 @@ TEN_MEGABYTES = 10490000
 
 class GatewayClient(LoggingClass):
     GATEWAY_VERSION = 6
-    MAX_RECONNECTS = 5
 
-    def __init__(self, client, encoder='json', ipc=None):
+    def __init__(self, client, max_reconnects=5, encoder='json', ipc=None):
         super(GatewayClient, self).__init__()
         self.client = client
+        self.max_reconnects = max_reconnects
         self.encoder = ENCODERS[encoder]
 
         self.events = client.events
@@ -192,8 +192,8 @@ class GatewayClient(LoggingClass):
         self.reconnects += 1
         self.log.info('WS Closed: [%s] %s (%s)', code, reason, self.reconnects)
 
-        if self.MAX_RECONNECTS and self.reconnects > self.MAX_RECONNECTS:
-            raise Exception('Failed to reconnect after {} attempts, giving up'.format(self.MAX_RECONNECTS))
+        if self.max_reconnects and self.reconnects > self.max_reconnects:
+            raise Exception('Failed to reconnect after {} attempts, giving up'.format(self.max_reconnects))
 
         # Don't resume for these error codes
         if code and 4000 <= code <= 4010:

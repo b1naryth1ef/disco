@@ -26,6 +26,8 @@ class ClientConfig(Config):
         The shard ID for the current client instance.
     shard_count : int
         The total count of shards running.
+    max_reconnects : int
+        The maximum number of connection retries to make before giving up (0 = never give up).
     manhole_enable : bool
         Whether to enable the manhole (e.g. console backdoor server) utility.
     manhole_bind : tuple(str, int)
@@ -39,6 +41,7 @@ class ClientConfig(Config):
     token = ""
     shard_id = 0
     shard_count = 1
+    max_reconnects = 5
 
     manhole_enable = False
     manhole_bind = ('127.0.0.1', 8484)
@@ -86,7 +89,7 @@ class Client(LoggingClass):
         self.packets = Emitter(gevent.spawn)
 
         self.api = APIClient(self.config.token, self)
-        self.gw = GatewayClient(self, self.config.encoder)
+        self.gw = GatewayClient(self, self.config.max_reconnects, self.config.encoder)
         self.state = State(self, StateConfig(self.config.get('state', {})))
 
         if self.config.manhole_enable:
