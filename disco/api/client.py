@@ -1,4 +1,5 @@
 import six
+import json
 
 from disco.api.http import Routes, HTTPClient
 from disco.util.logging import LoggingClass
@@ -98,7 +99,7 @@ class APIClient(LoggingClass):
             payload['embed'] = embed.to_dict()
 
         if attachment:
-            r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), data=payload, files={
+            r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), data={'payload_json': json.dumps(payload)}, files={
                 'file': (attachment[0], attachment[1])
             })
         else:
@@ -106,10 +107,10 @@ class APIClient(LoggingClass):
 
         return Message.create(self.client, r.json())
 
-    def channels_messages_modify(self, channel, message, content):
+    def channels_messages_modify(self, channel, message, content, embed=None):
         r = self.http(Routes.CHANNELS_MESSAGES_MODIFY,
                       dict(channel=channel, message=message),
-                      json={'content': content})
+                      json={'content': content, 'embed': embed.to_dict()})
         return Message.create(self.client, r.json())
 
     def channels_messages_delete(self, channel, message):

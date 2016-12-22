@@ -254,7 +254,7 @@ class Message(SlottedModel):
         """
         return self.channel.send_message(*args, **kwargs)
 
-    def edit(self, content):
+    def edit(self, *args, **kwargs):
         """
         Edit this message.
 
@@ -268,7 +268,7 @@ class Message(SlottedModel):
         :class:`Message`
             The edited message object.
         """
-        return self.client.api.channels_messages_modify(self.channel_id, self.id, content)
+        return self.client.api.channels_messages_modify(self.channel_id, self.id, *args, **kwargs)
 
     def delete(self):
         """
