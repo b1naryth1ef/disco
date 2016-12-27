@@ -6,7 +6,7 @@ from disco.bot.parser import ArgumentSet, ArgumentError
 from disco.util.functional import cached_property
 
 REGEX_FMT = '{}'
-ARGS_REGEX = '( ((?:\n|.)*)$|$)'
+ARGS_REGEX = '(?: ((?:\n|.)*)$|$)'
 
 USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
 ROLE_MENTION_RE = re.compile('<@&([0-9]+)>')
@@ -45,11 +45,11 @@ class CommandEvent(object):
         self.command = command
         self.msg = msg
         self.match = match
-        self.name = self.match.group(1)
+        self.name = self.match.group(0)
         self.args = []
 
-        if self.match.group(2):
-            self.args = [i for i in self.match.group(2).strip().split(' ') if i]
+        if self.match.group(1):
+            self.args = [i for i in self.match.group(1).strip().split(' ') if i]
 
     @property
     def codeblock(self):
