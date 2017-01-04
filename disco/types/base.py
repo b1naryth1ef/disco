@@ -15,6 +15,12 @@ DATETIME_FORMATS = [
 ]
 
 
+def get_item_by_path(obj, path):
+    for part in path.split('.'):
+        obj = getattr(obj, part)
+    return obj
+
+
 class Unset(object):
     def __nonzero__(self):
         return False
@@ -352,7 +358,9 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
     @classmethod
     def create_hash(cls, client, key, data, **kwargs):
         return HashMap({
-            getattr(item, key): cls.create(client, item, **kwargs) for item in data
+            get_item_by_path(item, key): item
+            for item in [
+                cls.create(client, item, **kwargs) for item in data]
         })
 
     @classmethod

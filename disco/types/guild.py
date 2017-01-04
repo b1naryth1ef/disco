@@ -110,6 +110,11 @@ class Role(SlottedModel):
         return self.client.state.guilds.get(self.guild_id)
 
 
+class GuildBan(SlottedModel):
+    user = Field(User)
+    reason = Field(str)
+
+
 class GuildMember(SlottedModel):
     """
     A GuildMember object.

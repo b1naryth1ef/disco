@@ -6,7 +6,7 @@ from disco.util.logging import LoggingClass
 
 from disco.types.user import User
 from disco.types.message import Message
-from disco.types.guild import Guild, GuildMember, Role, GuildEmoji
+from disco.types.guild import Guild, GuildMember, GuildBan, Role, GuildEmoji
 from disco.types.channel import Channel
 from disco.types.invite import Invite
 from disco.types.webhook import Webhook
@@ -231,7 +231,7 @@ class APIClient(LoggingClass):
 
     def guilds_bans_list(self, guild):
         r = self.http(Routes.GUILDS_BANS_LIST, dict(guild=guild))
-        return User.create_hash(self.client, 'id', r.json())
+        return GuildBan.create_hash(self.client, 'user.id', r.json())
 
     def guilds_bans_create(self, guild, user, delete_message_days):
         self.http(Routes.GUILDS_BANS_CREATE, dict(guild=guild, user=user), params={
