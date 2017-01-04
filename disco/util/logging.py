@@ -7,8 +7,11 @@ LEVEL_OVERRIDES = {
     'requests': logging.WARNING
 }
 
+LOG_FORMAT = '[%(levelname)s] %(asctime)s - %(name)s:%(lineno)d - %(message)s'
 
 def setup_logging(**kwargs):
+    kwargs.setdefault('format', LOG_FORMAT)
+
     logging.basicConfig(**kwargs)
     for logger, level in LEVEL_OVERRIDES.items():
         logging.getLogger(logger).setLevel(level)
