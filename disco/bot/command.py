@@ -162,7 +162,10 @@ class Command(object):
                 return ctx.msg.client.state.users.select_one(username=uid[0], discriminator=uid[1])
 
         def resolve_channel(ctx, cid):
-            return ctx.msg.guild.channels.get(cid)
+            if isinstance(cid, (int, long)):
+                return ctx.msg.guild.channels.get(cid)
+            else:
+                return ctx.msg.guild.channels.select_one(name=cid)
 
         def resolve_guild(ctx, gid):
             return ctx.msg.client.state.guilds.get(gid)
@@ -170,7 +173,7 @@ class Command(object):
         self.args = ArgumentSet.from_string(args or '', {
             'user': self.mention_type([resolve_user], USER_MENTION_RE, user=True),
             'role': self.mention_type([resolve_role], ROLE_MENTION_RE),
-            'channel': self.mention_type([resolve_channel], CHANNEL_MENTION_RE),
+            'channel': self.mention_type([resolve_channel], CHANNEL_MENTION_RE, allow_plain=True),
             'guild': self.mention_type([resolve_guild]),
         })
 
@@ -182,7 +185,7 @@ class Command(object):
         self.metadata = kwargs
 
     @staticmethod
-    def mention_type(getters, reg=None, user=False):
+    def mention_type(getters, reg=None, user=False, allow_plain=False):
         def _f(ctx, raw):
             if raw.isdigit():
                 resolved = int(raw)
@@ -191,10 +194,13 @@ class Command(object):
                 resolved = (username, int(discrim))
             elif reg:
                 res = reg.match(raw)
-                if not res:
-                    raise TypeError('Invalid mention: {}'.format(raw))
-
-                resolved = int(res.group(1))
+                if res:
+                    resolved = int(res.group(1))
+                else:
+                    if allow_plain:
+                        resolved = raw
+                    else:
+                        raise TypeError('Invalid mention: {}'.format(raw))
             else:
                 raise TypeError('Invalid mention: {}'.format(raw))
 
