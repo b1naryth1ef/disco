@@ -5,6 +5,7 @@ import inflection
 from collections import deque, namedtuple
 from gevent.event import Event
 
+from disco.types.base import UNSET
 from disco.util.config import Config
 from disco.util.hashmap import HashMap, DefaultHashMap
 
@@ -210,6 +211,10 @@ class State(object):
     def on_channel_update(self, event):
         if event.channel.id in self.channels:
             self.channels[event.channel.id].update(event.channel)
+
+            if event.overwrites is not UNSET:
+                self.channels[event.channel.id].overwrites = event.overwrites
+                self.channels[event.channel.id].after_load()
 
     def on_channel_delete(self, event):
         if event.channel.is_guild and event.channel.guild and event.channel.id in event.channel.guild.channels:

@@ -4,12 +4,12 @@ import inflection
 import six
 
 from disco.types.user import User, Presence
-from disco.types.channel import Channel
+from disco.types.channel import Channel, PermissionOverwrite
 from disco.types.message import Message, MessageReactionEmoji
 from disco.types.voice import VoiceState
 from disco.types.guild import Guild, GuildMember, Role, GuildEmoji
 
-from disco.types.base import Model, ModelMeta, Field, ListField, snowflake, lazy_datetime
+from disco.types.base import Model, ModelMeta, Field, ListField, AutoDictField, snowflake, lazy_datetime
 
 # Mapping of discords event name to our event classes
 EVENTS_MAP = {}
@@ -217,6 +217,7 @@ class ChannelUpdate(ChannelCreate):
     channel : :class:`disco.types.channel.Channel`
         The channel which was updated.
     """
+    overwrites = AutoDictField(PermissionOverwrite, 'id', alias='permission_overwrites')
 
 
 @wraps_model(Channel)

@@ -48,8 +48,8 @@ class PermissionOverwrite(ChannelSubType):
     """
     id = Field(snowflake)
     type = Field(enum(PermissionOverwriteType))
-    allow = Field(PermissionValue)
-    deny = Field(PermissionValue)
+    allow = Field(PermissionValue, cast=int)
+    deny = Field(PermissionValue, cast=int)
 
     channel_id = Field(snowflake)
 
@@ -66,6 +66,13 @@ class PermissionOverwrite(ChannelSubType):
             deny=deny,
             channel_id=channel.id
         ).save()
+
+    @property
+    def compiled(self):
+        value = PermissionValue()
+        value -= self.deny
+        value += self.allow
+        return value
 
     def save(self):
         self.client.api.channels_permissions_modify(self.channel_id,
@@ -117,7 +124,10 @@ class Channel(SlottedModel, Permissible):
 
     def __init__(self, *args, **kwargs):
         super(Channel, self).__init__(*args, **kwargs)
+        self.after_load()
 
+    def after_load(self):
+        # TODO: hackfix
         self.attach(six.itervalues(self.overwrites), {'channel_id': self.id, 'channel': self})
 
     def __str__(self):

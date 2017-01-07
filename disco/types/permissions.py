@@ -90,9 +90,12 @@ class PermissionValue(object):
         else:
             self.value &= ~Permissions[name].value
 
+    def __int__(self):
+        return self.value
+
     def to_dict(self):
         return {
-            k: getattr(self, k) for k in Permissions.attrs
+            k: getattr(self, k) for k in Permissions.keys_
         }
 
     @classmethod

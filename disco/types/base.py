@@ -40,11 +40,12 @@ class ConversionError(Exception):
 
 
 class Field(object):
-    def __init__(self, value_type, alias=None, default=None, create=True, ignore_dump=None, **kwargs):
+    def __init__(self, value_type, alias=None, default=None, create=True, ignore_dump=None, cast=None, **kwargs):
         # TODO: fix default bullshit
         self.src_name = alias
         self.dst_name = None
         self.ignore_dump = ignore_dump or []
+        self.cast = cast
         self.metadata = kwargs
 
         if default is not None:
@@ -101,6 +102,8 @@ class Field(object):
         elif isinstance(value, Model):
             return value.to_dict(ignore=(inst.ignore_dump if inst else []))
         else:
+            if inst and inst.cast:
+                return inst.cast(value)
             return value
 
     def __call__(self, raw, client):
