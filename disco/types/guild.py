@@ -405,3 +405,7 @@ class Guild(SlottedModel, Permissible):
 
     def create_ban(self, user, delete_message_days=0):
         self.client.api.guilds_bans_create(self.id, to_snowflake(user), delete_message_days)
+
+    def create_channel(self, *args, **kwargs):
+        return self.client.api.guilds_channels_create(self.id, *args, **kwargs)
+

@@ -196,8 +196,27 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_CHANNELS_LIST, dict(guild=guild))
         return Channel.create_hash(self.client, 'id', r.json(), guild_id=guild)
 
-    def guilds_channels_create(self, guild, **kwargs):
-        r = self.http(Routes.GUILDS_CHANNELS_CREATE, dict(guild=guild), json=kwargs)
+    def guilds_channels_create(self, guild, name, channel_type, bitrate=None, user_limit=None, permission_overwrites=[]):
+        payload = {
+            'name': name,
+            'channel_type': channel_type,
+            'permission_overwrites': [i.to_dict() for i in permission_overwrites],
+        }
+
+        if channel_type == 'text':
+            pass
+        elif channel_type == 'voice':
+            if bitrate is not None:
+                payload['bitrate'] = bitrate
+
+            if user_limit is not None:
+                payload['user_limit'] = user_limit
+        else:
+            # TODO: better error here?
+            raise Exception('Invalid channel type: {}'.format(channel_type))
+
+
+        r = self.http(Routes.GUILDS_CHANNELS_CREATE, dict(guild=guild), json=payload)
         return Channel.create(self.client, r.json(), guild_id=guild)
 
     def guilds_channels_modify(self, guild, channel, position):
