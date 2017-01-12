@@ -14,14 +14,20 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
 
     presence = Field(None)
 
-    @property
-    def avatar_url(self):
+    def get_avatar_url(self, fmt='webp', size=1024):
         if not self.avatar:
             return None
 
-        return 'https://discordapp.com/api/users/{}/avatars/{}.jpg'.format(
+        return 'https://cdn.discordapp.com/avatars/{}/{}.{}?size={}'.format(
             self.id,
-            self.avatar)
+            self.avatar,
+            fmt,
+            size
+        )
+
+    @property
+    def avatar_url(self):
+        return self.get_avatar_url()
 
     @property
     def mention(self):
