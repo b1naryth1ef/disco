@@ -5,7 +5,6 @@ from holster.enum import Enum
 from disco.bot.parser import ArgumentSet, ArgumentError
 from disco.util.functional import cached_property
 
-REGEX_FMT = '{}'
 ARGS_REGEX = '(?: ((?:\n|.)*)$|$)'
 
 USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
@@ -225,7 +224,7 @@ class Command(object):
         The regex string that defines/triggers this command.
         """
         if self.is_regex:
-            return REGEX_FMT.format('|'.join(self.triggers))
+            return '|'.join(self.triggers)
         else:
             group = ''
             if self.group:
@@ -233,7 +232,7 @@ class Command(object):
                     group = '{}(?:\w+)? '.format(self.plugin.bot.group_abbrev.get(self.group))
                 else:
                     group = self.group + ' '
-            return REGEX_FMT.format('|'.join(['^' + group + trigger for trigger in self.triggers]) + ARGS_REGEX)
+            return '^{}(?:{})'.format(group, '|'.join(self.triggers)) + ARGS_REGEX
 
     def execute(self, event):
         """
