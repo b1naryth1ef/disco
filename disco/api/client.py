@@ -108,9 +108,16 @@ class APIClient(LoggingClass):
         return Message.create(self.client, r.json())
 
     def channels_messages_modify(self, channel, message, content, embed=None):
+        payload = {
+            'content': content,
+        }
+
+        if embed:
+            payload['embed'] = embed.to_dict()
+
         r = self.http(Routes.CHANNELS_MESSAGES_MODIFY,
                       dict(channel=channel, message=message),
-                      json={'content': content, 'embed': embed.to_dict()})
+                      json=payload)
         return Message.create(self.client, r.json())
 
     def channels_messages_delete(self, channel, message):
