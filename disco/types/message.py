@@ -117,6 +117,24 @@ class MessageEmbed(SlottedModel):
     author = Field(MessageEmbedAuthor)
     fields = ListField(MessageEmbedField)
 
+    def set_footer(self, *args, **kwargs):
+        self.footer = MessageEmbedField(*args, **kwargs)
+
+    def set_image(self, *args, **kwargs):
+        self.image = MessageEmbedImage(*args, **kwargs)
+
+    def set_thumbnail(self, *args, **kwargs):
+        self.thumbnail = MessageEmbedThumbnail(*args, **kwargs)
+
+    def set_video(self, *args, **kwargs):
+        self.video = MessageEmbedVideo(*args, **kwargs)
+
+    def set_author(self, *args, **kwargs):
+        self.author = MessageEmbedAuthor(*args, **kwargs)
+
+    def add_field(self, *args, **kwargs):
+        self.fields.append(MessageEmbedField(*args, **kwargs))
+
 
 class MessageAttachment(SlottedModel):
     """
