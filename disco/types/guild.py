@@ -147,6 +147,13 @@ class GuildMember(SlottedModel):
     def __str__(self):
         return self.user.__str__()
 
+    @property
+    def name(self):
+        """
+        The nickname of this user if set, otherwise their username
+        """
+        return self.nick or self.user.username
+
     def get_voice_state(self):
         """
         Returns
@@ -408,4 +415,3 @@ class Guild(SlottedModel, Permissible):
 
     def create_channel(self, *args, **kwargs):
         return self.client.api.guilds_channels_create(self.id, *args, **kwargs)
-
