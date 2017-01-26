@@ -493,6 +493,14 @@ class MessageDeleteBulk(GatewayEvent):
     channel_id = Field(snowflake)
     ids = ListField(snowflake)
 
+    @property
+    def channel(self):
+        return self.client.state.channels.get(self.channel_id)
+
+    @property
+    def guild(self):
+        return self.channel.guild
+
 
 @wraps_model(Presence)
 class PresenceUpdate(GatewayEvent):
