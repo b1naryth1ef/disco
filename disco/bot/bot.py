@@ -65,6 +65,7 @@ class BotConfig(Config):
         The directory plugin configuration is located within.
     """
     levels = {}
+    plugin_config = {}
 
     commands_enabled = True
     commands_require_mention = True
@@ -455,17 +456,18 @@ class Bot(LoggingClass):
         path = os.path.join(
             self.config.plugin_config_dir, name) + '.' + self.config.plugin_config_format
 
-        if not os.path.exists(path):
-            if hasattr(cls, 'config_cls'):
-                return cls.config_cls()
-            return
+        data = {}
+        if name in self.config.plugin_config:
+            data = self.config.plugin_config[name]
 
-        with open(path, 'r') as f:
-            data = Serializer.loads(self.config.plugin_config_format, f.read())
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                data.update(Serializer.loads(self.config.plugin_config_format, f.read()))
 
         if hasattr(cls, 'config_cls'):
             inst = cls.config_cls()
-            inst.update(data)
+            if data:
+                inst.update(data)
             return inst
 
         return data
