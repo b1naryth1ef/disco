@@ -222,7 +222,6 @@ class APIClient(LoggingClass):
             # TODO: better error here?
             raise Exception('Invalid channel type: {}'.format(channel_type))
 
-
         r = self.http(Routes.GUILDS_CHANNELS_CREATE, dict(guild=guild), json=payload)
         return Channel.create(self.client, r.json(), guild_id=guild)
 
@@ -304,6 +303,13 @@ class APIClient(LoggingClass):
 
     def guilds_emojis_delete(self, guild, emoji):
         self.http(Routes.GUILDS_EMOJIS_DELETE, dict(guild=guild, emoji=emoji))
+
+    def users_me_get(self):
+        return User.create(self.client, self.http(Routes.USERS_ME_GET).json())
+
+    def users_me_patch(self, payload):
+        r = self.http(Routes.USERS_ME_PATCH, json=payload)
+        return User.create(self.client, r.json())
 
     def invites_get(self, invite):
         r = self.http(Routes.INVITES_GET, dict(invite=invite))
