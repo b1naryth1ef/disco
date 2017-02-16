@@ -295,7 +295,7 @@ class Bot(LoggingClass):
         level = CommandLevels.DEFAULT
 
         if callable(self.config.commands_level_getter):
-            level = self.config.commands_level_getter(actor)
+            level = self.config.commands_level_getter(self, actor)
         else:
             if actor.id in self.config.levels:
                 level = self.config.levels[actor.id]
