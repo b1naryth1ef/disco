@@ -118,7 +118,7 @@ class MessageEmbed(SlottedModel):
     fields = ListField(MessageEmbedField)
 
     def set_footer(self, *args, **kwargs):
-        self.footer = MessageEmbedField(*args, **kwargs)
+        self.footer = MessageEmbedFooter(*args, **kwargs)
 
     def set_image(self, *args, **kwargs):
         self.image = MessageEmbedImage(*args, **kwargs)
