@@ -33,7 +33,7 @@ class ConversionError(Exception):
     def __init__(self, field, raw, e):
         super(ConversionError, self).__init__(
             'Failed to convert `{}` (`{}`) to {}: {}'.format(
-                str(raw)[:144], field.src_name, field.deserializer, e))
+                str(raw)[:144], field.src_name, field.true_type, e))
 
         if six.PY3:
             self.__cause__ = e
@@ -42,6 +42,7 @@ class ConversionError(Exception):
 class Field(object):
     def __init__(self, value_type, alias=None, default=None, create=True, ignore_dump=None, cast=None, **kwargs):
         # TODO: fix default bullshit
+        self.true_type = value_type
         self.src_name = alias
         self.dst_name = None
         self.ignore_dump = ignore_dump or []
@@ -114,7 +115,9 @@ class DictField(Field):
     default = HashMap
 
     def __init__(self, key_type, value_type=None, **kwargs):
-        super(DictField, self).__init__(None, **kwargs)
+        super(DictField, self).__init__({}, **kwargs)
+        self.true_key_type = key_type
+        self.true_value_type = value_type
         self.key_de = self.type_to_deserializer(key_type)
         self.value_de = self.type_to_deserializer(value_type or key_type)
 
@@ -146,7 +149,7 @@ class AutoDictField(Field):
     default = HashMap
 
     def __init__(self, value_type, key, **kwargs):
-        super(AutoDictField, self).__init__(None, **kwargs)
+        super(AutoDictField, self).__init__({}, **kwargs)
         self.value_de = self.type_to_deserializer(value_type)
         self.key = key
 
@@ -296,12 +299,19 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
             obj = kwargs
 
         self.load(obj)
+        self.validate()
+
+    def validate(self):
+        pass
 
     @property
     def _fields(self):
         return self.__class__._fields
 
     def load(self, obj, consume=False, skip=None):
+        return self.load_into(self, obj, consume, skip)
+
+    def load_into(self, inst, obj, consume=False, skip=None):
         for name, field in six.iteritems(self._fields):
             should_skip = skip and name in skip
 
@@ -313,16 +323,16 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
             # If the field is unset/none, and we have a default we need to set it
             if (raw in (None, UNSET) or should_skip) and field.has_default():
                 default = field.default() if callable(field.default) else field.default
-                setattr(self, field.dst_name, default)
+                setattr(inst, field.dst_name, default)
                 continue
 
             # Otherwise if the field is UNSET and has no default, skip conversion
             if raw is UNSET or should_skip:
-                setattr(self, field.dst_name, raw)
+                setattr(inst, field.dst_name, raw)
                 continue
 
             value = field.try_convert(raw, self.client)
-            setattr(self, field.dst_name, value)
+            setattr(inst, field.dst_name, value)
 
     def update(self, other):
         for name in six.iterkeys(self._fields):
