@@ -17,7 +17,7 @@ class VoiceState(SlottedModel):
     def guild(self):
         return self.client.state.guilds.get(self.guild_id)
 
-    @cached_property
+    @property
     def channel(self):
         return self.client.state.channels.get(self.channel_id)
 

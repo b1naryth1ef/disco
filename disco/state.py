@@ -223,22 +223,21 @@ class State(object):
             del self.dms[event.channel.id]
 
     def on_voice_state_update(self, event):
-        # Happy path: we have the voice state and want to update/delete it
-        guild = self.guilds.get(event.state.guild_id)
-        if not guild:
-            return
-
-        if event.state.session_id in guild.voice_states:
+        # Existing connection, we are either moving channels or disconnecting
+        if event.state.session_id in self.voice_states:
+            # Moving channels
             if event.state.channel_id:
-                guild.voice_states[event.state.session_id].update(event.state)
+                self.voice_states[event.state.session_id].update(event.state)
+            # Disconnection
             else:
-                del guild.voice_states[event.state.session_id]
-
-                # Prevent a weird race where events come in before the guild_create (I think...)
-                if event.state.session_id in self.voice_states:
-                    del self.voice_states[event.state.session_id]
+                if event.state.guild_id in self.guilds:
+                    if event.state.session_id in self.guilds[event.state.guild_id].voice_states:
+                        del self.guilds[event.state.guild_id].voice_states[event.state.session_id]
+                del self.voice_states[event.state.session_id]
+        # New connection
         elif event.state.channel_id:
-            guild.voice_states[event.state.session_id] = event.state
+            if event.state.guild_id in self.guilds:
+                self.guilds[event.state.guild_id].voice_states[event.state.session_id] = event.state
             self.voice_states[event.state.session_id] = event.state
 
     def on_guild_member_add(self, event):
