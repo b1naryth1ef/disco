@@ -1,5 +1,6 @@
 import six
 
+from six.moves import map
 from holster.enum import Enum
 
 from disco.util.snowflake import to_snowflake
@@ -298,9 +299,9 @@ class Channel(SlottedModel, Permissible):
             List of messages (or message ids) to delete. All messages must originate
             from this channel.
         """
-        messages = map(to_snowflake, messages)
+        message_ids = list(map(to_snowflake, messages))
 
-        if not messages:
+        if not message_ids:
             return
 
         if self.can(self.client.state.me, Permissions.MANAGE_MESSAGES) and len(messages) > 2:
