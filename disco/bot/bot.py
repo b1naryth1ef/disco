@@ -141,7 +141,7 @@ class Bot(LoggingClass):
                 self.client.events.on('MessageUpdate', self.on_message_update)
 
         # If we have a level getter and its a string, try to load it
-        if isinstance(self.config.commands_level_getter, (str, unicode)):
+        if isinstance(self.config.commands_level_getter, six.string_types):
             mod, func = self.config.commands_level_getter.rsplit('.', 1)
             mod = importlib.import_module(mod)
             self.config.commands_level_getter = getattr(mod, func)

@@ -207,6 +207,9 @@ def datetime(data):
 
 
 def text(obj):
+    if obj is None:
+        return None
+
     if six.PY2:
         if isinstance(obj, str):
             return obj.decode('utf-8')
@@ -216,6 +219,9 @@ def text(obj):
 
 
 def binary(obj):
+    if obj is None:
+        return None
+
     if six.PY2:
         if isinstance(obj, str):
             return obj.decode('utf-8')
