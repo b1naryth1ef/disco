@@ -7,7 +7,7 @@ from holster.enum import Enum
 
 from disco.types.base import (
     SlottedModel, Field, ListField, AutoDictField, snowflake, text,
-    lazy_datetime, enum
+    datetime, enum
 )
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
@@ -108,7 +108,7 @@ class MessageEmbed(SlottedModel):
     type = Field(str, default='rich')
     description = Field(text)
     url = Field(text)
-    timestamp = Field(lazy_datetime)
+    timestamp = Field(datetime)
     color = Field(int)
     footer = Field(MessageEmbedFooter)
     image = Field(MessageEmbedImage)
@@ -210,8 +210,8 @@ class Message(SlottedModel):
     author = Field(User)
     content = Field(text)
     nonce = Field(snowflake)
-    timestamp = Field(lazy_datetime)
-    edited_timestamp = Field(lazy_datetime)
+    timestamp = Field(datetime)
+    edited_timestamp = Field(datetime)
     tts = Field(bool)
     mention_everyone = Field(bool)
     pinned = Field(bool)

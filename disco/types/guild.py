@@ -7,7 +7,7 @@ from disco.api.http import APIException
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.base import (
-    SlottedModel, Field, ListField, AutoDictField, snowflake, text, binary, enum
+    SlottedModel, Field, ListField, AutoDictField, snowflake, text, binary, enum, datetime
 )
 from disco.types.user import User, Presence
 from disco.types.voice import VoiceState
@@ -21,7 +21,6 @@ VerificationLevel = Enum(
     LOW=1,
     MEDIUM=2,
     HIGH=3,
-    EXTREME=4,
 )
 
 
@@ -141,7 +140,7 @@ class GuildMember(SlottedModel):
     nick = Field(text)
     mute = Field(bool)
     deaf = Field(bool)
-    joined_at = Field(str)
+    joined_at = Field(datetime)
     roles = ListField(snowflake)
 
     def __str__(self):

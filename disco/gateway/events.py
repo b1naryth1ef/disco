@@ -9,7 +9,7 @@ from disco.types.message import Message, MessageReactionEmoji
 from disco.types.voice import VoiceState
 from disco.types.guild import Guild, GuildMember, Role, GuildEmoji
 
-from disco.types.base import Model, ModelMeta, Field, ListField, AutoDictField, snowflake, lazy_datetime
+from disco.types.base import Model, ModelMeta, Field, ListField, AutoDictField, snowflake, datetime
 
 # Mapping of discords event name to our event classes
 EVENTS_MAP = {}
@@ -244,7 +244,7 @@ class ChannelPinsUpdate(GatewayEvent):
         The time the last message was pinned.
     """
     channel_id = Field(snowflake)
-    last_pin_timestamp = Field(lazy_datetime)
+    last_pin_timestamp = Field(datetime)
 
 
 @proxy(User)
@@ -539,7 +539,7 @@ class TypingStart(GatewayEvent):
     """
     channel_id = Field(snowflake)
     user_id = Field(snowflake)
-    timestamp = Field(lazy_datetime)
+    timestamp = Field(datetime)
 
 
 @wraps_model(VoiceState, alias='state')

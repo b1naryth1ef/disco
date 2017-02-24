@@ -5,6 +5,7 @@ import inspect
 import weakref
 import functools
 
+from gevent.event import AsyncResult
 from holster.emitter import Priority
 
 from disco.util.logging import LoggingClass
@@ -207,6 +208,22 @@ class Plugin(LoggingClass, PluginDeco):
 
     def handle_exception(self, greenlet, event):
         pass
+
+    def wait_for_event(self, event_name, **kwargs):
+        result = AsyncResult()
+        listener = None
+
+        def _event_callback(event):
+            for k, v in kwargs.items():
+                if getattr(event, k) != v:
+                    break
+            else:
+                listener.remove()
+                return result.set(event)
+
+        listener = self.bot.client.events.on(event_name, _event_callback)
+
+        return result
 
     def spawn_wrap(self, spawner, method, *args, **kwargs):
         def wrapped(*args, **kwargs):

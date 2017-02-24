@@ -177,25 +177,12 @@ def enum(typ):
     return _f
 
 
-# TODO: make lazy
-def lazy_datetime(data):
+def datetime(data):
     if not data:
         return None
 
     if isinstance(data, int):
         return real_datetime.utcfromtimestamp(data)
-
-    for fmt in DATETIME_FORMATS:
-        try:
-            return real_datetime.strptime(data.rsplit('+', 1)[0], fmt)
-        except (ValueError, TypeError):
-            continue
-    raise ValueError('Failed to conver `{}` to datetime'.format(data))
-
-
-def datetime(data):
-    if not data:
-        return None
 
     for fmt in DATETIME_FORMATS:
         try:
