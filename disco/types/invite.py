@@ -1,4 +1,4 @@
-from disco.types.base import SlottedModel, Field, datetime 
+from disco.types.base import SlottedModel, Field, datetime
 from disco.types.user import User
 from disco.types.guild import Guild
 from disco.types.channel import Channel

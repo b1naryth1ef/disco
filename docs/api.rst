@@ -109,6 +109,8 @@ Command Argument Parser
 Gateway API
 -----------
 
+The Gateway API is Discord's real-time websocket based API. Disco includes various functionality for creating and maintaining a persistant/real-time connection over this API.
+
 GatewayClient
 ~~~~~~~~~~~~~
 
@@ -121,14 +123,34 @@ Gateway Events
 .. automodule:: disco.gateway.events
       :members:
 
+Sharding
+~~~~~~~~
+
+Sharding allows users to improve the performance of their application, and support over 2,500 guilds per account. Disco has native support for sharding, which allows you to transparently communicate between running shards.
+
+.. autoclass:: disco.gateway.sharder.ShardHelper
+      :members:
+
+.. autoclass:: disco.gateway.sharder.AutoSharder
+      :members:
+
+.. autoclass:: disco.gateway.ipc.GIPCProxy
+      :members:
+
 
 REST API
 --------
+
+Disco includes a module which handles all interactions with Discord's HTTP-based REST API. This module has support for various required functions of the API, such as ratelimit headers/backoff, error handling, and type conversions.
 
 APIClient
 ~~~~~~~~~
 
 .. autoclass:: disco.api.client.APIClient
+      :members:
+      :undoc-members:
+
+.. autoclass:: disco.api.client.Routes
       :members:
       :undoc-members:
 

@@ -1,0 +1,13 @@
+@import url("css/theme.css"); /* make sure to sync this with the base theme's css filename */
+
+.body {
+  color: #2C2F33;
+}
+
+.wy-side-nav-search {
+  background-color: #7289DA;
+}
+
+.wy-nav-content {
+	max-width: 1200px;
+}
