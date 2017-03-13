@@ -305,7 +305,7 @@ class Channel(SlottedModel, Permissible):
             return
 
         if self.can(self.client.state.me, Permissions.MANAGE_MESSAGES) and len(messages) > 2:
-            for chunk in chunks(messages, 100):
+            for chunk in chunks(message_ids, 100):
                 self.client.api.channels_messages_delete_bulk(self.id, chunk)
         else:
             for msg in messages:
