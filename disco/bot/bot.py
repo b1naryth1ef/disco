@@ -225,7 +225,7 @@ class Bot(LoggingClass):
         commands = list(self.commands)
         re_str = '|'.join(command.regex for command in commands)
         if re_str:
-            self.command_matches_re = re.compile(re_str)
+            self.command_matches_re = re.compile(re_str, re.I)
         else:
             self.command_matches_re = None
 
