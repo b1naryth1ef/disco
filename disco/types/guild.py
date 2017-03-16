@@ -200,6 +200,9 @@ class GuildMember(SlottedModel):
         else:
             self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
 
+    def modify(self, **kwargs):
+        self.client.api.guilds_members_modify(self.guild.id, self.user.id, **kwargs)
+
     def add_role(self, role):
         self.client.api.guilds_members_roles_add(self.guild.id, self.user.id, to_snowflake(role))
 

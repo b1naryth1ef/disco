@@ -240,7 +240,7 @@ class APIClient(LoggingClass):
         return GuildMember.create(self.client, r.json(), guild_id=guild)
 
     def guilds_members_modify(self, guild, member, **kwargs):
-        self.http(Routes.GUILDS_MEMBERS_MODIFY, dict(guild=guild, member=member), json=kwargs)
+        self.http(Routes.GUILDS_MEMBERS_MODIFY, dict(guild=guild, member=member), json=optional(**kwargs))
 
     def guilds_members_roles_add(self, guild, member, role):
         self.http(Routes.GUILDS_MEMBERS_ROLES_ADD, dict(guild=guild, member=member, role=role))
