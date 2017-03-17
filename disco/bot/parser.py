@@ -2,7 +2,6 @@ import re
 import six
 import copy
 
-
 # Regex which splits out argument parts
 PARTS_RE = re.compile('(\<|\[|\{)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\]|\})')
 
@@ -15,6 +14,12 @@ TYPE_MAP = {
     'float': lambda ctx, data: int(data),
     'snowflake': lambda ctx, data: int(data),
 }
+
+try:
+    import dateparser
+    TYPE_MAP['duration'] = lambda ctx, data: dateparser.parse(data, settings={'TIMEZONE': 'UTC'})
+except ImportError:
+    pass
 
 
 def to_bool(ctx, data):
