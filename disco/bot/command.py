@@ -129,6 +129,7 @@ class Command(object):
         self.triggers = [trigger]
 
         self.dispatch_func = None
+        self.raw_args = None
         self.args = None
         self.level = None
         self.group = None
@@ -169,6 +170,7 @@ class Command(object):
         def resolve_guild(ctx, gid):
             return ctx.msg.client.state.guilds.get(gid)
 
+        self.raw_args = args
         self.args = ArgumentSet.from_string(args or '', {
             'user': self.mention_type([resolve_user], USER_MENTION_RE, user=True),
             'role': self.mention_type([resolve_role], ROLE_MENTION_RE),
