@@ -2,6 +2,14 @@ from holster.enum import Enum
 
 from disco.types.base import SlottedModel, Field, snowflake, text, binary, with_equality, with_hash
 
+DefaultAvatars = Enum(
+    BLURPLE=0,
+    GREY=1,
+    GREEN=2,
+    ORANGE=3,
+    RED=4,
+)
+
 
 class User(SlottedModel, with_equality('id'), with_hash('id')):
     id = Field(snowflake)
@@ -16,7 +24,7 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
 
     def get_avatar_url(self, fmt='webp', size=1024):
         if not self.avatar:
-            return None
+            return 'https://cdn.discordapp.com/embed/avatars/{}.png'.format(self.default_avatar.value)
 
         return 'https://cdn.discordapp.com/avatars/{}/{}.{}?size={}'.format(
             self.id,
@@ -24,6 +32,10 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
             fmt,
             size
         )
+
+    @property
+    def default_avatar(self):
+        return DefaultAvatars[int(self.discriminator) % len(DefaultAvatars.attrs)]
 
     @property
     def avatar_url(self):
