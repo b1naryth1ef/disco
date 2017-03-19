@@ -299,6 +299,21 @@ class Message(SlottedModel):
         """
         return self.client.api.channels_messages_delete(self.channel_id, self.id)
 
+    def get_reactors(self, emoji):
+        """
+        Returns an list of users who reacted to this message with the given emoji.
+
+        Returns
+        -------
+        list(:class:`User`)
+            The users who reacted.
+        """
+        return self.client.api.channels_messages_reactions_get(
+            self.channel_id,
+            self.id,
+            emoji
+        )
+
     def create_reaction(self, emoji):
         if isinstance(emoji, Emoji):
             emoji = emoji.to_string()

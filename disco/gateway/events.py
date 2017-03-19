@@ -658,3 +658,11 @@ class MessageReactionRemoveAll(GatewayEvent):
     """
     channel_id = Field(snowflake)
     message_id = Field(snowflake)
+
+    @property
+    def channel(self):
+        return self.client.state.channels.get(self.channel_id)
+
+    @property
+    def guild(self):
+        return self.channel.guild
