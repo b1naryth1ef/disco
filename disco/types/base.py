@@ -327,8 +327,11 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
             value = field.try_convert(raw, self.client)
             setattr(inst, field.dst_name, value)
 
-    def update(self, other):
+    def update(self, other, ignored=None):
         for name in six.iterkeys(self._fields):
+            if ignored and name in ignored:
+                continue
+
             if hasattr(other, name) and not getattr(other, name) is UNSET:
                 setattr(self, name, getattr(other, name))
 

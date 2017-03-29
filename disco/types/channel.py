@@ -149,8 +149,8 @@ class Channel(SlottedModel, Permissible):
         if not self.guild_id:
             return Permissions.ADMINISTRATOR
 
-        member = self.guild.members.get(user.id)
-        base = self.guild.get_permissions(user)
+        member = self.guild.get_member(user)
+        base = self.guild.get_permissions(member)
 
         for ow in six.itervalues(self.overwrites):
             if ow.id != user.id and ow.id not in member.roles:

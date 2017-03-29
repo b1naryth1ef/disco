@@ -193,7 +193,12 @@ class State(object):
             event.guild.sync()
 
     def on_guild_update(self, event):
-        self.guilds[event.guild.id].update(event.guild)
+        self.guilds[event.guild.id].update(event.guild, ignored=[
+            'channels',
+            'members',
+            'voice_states',
+            'presences'
+        ])
 
     def on_guild_delete(self, event):
         if event.id in self.guilds:
