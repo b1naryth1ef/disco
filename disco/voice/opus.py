@@ -258,7 +258,7 @@ class DCADOpusEncoder(OpusEncoder):
                 '--packet-loss-percent', '30',
                 '--input', 'pipe:0',
                 '--output', 'pipe:1',
-            ], stdin=self.source.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+            ], stdin=self.source.stdout, stdout=subprocess.PIPE)
         return self._proc
 
     def have_frame(self):
@@ -267,13 +267,8 @@ class DCADOpusEncoder(OpusEncoder):
     def next_frame(self):
         header = self.proc.stdout.read(self.header_size)
         if len(header) < self.header_size:
-            print 'read less than required header size'
-            print self.proc.poll()
             self._proc = None
             return
-
-        if self.proc.poll() is not None:
-            print 'read that data when she dead n gone: %s' % self.proc.poll()
 
         size = struct.unpack('<h', header)[0]
 

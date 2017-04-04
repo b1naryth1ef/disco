@@ -63,7 +63,7 @@ class FFmpegPlayable(object):
                 '-loglevel', 'warning',
                 'pipe:1'
             ]
-            self._proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+            self._proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE)
         return self._proc
 
     def have_frame(self):
