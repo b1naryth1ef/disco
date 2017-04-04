@@ -33,20 +33,28 @@ class UDPVoiceClient(LoggingClass):
     def __init__(self, vc):
         super(UDPVoiceClient, self).__init__()
         self.vc = vc
+
+        # The underlying UDP socket
         self.conn = None
+
+        # Connection information
         self.ip = None
         self.port = None
+        self.sequence = 0
+        self.timestamp = 0
+
         self.run_task = None
         self.connected = False
 
-    def send_frame(self, frame, sequence, timestamp):
+    def send_frame(self, frame, sequence=None, timestamp=None):
         data = bytearray(12)
         data[0] = 0x80
         data[1] = 0x78
-        struct.pack_into('>H', data, 2, sequence)
-        struct.pack_into('>I', data, 4, timestamp)
+        struct.pack_into('>H', data, 2, sequence or self.sequence)
+        struct.pack_into('>I', data, 4, timestamp or self.timestamp)
         struct.pack_into('>i', data, 8, self.vc.ssrc)
         self.send(data + ''.join(frame))
+        self.sequence += 1
 
     def run(self):
         while True:
@@ -58,26 +66,29 @@ class UDPVoiceClient(LoggingClass):
     def disconnect(self):
         self.run_task.kill()
 
-    def connect(self, host, port, timeout=10):
+    def connect(self, host, port, timeout=10, addrinfo=None):
         self.ip = socket.gethostbyname(host)
         self.port = port
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        # Send discovery packet
-        packet = bytearray(70)
-        struct.pack_into('>I', packet, 0, self.vc.ssrc)
-        self.send(packet)
+        if addrinfo:
+            ip, port = addrinfo
+        else:
+            # Send discovery packet
+            packet = bytearray(70)
+            struct.pack_into('>I', packet, 0, self.vc.ssrc)
+            self.send(packet)
 
-        # Wait for a response
-        try:
-            data, addr = gevent.spawn(lambda: self.conn.recvfrom(70)).get(timeout=timeout)
-        except gevent.Timeout:
-            return (None, None)
+            # Wait for a response
+            try:
+                data, addr = gevent.spawn(lambda: self.conn.recvfrom(70)).get(timeout=timeout)
+            except gevent.Timeout:
+                return (None, None)
 
-        # Read IP and port
-        ip = str(data[4:]).split('\x00', 1)[0]
-        port = struct.unpack('<H', data[-2:])[0]
+            # Read IP and port
+            ip = str(data[4:]).split('\x00', 1)[0]
+            port = struct.unpack('<H', data[-2:])[0]
 
         # Spawn read thread so we don't max buffers
         self.connected = True
@@ -205,7 +216,6 @@ class VoiceClient(LoggingClass):
         })
 
     def on_close(self, code, error):
-        # TODO
         self.log.warning('Voice websocket disconnected (%s, %s)', code, error)
 
         if self.state == VoiceState.CONNECTED:

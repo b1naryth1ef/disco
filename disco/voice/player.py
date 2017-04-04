@@ -180,10 +180,10 @@ class Player(object):
     def play(self, item):
         start = time.time()
         loops = 0
-        timestamp = 0
 
         while True:
             loops += 1
+
             if self.paused:
                 self.client.set_speaking(False)
                 self.paused.wait()
@@ -199,8 +199,9 @@ class Player(object):
             if not item.have_frame():
                 return
 
-            self.client.send_frame(item.next_frame(), loops, timestamp)
-            timestamp += item.samples_per_frame
+            self.client.send_frame(item.next_frame())
+            self.client.timestamp += item.samples_per_frame
+
             next_time = start + 0.02 * loops
             delay = max(0, 0.02 + (next_time - time.time()))
             gevent.sleep(delay)
