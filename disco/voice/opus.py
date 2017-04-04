@@ -137,9 +137,9 @@ class OpusEncoder(BaseOpus):
         return result
 
     def __del__(self):
-        if self.inst:
-            self.opus_encoder_destroy(self.inst)
-            self.inst = None
+        if self._inst:
+            self.opus_encoder_destroy(self._inst)
+            self._inst = None
 
     def encode(self, pcm, frame_size):
         max_data_bytes = len(pcm)
@@ -159,24 +159,24 @@ class OpusDecoder(BaseOpus):
 
 
 class BufferedOpusEncoder(OpusEncoder):
-    def __init__(self, f, *args, **kwargs):
-        self.data = f
+    def __init__(self, source, *args, **kwargs):
+        self.source = source
         self.frames = Queue(kwargs.pop('queue_size', 4096))
         super(BufferedOpusEncoder, self).__init__(*args, **kwargs)
         gevent.spawn(self._encoder_loop)
 
     def _encoder_loop(self):
-        while self.data:
-            raw = self.data.read(self.frame_size)
+        while self.source:
+            raw = self.source.read(self.frame_size)
             if len(raw) < self.frame_size:
                 break
 
             self.frames.put(self.encode(raw, self.samples_per_frame))
             gevent.idle()
-        self.data = None
+        self.source = None
 
     def have_frame(self):
-        return self.data or not self.frames.empty()
+        return self.source or not self.frames.empty()
 
     def next_frame(self):
         return self.frames.get()
@@ -185,10 +185,10 @@ class BufferedOpusEncoder(OpusEncoder):
 class GIPCBufferedOpusEncoder(OpusEncoder):
     FIN = 1
 
-    def __init__(self, f, *args, **kwargs):
+    def __init__(self, source, *args, **kwargs):
         import gipc
 
-        self.data = f
+        self.source = source
         self.parent_pipe, self.child_pipe = gipc.pipe(duplex=True)
         self.frames = Queue(kwargs.pop('queue_size', 4096))
         super(GIPCBufferedOpusEncoder, self).__init__(*args, **kwargs)
@@ -209,7 +209,7 @@ class GIPCBufferedOpusEncoder(OpusEncoder):
 
     def _writer(self):
         while self.data:
-            raw = self.data.read(self.frame_size)
+            raw = self.source.read(self.frame_size)
             if len(raw) < self.frame_size:
                 break
 
@@ -238,21 +238,28 @@ class GIPCBufferedOpusEncoder(OpusEncoder):
 
 
 class DCADOpusEncoder(OpusEncoder):
-    def __init__(self, pipe, *args, **kwargs):
-        command = kwargs.pop('command', 'dcad')
+    def __init__(self, source, *args, **kwargs):
+        self.source = source
+        self.command = kwargs.pop('command', 'dcad')
         super(DCADOpusEncoder, self).__init__(*args, **kwargs)
-        self.proc = subprocess.Popen([
-            command,
-            # '--channels', str(self.channels),
-            # '--rate', str(self.sampling_rate),
-            # '--size', str(self.frame_length),
-            '--bitrate', '128',
-            '--fec',
-            '--packet-loss-percent', '30',
-            '--input', 'pipe:0',
-            '--output', 'pipe:1',
-        ], stdin=pipe, stdout=subprocess.PIPE)
+        self._proc = None
         self.header_size = struct.calcsize('<h')
+
+    @property
+    def proc(self):
+        if not self._proc:
+            self._proc = subprocess.Popen([
+                self.command,
+                '--channels', str(self.channels),
+                '--rate', str(self.sampling_rate),
+                '--size', str(self.samples_per_frame),
+                '--bitrate', '128',
+                '--fec',
+                '--packet-loss-percent', '30',
+                '--input', 'pipe:0',
+                '--output', 'pipe:1',
+            ], stdin=self.source.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+        return self._proc
 
     def have_frame(self):
         return bool(self.proc)
@@ -260,14 +267,19 @@ class DCADOpusEncoder(OpusEncoder):
     def next_frame(self):
         header = self.proc.stdout.read(self.header_size)
         if len(header) < self.header_size:
-            self.proc = None
+            print 'read less than required header size'
+            print self.proc.poll()
+            self._proc = None
             return
+
+        if self.proc.poll() is not None:
+            print 'read that data when she dead n gone: %s' % self.proc.poll()
 
         size = struct.unpack('<h', header)[0]
 
         data = self.proc.stdout.read(size)
-        if len(data) < size:
-            self.proc = None
+        if len(data) == 0:
+            self._proc = None
             return
 
         return data

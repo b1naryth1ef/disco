@@ -3,6 +3,8 @@ import socket
 import struct
 import time
 
+import nacl.secret
+
 from holster.enum import Enum
 from holster.emitter import Emitter
 
@@ -40,21 +42,32 @@ class UDPVoiceClient(LoggingClass):
         # Connection information
         self.ip = None
         self.port = None
-        self.sequence = 0
-        self.timestamp = 0
 
         self.run_task = None
         self.connected = False
 
     def send_frame(self, frame, sequence=None, timestamp=None):
-        data = bytearray(12)
-        data[0] = 0x80
-        data[1] = 0x78
-        struct.pack_into('>H', data, 2, sequence or self.sequence)
-        struct.pack_into('>I', data, 4, timestamp or self.timestamp)
-        struct.pack_into('>i', data, 8, self.vc.ssrc)
-        self.send(data + ''.join(frame))
-        self.sequence += 1
+        # Convert the frame to a bytearray
+        frame = bytearray(frame)
+
+        # First, pack the header (TODO: reuse bytearray?)
+        header = bytearray(24)
+        header[0] = 0x80
+        header[1] = 0x78
+        struct.pack_into('>H', header, 2, sequence or self.vc.sequence)
+        struct.pack_into('>I', header, 4, timestamp or self.vc.timestamp)
+        struct.pack_into('>i', header, 8, self.vc.ssrc)
+
+        # Now encrypt the payload with the nonce as a header
+        raw = self.vc.secret_box.encrypt(bytes(frame), bytes(header)).ciphertext
+
+        # Send the header (sans nonce padding) plus the payload
+        self.send(header[:12] + raw)
+
+        # Increment our sequence counter
+        self.vc.sequence += 1
+        if self.vc.sequence >= 65535:
+            self.vc.sequence = 0
 
     def run(self):
         while True:
@@ -101,23 +114,33 @@ class VoiceClient(LoggingClass):
     def __init__(self, channel, encoder=None):
         super(VoiceClient, self).__init__()
 
-        assert channel.is_voice, 'Cannot spawn a VoiceClient for a non-voice channel'
+        if not channel.is_voice:
+            raise ValueError('Cannot spawn a VoiceClient for a non-voice channel')
+
         self.channel = channel
         self.client = self.channel.client
         self.encoder = encoder or JSONEncoder
 
+        # Bind to some WS packets
         self.packets = Emitter(gevent.spawn)
         self.packets.on(VoiceOPCode.READY, self.on_voice_ready)
         self.packets.on(VoiceOPCode.SESSION_DESCRIPTION, self.on_voice_sdp)
 
-        # State
+        # State + state change emitter
         self.state = VoiceState.DISCONNECTED
         self.state_emitter = Emitter(gevent.spawn)
+
+        # Connection metadata
         self.token = None
         self.endpoint = None
         self.ssrc = None
         self.port = None
+        self.secret_box = None
         self.udp = None
+
+        # Voice data state
+        self.sequence = 0
+        self.timestamp = 0
 
         self.update_listener = None
 
@@ -166,11 +189,14 @@ class VoiceClient(LoggingClass):
             'data': {
                 'port': port,
                 'address': ip,
-                'mode': 'plain'
+                'mode': 'xsalsa20_poly1305'
             }
         })
 
-    def on_voice_sdp(self, _):
+    def on_voice_sdp(self, sdp):
+        # Create a secret box for encryption/decryption
+        self.secret_box = nacl.secret.SecretBox(bytes(bytearray(sdp['secret_key'])))
+
         # Toggle speaking state so clients learn of our SSRC
         self.set_speaking(True)
         self.set_speaking(False)
@@ -204,7 +230,7 @@ class VoiceClient(LoggingClass):
             self.log.exception('Failed to parse voice gateway message: ')
 
     def on_error(self, err):
-        # TODO
+        # TODO: raise an exception here
         self.log.warning('Voice websocket error: {}'.format(err))
 
     def on_open(self):

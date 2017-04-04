@@ -24,16 +24,28 @@ class FFmpegPlayable(object):
         self.channels = channels
         self.kwargs = kwargs
 
+        self._buffer = None
         self._proc = None
         self._child = None
 
+    @property
+    def stdout(self):
+        return self.proc.stdout
+
+    def read(self, sz):
+        if self.streaming:
+            return self.proc.stdout.read(sz)
+        else:
+            if not self._buffer:
+                data, _ = self.proc.communicate()
+                self._buffer = StringIO(data)
+            return self._buffer.read(sz)
+
     def pipe(self, other, streaming=True):
         if issubclass(other, OpusEncoder):
-            if not streaming:
-                stdout, _ = self._proc.communicate()
-                self._child = other(StringIO(stdout), self.sampling_rate, self.channels, **self.kwargs)
-            else:
-                self._child = other(self.out_pipe, self.sampling_rate, self.channels, **self.kwargs)
+            self._child = other(self, self.sampling_rate, self.channels, **self.kwargs)
+        else:
+            raise TypeError('Invalid pipe target')
 
     @property
     def samples_per_frame(self):
@@ -51,16 +63,8 @@ class FFmpegPlayable(object):
                 '-loglevel', 'warning',
                 'pipe:1'
             ]
-            self._proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self._proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
         return self._proc
-
-    @property
-    def out_pipe(self):
-        return self.proc.stdout
-
-    @property
-    def in_pipe(self):
-        return self.proc.stdin
 
     def have_frame(self):
         return self._child and self._child.have_frame()
@@ -76,18 +80,17 @@ def create_ffmpeg_playable(*args, **kwargs):
     return playable
 
 
-def create_youtube_dl_playable(url, *args, **kwargs):
+def create_youtube_dl_playables(url, *args, **kwargs):
     import youtube_dl
 
     ydl = youtube_dl.YoutubeDL({'format': 'webm[abr>0]/bestaudio/best'})
     info = ydl.extract_info(url, download=False)
+    entries = [info] if 'entries' not in info else info['entries']
 
-    if 'entries' in info:
-        info = info['entries'][0]
-
-    playable = create_ffmpeg_playable(info['url'], *args, **kwargs)
-    playable.info = info
-    return playable
+    for entry in entries:
+        playable = create_ffmpeg_playable(entry['url'], *args, **kwargs)
+        playable.info = entry
+        yield playable
 
 
 class OpusPlayable(object):
@@ -199,7 +202,11 @@ class Player(object):
             if not item.have_frame():
                 return
 
-            self.client.send_frame(item.next_frame())
+            frame = item.next_frame()
+            if frame is None:
+                return
+
+            self.client.send_frame(frame)
             self.client.timestamp += item.samples_per_frame
 
             next_time = start + 0.02 * loops

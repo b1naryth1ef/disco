@@ -1,11 +1,11 @@
 from disco.bot import Plugin
 from disco.bot.command import CommandError
-from disco.voice.player import Player, create_youtube_dl_playable
+from disco.voice.player import Player, create_youtube_dl_playables
 from disco.voice.client import VoiceException
 
 
 def download(url):
-    return create_youtube_dl_playable(url)
+    return create_youtube_dl_playables(url)
 
 
 class MusicPlugin(Plugin):
@@ -43,7 +43,8 @@ class MusicPlugin(Plugin):
 
     @Plugin.command('play', '<url:str>')
     def on_play(self, event, url):
-        self.get_player(event.guild.id).queue.put(download(url))
+        item = list(create_youtube_dl_playables(url))[0]
+        self.get_player(event.guild.id).queue.put(item)
 
     @Plugin.command('pause')
     def on_pause(self, event):

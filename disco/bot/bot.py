@@ -355,10 +355,10 @@ class Bot(LoggingClass):
         if event.message.author.id == self.client.state.me.id:
             return
 
-        if self.config.commands_allow_edit:
-            self.last_message_cache[event.message.channel_id] = (event.message, False)
+        result = self.handle_message(event.message)
 
-        self.handle_message(event.message)
+        if self.config.commands_allow_edit:
+            self.last_message_cache[event.message.channel_id] = (event.message, result)
 
     def on_message_update(self, event):
         if self.config.commands_allow_edit:
