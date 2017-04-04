@@ -5,7 +5,7 @@ from disco.voice.client import VoiceException
 
 
 def download(url):
-    return create_youtube_dl_playable(url)[0]
+    return create_youtube_dl_playable(url)
 
 
 class MusicPlugin(Plugin):

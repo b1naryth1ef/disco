@@ -4,28 +4,79 @@ import struct
 import subprocess
 
 from six.moves import queue
+from holster.enum import Enum
+from holster.emitter import Emitter
 
 from disco.voice.client import VoiceState
-from disco.voice.opus import BufferedOpusEncoder, GIPCBufferedOpusEncoder
+from disco.voice.opus import OpusEncoder, BufferedOpusEncoder
+
+try:
+    from cStringIO import cStringIO as StringIO
+except:
+    from StringIO import StringIO
 
 
-class BaseFFmpegPlayable(object):
+class FFmpegPlayable(object):
     def __init__(self, source='-', command='avconv', sampling_rate=48000, channels=2, **kwargs):
-        args = [command, '-i', source, '-f', 's16le', '-ar', str(sampling_rate), '-ac', str(channels), '-loglevel', 'warning', 'pipe:1']
-        self.proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        data, _ = self.proc.communicate()
-        super(BaseFFmpegPlayable, self).__init__(data, sampling_rate, channels, **kwargs)
+        self.source = source
+        self.command = command
+        self.sampling_rate = sampling_rate
+        self.channels = channels
+        self.kwargs = kwargs
+
+        self._proc = None
+        self._child = None
+
+    def pipe(self, other, streaming=True):
+        if issubclass(other, OpusEncoder):
+            if not streaming:
+                stdout, _ = self._proc.communicate()
+                self._child = other(StringIO(stdout), self.sampling_rate, self.channels, **self.kwargs)
+            else:
+                self._child = other(self.out_pipe, self.sampling_rate, self.channels, **self.kwargs)
+
+    @property
+    def samples_per_frame(self):
+        return self._child.samples_per_frame
+
+    @property
+    def proc(self):
+        if not self._proc:
+            args = [
+                self.command,
+                '-i', self.source,
+                '-f', 's16le',
+                '-ar', str(self.sampling_rate),
+                '-ac', str(self.channels),
+                '-loglevel', 'warning',
+                'pipe:1'
+            ]
+            self._proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return self._proc
+
+    @property
+    def out_pipe(self):
+        return self.proc.stdout
+
+    @property
+    def in_pipe(self):
+        return self.proc.stdin
+
+    def have_frame(self):
+        return self._child and self._child.have_frame()
+
+    def next_frame(self):
+        return self._child.next_frame()
 
 
-class FFmpegPlayable(BaseFFmpegPlayable, BufferedOpusEncoder):
-    pass
+def create_ffmpeg_playable(*args, **kwargs):
+    cls = kwargs.pop('cls', BufferedOpusEncoder)
+    playable = FFmpegPlayable(*args, **kwargs)
+    playable.pipe(cls)
+    return playable
 
 
-class GIPCFFmpegPlayable(BaseFFmpegPlayable, GIPCBufferedOpusEncoder):
-    pass
-
-
-def create_youtube_dl_playable(url, cls=FFmpegPlayable, *args, **kwargs):
+def create_youtube_dl_playable(url, *args, **kwargs):
     import youtube_dl
 
     ydl = youtube_dl.YoutubeDL({'format': 'webm[abr>0]/bestaudio/best'})
@@ -34,7 +85,9 @@ def create_youtube_dl_playable(url, cls=FFmpegPlayable, *args, **kwargs):
     if 'entries' in info:
         info = info['entries'][0]
 
-    return cls(info['url'], *args, **kwargs), info
+    playable = create_ffmpeg_playable(info['url'], *args, **kwargs)
+    playable.info = info
+    return playable
 
 
 class OpusPlayable(object):
@@ -71,25 +124,58 @@ class OpusPlayable(object):
 
 
 class Player(object):
+    Events = Enum(
+        'START_PLAY',
+        'STOP_PLAY',
+        'PAUSE_PLAY',
+        'RESUME_PLAY',
+        'DISCONNECT'
+    )
+
     def __init__(self, client):
         self.client = client
+
+        # Queue contains playable items
         self.queue = queue.Queue()
+
+        # Whether we're playing music (true for lifetime)
         self.playing = True
-        self.run_task = gevent.spawn(self.run)
+
+        # Set to an event when playback is paused
         self.paused = None
+
+        # Current playing item
+        self.now_playing = None
+
+        # Current play task
+        self.play_task = None
+
+        # Core task
+        self.run_task = gevent.spawn(self.run)
+
+        # Event triggered when playback is complete
         self.complete = gevent.event.Event()
+
+        # Event emitter for metadata
+        self.events = Emitter(gevent.spawn)
 
     def disconnect(self):
         self.client.disconnect()
+        self.events.emit(self.Events.DISCONNECT)
+
+    def skip(self):
+        self.play_task.kill()
 
     def pause(self):
         if self.paused:
             return
         self.paused = gevent.event.Event()
+        self.events.emit(self.Events.PAUSE_PLAY)
 
     def resume(self):
         self.paused.set()
         self.paused = None
+        self.events.emit(self.Events.RESUME_PLAY)
 
     def play(self, item):
         start = time.time()
@@ -123,7 +209,12 @@ class Player(object):
         self.client.set_speaking(True)
 
         while self.playing:
-            self.play(self.queue.get())
+            self.now_playing = self.queue.get()
+
+            self.events.emit(self.Events.START_PLAY, self.now_playing)
+            self.play_task = gevent.spawn(self.play, self.now_playing)
+            self.play_task.join()
+            self.events.emit(self.Events.STOP_PLAY, self.now_playing)
 
             if self.client.state == VoiceState.DISCONNECTED:
                 self.playing = False

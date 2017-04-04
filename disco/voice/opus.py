@@ -1,13 +1,10 @@
 import sys
 import array
+import struct
 import gevent
 import ctypes
 import ctypes.util
-
-try:
-    from cStringIO import cStringIO as StringIO
-except:
-    from StringIO import StringIO
+import subprocess
 
 from gevent.queue import Queue
 from holster.enum import Enum
@@ -100,10 +97,16 @@ class OpusEncoder(BaseOpus):
         self.samples_per_frame = int(self.sampling_rate / 1000 * self.frame_length)
         self.frame_size = self.samples_per_frame * self.sample_size
 
-        self.inst = self.create()
-        self.set_bitrate(128)
-        self.set_fec(True)
-        self.set_expected_packet_loss_percent(0.15)
+        self._inst = None
+
+    @property
+    def inst(self):
+        if not self._inst:
+            self._inst = self.create()
+            self.set_bitrate(128)
+            self.set_fec(True)
+            self.set_expected_packet_loss_percent(0.15)
+        return self._inst
 
     def set_bitrate(self, kbps):
         kbps = min(128, max(16, int(kbps)))
@@ -156,8 +159,8 @@ class OpusDecoder(BaseOpus):
 
 
 class BufferedOpusEncoder(OpusEncoder):
-    def __init__(self, data, *args, **kwargs):
-        self.data = StringIO(data)
+    def __init__(self, f, *args, **kwargs):
+        self.data = f
         self.frames = Queue(kwargs.pop('queue_size', 4096))
         super(BufferedOpusEncoder, self).__init__(*args, **kwargs)
         gevent.spawn(self._encoder_loop)
@@ -182,10 +185,10 @@ class BufferedOpusEncoder(OpusEncoder):
 class GIPCBufferedOpusEncoder(OpusEncoder):
     FIN = 1
 
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, f, *args, **kwargs):
         import gipc
 
-        self.data = StringIO(data)
+        self.data = f
         self.parent_pipe, self.child_pipe = gipc.pipe(duplex=True)
         self.frames = Queue(kwargs.pop('queue_size', 4096))
         super(GIPCBufferedOpusEncoder, self).__init__(*args, **kwargs)
@@ -232,3 +235,39 @@ class GIPCBufferedOpusEncoder(OpusEncoder):
                 return
 
             pipe.put(encoder.encode(data, encoder.samples_per_frame))
+
+
+class DCADOpusEncoder(OpusEncoder):
+    def __init__(self, pipe, *args, **kwargs):
+        command = kwargs.pop('command', 'dcad')
+        super(DCADOpusEncoder, self).__init__(*args, **kwargs)
+        self.proc = subprocess.Popen([
+            command,
+            # '--channels', str(self.channels),
+            # '--rate', str(self.sampling_rate),
+            # '--size', str(self.frame_length),
+            '--bitrate', '128',
+            '--fec',
+            '--packet-loss-percent', '30',
+            '--input', 'pipe:0',
+            '--output', 'pipe:1',
+        ], stdin=pipe, stdout=subprocess.PIPE)
+        self.header_size = struct.calcsize('<h')
+
+    def have_frame(self):
+        return bool(self.proc)
+
+    def next_frame(self):
+        header = self.proc.stdout.read(self.header_size)
+        if len(header) < self.header_size:
+            self.proc = None
+            return
+
+        size = struct.unpack('<h', header)[0]
+
+        data = self.proc.stdout.read(size)
+        if len(data) < size:
+            self.proc = None
+            return
+
+        return data
