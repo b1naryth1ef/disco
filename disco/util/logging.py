@@ -9,6 +9,7 @@ LEVEL_OVERRIDES = {
 
 LOG_FORMAT = '[%(levelname)s] %(asctime)s - %(name)s:%(lineno)d - %(message)s'
 
+
 def setup_logging(**kwargs):
     kwargs.setdefault('format', LOG_FORMAT)
 
