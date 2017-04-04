@@ -15,15 +15,20 @@ TEN_MEGABYTES = 10490000
 
 class GatewayClient(LoggingClass):
     GATEWAY_VERSION = 6
-    MAX_RECONNECTS = 5
 
-    def __init__(self, client, encoder='json'):
+    def __init__(self, client, max_reconnects=5, encoder='json', ipc=None):
         super(GatewayClient, self).__init__()
         self.client = client
+        self.max_reconnects = max_reconnects
         self.encoder = ENCODERS[encoder]
 
         self.events = client.events
         self.packets = client.packets
+
+        # IPC for shards
+        if ipc:
+            self.shards = ipc.get_shards()
+            self.ipc = ipc
 
         # Its actually 60, 120 but lets give ourselves a buffer
         self.limiter = SimpleLimiter(60, 130)
@@ -37,6 +42,7 @@ class GatewayClient(LoggingClass):
 
         # Bind to ready payload
         self.events.on('Ready', self.on_ready)
+        self.events.on('Resumed', self.on_resumed)
 
         # Websocket connection
         self.ws = None
@@ -76,15 +82,15 @@ class GatewayClient(LoggingClass):
         self.log.debug('Dispatching %s', obj.__class__.__name__)
         self.client.events.emit(obj.__class__.__name__, obj)
 
-    def handle_heartbeat(self, packet):
+    def handle_heartbeat(self, _):
         self._send(OPCode.HEARTBEAT, self.seq)
 
-    def handle_reconnect(self, packet):
+    def handle_reconnect(self, _):
         self.log.warning('Received RECONNECT request, forcing a fresh reconnect')
         self.session_id = None
         self.ws.close()
 
-    def handle_invalid_session(self, packet):
+    def handle_invalid_session(self, _):
         self.log.warning('Recieved INVALID_SESSION, forcing a fresh reconnect')
         self.session_id = None
         self.ws.close()
@@ -98,14 +104,21 @@ class GatewayClient(LoggingClass):
         self.session_id = ready.session_id
         self.reconnects = 0
 
-    def connect_and_run(self):
-        if not self._cached_gateway_url:
-            self._cached_gateway_url = self.client.api.gateway(
-                version=self.GATEWAY_VERSION,
-                encoding=self.encoder.TYPE)
+    def on_resumed(self, _):
+        self.log.info('Recieved RESUMED')
+        self.reconnects = 0
 
-        self.log.info('Opening websocket connection to URL `%s`', self._cached_gateway_url)
-        self.ws = Websocket(self._cached_gateway_url)
+    def connect_and_run(self, gateway_url=None):
+        if not gateway_url:
+            if not self._cached_gateway_url:
+                self._cached_gateway_url = self.client.api.gateway_get()['url']
+
+            gateway_url = self._cached_gateway_url
+
+        gateway_url += '?v={}&encoding={}'.format(self.GATEWAY_VERSION, self.encoder.TYPE)
+
+        self.log.info('Opening websocket connection to URL `%s`', gateway_url)
+        self.ws = Websocket(gateway_url)
         self.ws.emitter.on('on_open', self.on_open)
         self.ws.emitter.on('on_error', self.on_error)
         self.ws.emitter.on('on_close', self.on_close)
@@ -153,8 +166,8 @@ class GatewayClient(LoggingClass):
                 'compress': True,
                 'large_threshold': 250,
                 'shard': [
-                    self.client.config.shard_id,
-                    self.client.config.shard_count,
+                    int(self.client.config.shard_id),
+                    int(self.client.config.shard_count),
                 ],
                 'properties': {
                     '$os': 'linux',
@@ -165,15 +178,22 @@ class GatewayClient(LoggingClass):
             })
 
     def on_close(self, code, reason):
+        # Kill heartbeater, a reconnect/resume will trigger a HELLO which will
+        #  respawn it
+        if self._heartbeat_task:
+            self._heartbeat_task.kill()
+
+        # If we're quitting, just break out of here
         if self.shutting_down:
             self.log.info('WS Closed: shutting down')
             return
 
+        # Track reconnect attempts
         self.reconnects += 1
         self.log.info('WS Closed: [%s] %s (%s)', code, reason, self.reconnects)
 
-        if self.MAX_RECONNECTS and self.reconnects > self.MAX_RECONNECTS:
-            raise Exception('Failed to reconect after {} attempts, giving up'.format(self.MAX_RECONNECTS))
+        if self.max_reconnects and self.reconnects > self.max_reconnects:
+            raise Exception('Failed to reconnect after {} attempts, giving up'.format(self.max_reconnects))
 
         # Don't resume for these error codes
         if code and 4000 <= code <= 4010:

@@ -1,8 +1,14 @@
 import re
+import six
+import functools
+import unicodedata
 
 from holster.enum import Enum
 
-from disco.types.base import SlottedModel, Field, snowflake, text, lazy_datetime, dictof, listof, enum
+from disco.types.base import (
+    SlottedModel, Field, ListField, AutoDictField, snowflake, text,
+    datetime, enum
+)
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
@@ -17,6 +23,31 @@ MessageType = Enum(
     CHANNEL_ICON_CHANGE=5,
     PINS_ADD=6
 )
+
+
+class Emoji(SlottedModel):
+    id = Field(snowflake)
+    name = Field(text)
+
+    def __eq__(self, other):
+        if isinstance(other, Emoji):
+            return self.id == other.id and self.name == other.name
+        raise NotImplementedError
+
+    def to_string(self):
+        if self.id:
+            return '{}:{}'.format(self.name, self.id)
+        return self.name
+
+
+class MessageReactionEmoji(Emoji):
+    pass
+
+
+class MessageReaction(SlottedModel):
+    emoji = Field(MessageReactionEmoji)
+    count = Field(int)
+    me = Field(bool)
 
 
 class MessageEmbedFooter(SlottedModel):
@@ -60,7 +91,7 @@ class MessageEmbedField(SlottedModel):
 
 class MessageEmbed(SlottedModel):
     """
-    Message embed object
+    Message embed object.
 
     Attributes
     ----------
@@ -76,20 +107,38 @@ class MessageEmbed(SlottedModel):
     title = Field(text)
     type = Field(str, default='rich')
     description = Field(text)
-    url = Field(str)
-    timestamp = Field(lazy_datetime)
+    url = Field(text)
+    timestamp = Field(datetime)
     color = Field(int)
     footer = Field(MessageEmbedFooter)
     image = Field(MessageEmbedImage)
     thumbnail = Field(MessageEmbedThumbnail)
     video = Field(MessageEmbedVideo)
     author = Field(MessageEmbedAuthor)
-    fields = Field(listof(MessageEmbedField))
+    fields = ListField(MessageEmbedField)
+
+    def set_footer(self, *args, **kwargs):
+        self.footer = MessageEmbedFooter(*args, **kwargs)
+
+    def set_image(self, *args, **kwargs):
+        self.image = MessageEmbedImage(*args, **kwargs)
+
+    def set_thumbnail(self, *args, **kwargs):
+        self.thumbnail = MessageEmbedThumbnail(*args, **kwargs)
+
+    def set_video(self, *args, **kwargs):
+        self.video = MessageEmbedVideo(*args, **kwargs)
+
+    def set_author(self, *args, **kwargs):
+        self.author = MessageEmbedAuthor(*args, **kwargs)
+
+    def add_field(self, *args, **kwargs):
+        self.fields.append(MessageEmbedField(*args, **kwargs))
 
 
 class MessageAttachment(SlottedModel):
     """
-    Message attachment object
+    Message attachment object.
 
     Attributes
     ----------
@@ -110,8 +159,8 @@ class MessageAttachment(SlottedModel):
     """
     id = Field(str)
     filename = Field(text)
-    url = Field(str)
-    proxy_url = Field(str)
+    url = Field(text)
+    proxy_url = Field(text)
     size = Field(int)
     height = Field(int)
     width = Field(int)
@@ -161,15 +210,16 @@ class Message(SlottedModel):
     author = Field(User)
     content = Field(text)
     nonce = Field(snowflake)
-    timestamp = Field(lazy_datetime)
-    edited_timestamp = Field(lazy_datetime)
+    timestamp = Field(datetime)
+    edited_timestamp = Field(datetime)
     tts = Field(bool)
     mention_everyone = Field(bool)
     pinned = Field(bool)
-    mentions = Field(dictof(User, key='id'))
-    mention_roles = Field(listof(snowflake))
-    embeds = Field(listof(MessageEmbed))
-    attachments = Field(dictof(MessageAttachment, key='id'))
+    mentions = AutoDictField(User, 'id')
+    mention_roles = ListField(snowflake)
+    embeds = ListField(MessageEmbed)
+    attachments = AutoDictField(MessageAttachment, 'id')
+    reactions = ListField(MessageReaction)
 
     def __str__(self):
         return '<Message {} ({})>'.format(self.id, self.channel_id)
@@ -213,7 +263,7 @@ class Message(SlottedModel):
     def reply(self, *args, **kwargs):
         """
         Reply to this message (proxys arguments to
-        :func:`disco.types.channel.Channel.send_message`)
+        :func:`disco.types.channel.Channel.send_message`).
 
         Returns
         -------
@@ -222,9 +272,9 @@ class Message(SlottedModel):
         """
         return self.channel.send_message(*args, **kwargs)
 
-    def edit(self, content):
+    def edit(self, *args, **kwargs):
         """
-        Edit this message
+        Edit this message.
 
         Args
         ----
@@ -236,7 +286,7 @@ class Message(SlottedModel):
         :class:`Message`
             The edited message object.
         """
-        return self.client.api.channels_messages_modify(self.channel_id, self.id, content)
+        return self.client.api.channels_messages_modify(self.channel_id, self.id, *args, **kwargs)
 
     def delete(self):
         """
@@ -249,6 +299,42 @@ class Message(SlottedModel):
         """
         return self.client.api.channels_messages_delete(self.channel_id, self.id)
 
+    def get_reactors(self, emoji):
+        """
+        Returns an list of users who reacted to this message with the given emoji.
+
+        Returns
+        -------
+        list(:class:`User`)
+            The users who reacted.
+        """
+        return self.client.api.channels_messages_reactions_get(
+            self.channel_id,
+            self.id,
+            emoji
+        )
+
+    def create_reaction(self, emoji):
+        if isinstance(emoji, Emoji):
+            emoji = emoji.to_string()
+        self.client.api.channels_messages_reactions_create(
+            self.channel_id,
+            self.id,
+            emoji)
+
+    def delete_reaction(self, emoji, user=None):
+        if isinstance(emoji, Emoji):
+            emoji = emoji.to_string()
+
+        if user:
+            user = to_snowflake(user)
+
+        self.client.api.channels_messages_reactions_delete(
+            self.channel_id,
+            self.id,
+            emoji,
+            user)
+
     def is_mentioned(self, entity):
         """
         Returns
@@ -256,22 +342,37 @@ class Message(SlottedModel):
         bool
             Whether the give entity was mentioned.
         """
-        id = to_snowflake(entity)
-        return id in self.mentions or id in self.mention_roles
+        entity = to_snowflake(entity)
+        return entity in self.mentions or entity in self.mention_roles
 
     @cached_property
-    def without_mentions(self):
+    def without_mentions(self, valid_only=False):
         """
         Returns
         -------
         str
-            the message contents with all valid mentions removed.
+            the message contents with all mentions removed.
         """
         return self.replace_mentions(
             lambda u: '',
-            lambda r: '')
+            lambda r: '',
+            lambda c: '',
+            nonexistant=not valid_only)
 
-    def replace_mentions(self, user_replace, role_replace):
+    @cached_property
+    def with_proper_mentions(self):
+        def replace_user(u):
+            return u'@' + six.text_type(u)
+
+        def replace_role(r):
+            return u'@' + six.text_type(r)
+
+        def replace_channel(c):
+            return six.text_type(c)
+
+        return self.replace_mentions(replace_user, replace_role, replace_channel)
+
+    def replace_mentions(self, user_replace=None, role_replace=None, channel_replace=None, nonexistant=False):
         """
         Replaces user and role mentions with the result of a given lambda/function.
 
@@ -289,39 +390,55 @@ class Message(SlottedModel):
         str
             The message contents with all valid mentions replaced.
         """
-        if not self.mentions and not self.mention_roles:
-            return
+        def replace(getter, func, match):
+            oid = int(match.group(2))
+            obj = getter(oid)
 
-        def replace(match):
-            id = match.group(0)
-            if id in self.mention_roles:
-                return role_replace(id)
-            else:
-                return user_replace(self.mentions.get(id))
+            if obj or nonexistant:
+                return func(obj or oid) or match.group(0)
 
-        return re.sub('<@!?([0-9]+)>', replace, self.content)
+            return match.group(0)
+
+        content = self.content
+
+        if user_replace:
+            replace_user = functools.partial(replace, self.mentions.get, user_replace)
+            content = re.sub('(<@!?([0-9]+)>)', replace_user, content)
+
+        if role_replace:
+            replace_role = functools.partial(replace, lambda v: (self.guild and self.guild.roles.get(v)), role_replace)
+            content = re.sub('(<@&([0-9]+)>)', replace_role, content)
+
+        if channel_replace:
+            replace_channel = functools.partial(replace, self.client.state.channels.get, channel_replace)
+            content = re.sub('(<#([0-9]+)>)', replace_channel, content)
+
+        return content
 
 
 class MessageTable(object):
-    def __init__(self, sep=' | ', codeblock=True, header_break=True):
+    def __init__(self, sep=' | ', codeblock=True, header_break=True, language=None):
         self.header = []
         self.entries = []
         self.size_index = {}
         self.sep = sep
         self.codeblock = codeblock
         self.header_break = header_break
+        self.language = language
 
     def recalculate_size_index(self, cols):
         for idx, col in enumerate(cols):
-            if idx not in self.size_index or len(col) > self.size_index[idx]:
-                self.size_index[idx] = len(col)
+            size = len(unicodedata.normalize('NFC', col))
+            if idx not in self.size_index or size > self.size_index[idx]:
+                self.size_index[idx] = size
 
     def set_header(self, *args):
+        args = list(map(six.text_type, args))
         self.header = args
         self.recalculate_size_index(args)
 
     def add(self, *args):
-        args = list(map(str, args))
+        args = list(map(six.text_type, args))
         self.entries.append(args)
         self.recalculate_size_index(args)
 
@@ -329,22 +446,23 @@ class MessageTable(object):
         data = self.sep.lstrip()
 
         for idx, col in enumerate(cols):
-            padding = ' ' * ((self.size_index[idx] - len(col)))
+            padding = ' ' * (self.size_index[idx] - len(col))
             data += col + padding + self.sep
 
         return data.rstrip()
 
     def compile(self):
         data = []
-        data.append(self.compile_one(self.header))
+        if self.header:
+            data = [self.compile_one(self.header)]
 
-        if self.header_break:
+        if self.header and self.header_break:
             data.append('-' * (sum(self.size_index.values()) + (len(self.header) * len(self.sep)) + 1))
 
         for row in self.entries:
             data.append(self.compile_one(row))
 
         if self.codeblock:
-            return '```' + '\n'.join(data) + '```'
+            return '```{}'.format(self.language if self.language else '') + '\n'.join(data) + '```'
 
         return '\n'.join(data)

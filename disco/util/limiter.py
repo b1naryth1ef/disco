@@ -17,7 +17,8 @@ class SimpleLimiter(object):
         gevent.sleep(self.reset_at - time.time())
         self.count = 0
         self.reset_at = 0
-        self.event.set()
+        if self.event:
+            self.event.set()
         self.event = None
 
     def check(self):

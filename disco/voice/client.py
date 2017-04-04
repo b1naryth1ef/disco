@@ -106,6 +106,7 @@ class VoiceClient(LoggingClass):
         self.endpoint = None
         self.ssrc = None
         self.port = None
+        self.udp = None
 
         self.update_listener = None
 
@@ -158,7 +159,7 @@ class VoiceClient(LoggingClass):
             }
         })
 
-    def on_voice_sdp(self, data):
+    def on_voice_sdp(self, _):
         # Toggle speaking state so clients learn of our SSRC
         self.set_speaking(True)
         self.set_speaking(False)
@@ -187,10 +188,9 @@ class VoiceClient(LoggingClass):
     def on_message(self, msg):
         try:
             data = self.encoder.decode(msg)
+            self.packets.emit(VoiceOPCode[data['op']], data['d'])
         except:
             self.log.exception('Failed to parse voice gateway message: ')
-
-        self.packets.emit(VoiceOPCode[data['op']], data['d'])
 
     def on_error(self, err):
         # TODO
@@ -205,6 +205,7 @@ class VoiceClient(LoggingClass):
         })
 
     def on_close(self, code, error):
+        # TODO
         self.log.warning('Voice websocket disconnected (%s, %s)', code, error)
 
         if self.state == VoiceState.CONNECTED:

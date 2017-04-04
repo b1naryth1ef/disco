@@ -76,13 +76,13 @@ class PermissionValue(object):
         return self.sub(other)
 
     def __getattribute__(self, name):
-        if name in Permissions.attrs:
+        if name in Permissions.keys_:
             return (self.value & Permissions[name].value) == Permissions[name].value
         else:
             return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
-        if name not in Permissions.attrs:
+        if name not in Permissions.keys_:
             return super(PermissionValue, self).__setattr__(name, value)
 
         if value:
@@ -90,9 +90,12 @@ class PermissionValue(object):
         else:
             self.value &= ~Permissions[name].value
 
+    def __int__(self):
+        return self.value
+
     def to_dict(self):
         return {
-            k: getattr(self, k) for k in Permissions.attrs
+            k: getattr(self, k) for k in Permissions.keys_
         }
 
     @classmethod
@@ -106,6 +109,9 @@ class PermissionValue(object):
 
 class Permissible(object):
     __slots__ = []
+
+    def get_permissions(self):
+        raise NotImplementedError
 
     def can(self, user, *args):
         perms = self.get_permissions(user)

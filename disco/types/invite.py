@@ -1,4 +1,4 @@
-from disco.types.base import SlottedModel, Field, lazy_datetime
+from disco.types.base import SlottedModel, Field, datetime 
 from disco.types.user import User
 from disco.types.guild import Guild
 from disco.types.channel import Channel
@@ -6,7 +6,7 @@ from disco.types.channel import Channel
 
 class Invite(SlottedModel):
     """
-    An invite object
+    An invite object.
 
     Attributes
     ----------
@@ -37,7 +37,7 @@ class Invite(SlottedModel):
     max_uses = Field(int)
     uses = Field(int)
     temporary = Field(bool)
-    created_at = Field(lazy_datetime)
+    created_at = Field(datetime)
 
     @classmethod
     def create(cls, channel, max_age=86400, max_uses=0, temporary=False, unique=False):

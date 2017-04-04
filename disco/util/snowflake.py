@@ -17,7 +17,7 @@ def to_unix(snowflake):
 
 
 def to_unix_ms(snowflake):
-    return ((int(snowflake) >> 22) + DISCORD_EPOCH)
+    return (int(snowflake) >> 22) + DISCORD_EPOCH
 
 
 def to_snowflake(i):

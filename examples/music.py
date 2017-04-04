@@ -1,15 +1,16 @@
 from disco.bot import Plugin
 from disco.bot.command import CommandError
-from disco.voice.client import Player, OpusItem, VoiceException
+from disco.voice.player import Player, create_youtube_dl_playable
+from disco.voice.client import VoiceException
 
 
 def download(url):
-    return OpusItem.from_raw_file('test.dca')
+    return create_youtube_dl_playable(url)[0]
 
 
 class MusicPlugin(Plugin):
-    def load(self):
-        super(MusicPlugin, self).load()
+    def load(self, ctx):
+        super(MusicPlugin, self).load(ctx)
         self.guilds = {}
 
     @Plugin.command('join')

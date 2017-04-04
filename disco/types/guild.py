@@ -6,10 +6,13 @@ from disco.gateway.packets import OPCode
 from disco.api.http import APIException
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
-from disco.types.base import SlottedModel, Field, snowflake, listof, dictof, text, binary, enum
-from disco.types.user import User
+from disco.types.base import (
+    SlottedModel, Field, ListField, AutoDictField, snowflake, text, binary, enum, datetime
+)
+from disco.types.user import User, Presence
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
+from disco.types.message import Emoji
 from disco.types.permissions import PermissionValue, Permissions, Permissible
 
 
@@ -18,21 +21,12 @@ VerificationLevel = Enum(
     LOW=1,
     MEDIUM=2,
     HIGH=3,
-    EXTREME=4,
 )
 
 
-class GuildSubType(SlottedModel):
-    guild_id = Field(None)
-
-    @cached_property
-    def guild(self):
-        return self.client.state.guilds.get(self.guild_id)
-
-
-class Emoji(GuildSubType):
+class GuildEmoji(Emoji):
     """
-    An emoji object
+    An emoji object.
 
     Attributes
     ----------
@@ -48,15 +42,27 @@ class Emoji(GuildSubType):
         Roles this emoji is attached to.
     """
     id = Field(snowflake)
+    guild_id = Field(snowflake)
     name = Field(text)
     require_colons = Field(bool)
     managed = Field(bool)
-    roles = Field(listof(snowflake))
+    roles = ListField(snowflake)
+
+    def __str__(self):
+        return u'<:{}:{}>'.format(self.name, self.id)
+
+    @property
+    def url(self):
+        return 'https://discordapp.com/api/emojis/{}.png'.format(self.id)
+
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
 
-class Role(GuildSubType):
+class Role(SlottedModel):
     """
-    A role object
+    A role object.
 
     Attributes
     ----------
@@ -76,6 +82,7 @@ class Role(GuildSubType):
         The position of this role in the hierarchy.
     """
     id = Field(snowflake)
+    guild_id = Field(snowflake)
     name = Field(text)
     hoist = Field(bool)
     managed = Field(bool)
@@ -83,6 +90,9 @@ class Role(GuildSubType):
     permissions = Field(PermissionValue)
     position = Field(int)
     mentionable = Field(bool)
+
+    def __str__(self):
+        return self.name
 
     def delete(self):
         self.guild.delete_role(self)
@@ -94,10 +104,19 @@ class Role(GuildSubType):
     def mention(self):
         return '<@{}>'.format(self.id)
 
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
 
-class GuildMember(GuildSubType):
+
+class GuildBan(SlottedModel):
+    user = Field(User)
+    reason = Field(str)
+
+
+class GuildMember(SlottedModel):
     """
-    A GuildMember object
+    A GuildMember object.
 
     Attributes
     ----------
@@ -121,8 +140,18 @@ class GuildMember(GuildSubType):
     nick = Field(text)
     mute = Field(bool)
     deaf = Field(bool)
-    joined_at = Field(str)
-    roles = Field(listof(snowflake))
+    joined_at = Field(datetime)
+    roles = ListField(snowflake)
+
+    def __str__(self):
+        return self.user.__str__()
+
+    @property
+    def name(self):
+        """
+        The nickname of this user if set, otherwise their username
+        """
+        return self.nick or self.user.username
 
     def get_voice_state(self):
         """
@@ -151,6 +180,12 @@ class GuildMember(GuildSubType):
         """
         self.guild.create_ban(self, delete_message_days)
 
+    def unban(self):
+        """
+        Unbans the member from the guild.
+        """
+        self.guild.delete_ban(self)
+
     def set_nickname(self, nickname=None):
         """
         Sets the member's nickname (or clears it if None).
@@ -160,11 +195,19 @@ class GuildMember(GuildSubType):
         nickname : Optional[str]
             The nickname (or none to reset) to set.
         """
-        self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
+        if self.client.state.me.id == self.user.id:
+            self.client.api.guilds_members_me_nick(self.guild.id, nick=nickname or '')
+        else:
+            self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
+
+    def modify(self, **kwargs):
+        self.client.api.guilds_members_modify(self.guild.id, self.user.id, **kwargs)
 
     def add_role(self, role):
-        roles = self.roles + [role.id]
-        self.client.api.guilds_members_modify(self.guild.id, self.user.id, roles=roles)
+        self.client.api.guilds_members_roles_add(self.guild.id, self.user.id, to_snowflake(role))
+
+    def remove_role(self, role):
+        self.client.api.guilds_members_roles_remove(self.guild.id, self.user.id, to_snowflake(role))
 
     @cached_property
     def owner(self):
@@ -179,14 +222,22 @@ class GuildMember(GuildSubType):
     @property
     def id(self):
         """
-        Alias to the guild members user id
+        Alias to the guild members user id.
         """
         return self.user.id
+
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
+
+    @cached_property
+    def permissions(self):
+        return self.guild.get_permissions(self)
 
 
 class Guild(SlottedModel, Permissible):
     """
-    A guild object
+    A guild object.
 
     Attributes
     ----------
@@ -222,7 +273,7 @@ class Guild(SlottedModel, Permissible):
         All of the guild's channels.
     roles : dict(snowflake, :class:`Role`)
         All of the guild's roles.
-    emojis : dict(snowflake, :class:`Emoji`)
+    emojis : dict(snowflake, :class:`GuildEmoji`)
         All of the guild's emojis.
     voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
         All of the guild's voice states.
@@ -239,12 +290,14 @@ class Guild(SlottedModel, Permissible):
     embed_enabled = Field(bool)
     verification_level = Field(enum(VerificationLevel))
     mfa_level = Field(int)
-    features = Field(listof(str))
-    members = Field(dictof(GuildMember, key='id'))
-    channels = Field(dictof(Channel, key='id'))
-    roles = Field(dictof(Role, key='id'))
-    emojis = Field(dictof(Emoji, key='id'))
-    voice_states = Field(dictof(VoiceState, key='session_id'))
+    features = ListField(str)
+    members = AutoDictField(GuildMember, 'id')
+    channels = AutoDictField(Channel, 'id')
+    roles = AutoDictField(Role, 'id')
+    emojis = AutoDictField(GuildEmoji, 'id')
+    voice_states = AutoDictField(VoiceState, 'session_id')
+    member_count = Field(int)
+    presences = ListField(Presence)
 
     synced = Field(bool, default=False)
 
@@ -257,7 +310,7 @@ class Guild(SlottedModel, Permissible):
         self.attach(six.itervalues(self.emojis), {'guild_id': self.id})
         self.attach(six.itervalues(self.voice_states), {'guild_id': self.id})
 
-    def get_permissions(self, user):
+    def get_permissions(self, member):
         """
         Get the permissions a user has in this guild.
 
@@ -266,10 +319,13 @@ class Guild(SlottedModel, Permissible):
         :class:`disco.types.permissions.PermissionValue`
             Computed permission value for the user.
         """
-        if self.owner_id == user.id:
+        if not isinstance(member, GuildMember):
+            member = self.get_member(member)
+
+        # Owner has all permissions
+        if self.owner_id == member.id:
             return PermissionValue(Permissions.ADMINISTRATOR)
 
-        member = self.get_member(user)
         value = PermissionValue(self.roles.get(self.id).permissions)
 
         for role in map(self.roles.get, member.roles):
@@ -358,3 +414,6 @@ class Guild(SlottedModel, Permissible):
 
     def create_ban(self, user, delete_message_days=0):
         self.client.api.guilds_bans_create(self.id, to_snowflake(user), delete_message_days)
+
+    def create_channel(self, *args, **kwargs):
+        return self.client.api.guilds_channels_create(self.id, *args, **kwargs)

@@ -32,12 +32,14 @@ class Webhook(SlottedModel):
         else:
             return self.client.api.webhooks_modify(self.id, name, avatar)
 
-    def execute(self, content=None, username=None, avatar_url=None, tts=False, file=None, embeds=[], wait=False):
+    def execute(self, content=None, username=None, avatar_url=None, tts=False, fobj=None, embeds=[], wait=False):
+        # TODO: support file stuff properly
+
         return self.client.api.webhooks_token_execute(self.id, self.token, {
             'content': content,
             'username': username,
             'avatar_url': avatar_url,
             'tts': tts,
-            'file': file,
+            'file': fobj,
             'embeds': [i.to_dict() for i in embeds],
         }, wait)

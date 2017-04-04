@@ -1,9 +1,11 @@
 import six
+import types
 import gevent
 import inspect
 import weakref
 import functools
 
+from gevent.event import AsyncResult
 from holster.emitter import Priority
 
 from disco.util.logging import LoggingClass
@@ -18,8 +20,8 @@ class PluginDeco(object):
     Prio = Priority
 
     # TODO: dont smash class methods
-    @staticmethod
-    def add_meta_deco(meta):
+    @classmethod
+    def add_meta_deco(cls, meta):
         def deco(f):
             if not hasattr(f, 'meta'):
                 f.meta = []
@@ -40,33 +42,33 @@ class PluginDeco(object):
         return deco
 
     @classmethod
-    def listen(cls, event_name, priority=None):
+    def listen(cls, *args, **kwargs):
         """
-        Binds the function to listen for a given event name
+        Binds the function to listen for a given event name.
         """
         return cls.add_meta_deco({
             'type': 'listener',
             'what': 'event',
-            'desc': event_name,
-            'priority': priority
+            'args': args,
+            'kwargs': kwargs,
         })
 
     @classmethod
-    def listen_packet(cls, op, priority=None):
+    def listen_packet(cls, *args, **kwargs):
         """
-        Binds the function to listen for a given gateway op code
+        Binds the function to listen for a given gateway op code.
         """
         return cls.add_meta_deco({
             'type': 'listener',
             'what': 'packet',
-            'desc': op,
-            'priority': priority,
+            'args': args,
+            'kwargs': kwargs,
         })
 
     @classmethod
     def command(cls, *args, **kwargs):
         """
-        Creates a new command attached to the function
+        Creates a new command attached to the function.
         """
         return cls.add_meta_deco({
             'type': 'command',
@@ -77,7 +79,7 @@ class PluginDeco(object):
     @classmethod
     def pre_command(cls):
         """
-        Runs a function before a command is triggered
+        Runs a function before a command is triggered.
         """
         return cls.add_meta_deco({
             'type': 'pre_command',
@@ -86,7 +88,7 @@ class PluginDeco(object):
     @classmethod
     def post_command(cls):
         """
-        Runs a function after a command is triggered
+        Runs a function after a command is triggered.
         """
         return cls.add_meta_deco({
             'type': 'post_command',
@@ -95,7 +97,7 @@ class PluginDeco(object):
     @classmethod
     def pre_listener(cls):
         """
-        Runs a function before a listener is triggered
+        Runs a function before a listener is triggered.
         """
         return cls.add_meta_deco({
             'type': 'pre_listener',
@@ -104,7 +106,7 @@ class PluginDeco(object):
     @classmethod
     def post_listener(cls):
         """
-        Runs a function after a listener is triggered
+        Runs a function after a listener is triggered.
         """
         return cls.add_meta_deco({
             'type': 'post_listener',
@@ -113,7 +115,7 @@ class PluginDeco(object):
     @classmethod
     def schedule(cls, *args, **kwargs):
         """
-        Runs a function repeatedly, waiting for a specified interval
+        Runs a function repeatedly, waiting for a specified interval.
         """
         return cls.add_meta_deco({
             'type': 'schedule',
@@ -153,46 +155,101 @@ class Plugin(LoggingClass, PluginDeco):
         self.storage = bot.storage
         self.config = config
 
+        # General declartions
+        self.listeners = []
+        self.commands = []
+        self.schedules = {}
+        self.greenlets = weakref.WeakSet()
+        self._pre = {}
+        self._post = {}
+
+        # This is an array of all meta functions we sniff at init
+        self.meta_funcs = []
+
+        for name, member in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(member, 'meta'):
+                self.meta_funcs.append(member)
+
+                # Unsmash local functions
+                if hasattr(Plugin, name):
+                    method = types.MethodType(getattr(Plugin, name), self, self.__class__)
+                    setattr(self, name, method)
+
+        self.bind_all()
+
     @property
     def name(self):
         return self.__class__.__name__
 
     def bind_all(self):
         self.listeners = []
-        self.commands = {}
+        self.commands = []
         self.schedules = {}
         self.greenlets = weakref.WeakSet()
 
         self._pre = {'command': [], 'listener': []}
         self._post = {'command': [], 'listener': []}
 
-        # TODO: when handling events/commands we need to track the greenlet in
-        #  the greenlets set so we can termiante long running commands/listeners
-        #  on reload.
+        for member in self.meta_funcs:
+            for meta in member.meta:
+                self.bind_meta(member, meta)
 
-        for name, member in inspect.getmembers(self, predicate=inspect.ismethod):
-            if hasattr(member, 'meta'):
-                for meta in member.meta:
-                    if meta['type'] == 'listener':
-                        self.register_listener(member, meta['what'], meta['desc'], meta['priority'])
-                    elif meta['type'] == 'command':
-                        meta['kwargs']['update'] = True
-                        self.register_command(member, *meta['args'], **meta['kwargs'])
-                    elif meta['type'] == 'schedule':
-                        self.register_schedule(member, *meta['args'], **meta['kwargs'])
-                    elif meta['type'].startswith('pre_') or meta['type'].startswith('post_'):
-                        when, typ = meta['type'].split('_', 1)
-                        self.register_trigger(typ, when, member)
+    def bind_meta(self, member, meta):
+        if meta['type'] == 'listener':
+            self.register_listener(member, meta['what'], *meta['args'], **meta['kwargs'])
+        elif meta['type'] == 'command':
+            # meta['kwargs']['update'] = True
+            self.register_command(member, *meta['args'], **meta['kwargs'])
+        elif meta['type'] == 'schedule':
+            self.register_schedule(member, *meta['args'], **meta['kwargs'])
+        elif meta['type'].startswith('pre_') or meta['type'].startswith('post_'):
+            when, typ = meta['type'].split('_', 1)
+            self.register_trigger(typ, when, member)
 
-    def spawn(self, method, *args, **kwargs):
-        obj = gevent.spawn(method, *args, **kwargs)
+    def handle_exception(self, greenlet, event):
+        pass
+
+    def wait_for_event(self, event_name, **kwargs):
+        result = AsyncResult()
+        listener = None
+
+        def _event_callback(event):
+            for k, v in kwargs.items():
+                if getattr(event, k) != v:
+                    break
+            else:
+                listener.remove()
+                return result.set(event)
+
+        listener = self.bot.client.events.on(event_name, _event_callback)
+
+        return result
+
+    def spawn_wrap(self, spawner, method, *args, **kwargs):
+        def wrapped(*args, **kwargs):
+            self.ctx['plugin'] = self
+            try:
+                res = method(*args, **kwargs)
+                return res
+            finally:
+                self.ctx.drop()
+
+        obj = spawner(wrapped, *args, **kwargs)
         self.greenlets.add(obj)
         return obj
 
+    def spawn(self, *args, **kwargs):
+        return self.spawn_wrap(gevent.spawn, *args, **kwargs)
+
+    def spawn_later(self, delay, *args, **kwargs):
+        return self.spawn_wrap(functools.partial(gevent.spawn_later, delay), *args, **kwargs)
+
     def execute(self, event):
         """
-        Executes a CommandEvent this plugin owns
+        Executes a CommandEvent this plugin owns.
         """
+        if not event.command.oob:
+            self.greenlets.add(gevent.getcurrent())
         try:
             return event.command.execute(event)
         except CommandError as e:
@@ -203,11 +260,18 @@ class Plugin(LoggingClass, PluginDeco):
 
     def register_trigger(self, typ, when, func):
         """
-        Registers a trigger
+        Registers a trigger.
         """
         getattr(self, '_' + when)[typ].append(func)
 
-    def _dispatch(self, typ, func, event, *args, **kwargs):
+    def dispatch(self, typ, func, event, *args, **kwargs):
+        # Link the greenlet with our exception handler
+        gevent.getcurrent().link_exception(lambda g: self.handle_exception(g, event))
+
+        # TODO: this is ugly
+        if typ != 'command':
+            self.greenlets.add(gevent.getcurrent())
+
         self.ctx['plugin'] = self
 
         if hasattr(event, 'guild'):
@@ -218,7 +282,7 @@ class Plugin(LoggingClass, PluginDeco):
             self.ctx['user'] = event.author
 
         for pre in self._pre[typ]:
-            event = pre(event, args, kwargs)
+            event = pre(func, event, args, kwargs)
 
         if event is None:
             return False
@@ -226,13 +290,13 @@ class Plugin(LoggingClass, PluginDeco):
         result = func(event, *args, **kwargs)
 
         for post in self._post[typ]:
-            post(event, args, kwargs, result)
+            post(func, event, args, kwargs, result)
 
         return True
 
-    def register_listener(self, func, what, desc, priority):
+    def register_listener(self, func, what, *args, **kwargs):
         """
-        Registers a listener
+        Registers a listener.
 
         Parameters
         ----------
@@ -242,17 +306,13 @@ class Plugin(LoggingClass, PluginDeco):
             The function to be registered.
         desc
             The descriptor of the event/packet.
-        priority : Priority
-            The priority of this listener.
         """
-        func = functools.partial(self._dispatch, 'listener', func)
-
-        priority = priority or Priority.NONE
+        args = list(args) + [functools.partial(self.dispatch, 'listener', func)]
 
         if what == 'event':
-            li = self.bot.client.events.on(desc, func, priority=priority)
+            li = self.bot.client.events.on(*args, **kwargs)
         elif what == 'packet':
-            li = self.bot.client.packets.on(desc, func, priority=priority)
+            li = self.bot.client.packets.on(*args, **kwargs)
         else:
             raise Exception('Invalid listener what: {}'.format(what))
 
@@ -260,7 +320,7 @@ class Plugin(LoggingClass, PluginDeco):
 
     def register_command(self, func, *args, **kwargs):
         """
-        Registers a command
+        Registers a command.
 
         Parameters
         ----------
@@ -272,11 +332,7 @@ class Plugin(LoggingClass, PluginDeco):
             Keyword arguments to pass onto the :class:`disco.bot.command.Command`
             object.
         """
-        if kwargs.pop('update', False) and func.__name__ in self.commands:
-            self.commands[func.__name__].update(*args, **kwargs)
-        else:
-            wrapped = functools.partial(self._dispatch, 'command', func)
-            self.commands[func.__name__] = Command(self, wrapped, *args, **kwargs)
+        self.commands.append(Command(self, func, *args, **kwargs))
 
     def register_schedule(self, func, interval, repeat=True, init=True):
         """
@@ -289,8 +345,13 @@ class Plugin(LoggingClass, PluginDeco):
             The function to be registered.
         interval : int
             Interval (in seconds) to repeat the function on.
+        repeat : bool
+            Whether this schedule is repeating (or one time).
+        init : bool
+            Whether to run this schedule once immediatly, or wait for the first
+            scheduled iteration.
         """
-        def repeat():
+        def repeat_func():
             if init:
                 func()
 
@@ -300,17 +361,17 @@ class Plugin(LoggingClass, PluginDeco):
                 if not repeat:
                     break
 
-        self.schedules[func.__name__] = self.spawn(repeat)
+        self.schedules[func.__name__] = self.spawn(repeat_func)
 
-    def load(self):
+    def load(self, ctx):
         """
-        Called when the plugin is loaded
+        Called when the plugin is loaded.
         """
-        self.bind_all()
+        pass
 
-    def unload(self):
+    def unload(self, ctx):
         """
-        Called when the plugin is unloaded
+        Called when the plugin is unloaded.
         """
         for greenlet in self.greenlets:
             greenlet.kill()

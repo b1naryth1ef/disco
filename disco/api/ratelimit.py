@@ -1,8 +1,10 @@
 import time
 import gevent
 
+from disco.util.logging import LoggingClass
 
-class RouteState(object):
+
+class RouteState(LoggingClass):
     """
     An object which stores ratelimit state for a given method/url route
     combination (as specified in :class:`disco.api.http.Routes`).
@@ -36,10 +38,13 @@ class RouteState(object):
 
         self.update(response)
 
+    def __repr__(self):
+        return '<RouteState {}>'.format(' '.join(self.route))
+
     @property
     def chilled(self):
         """
-        Whether this route is currently being cooldown (aka waiting until reset_time)
+        Whether this route is currently being cooldown (aka waiting until reset_time).
         """
         return self.event is not None
 
@@ -69,7 +74,7 @@ class RouteState(object):
 
     def wait(self, timeout=None):
         """
-        Waits until this route is no longer under a cooldown
+        Waits until this route is no longer under a cooldown.
 
         Parameters
         ----------
@@ -80,24 +85,26 @@ class RouteState(object):
         Returns
         -------
         bool
-            False if the timeout period expired before the cooldown was finished
+            False if the timeout period expired before the cooldown was finished.
         """
         return self.event.wait(timeout)
 
     def cooldown(self):
         """
-        Waits for the current route to be cooled-down (aka waiting until reset time)
+        Waits for the current route to be cooled-down (aka waiting until reset time).
         """
         if self.reset_time - time.time() < 0:
             raise Exception('Cannot cooldown for negative time period; check clock sync')
 
         self.event = gevent.event.Event()
-        gevent.sleep((self.reset_time - time.time()) + .5)
+        delay = (self.reset_time - time.time()) + .5
+        self.log.debug('Cooling down bucket %s for %s seconds', self, delay)
+        gevent.sleep(delay)
         self.event.set()
         self.event = None
 
 
-class RateLimiter(object):
+class RateLimiter(LoggingClass):
     """
     A in-memory store of ratelimit states for all routes we've ever called.
 

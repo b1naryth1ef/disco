@@ -12,11 +12,13 @@ from .base import BaseProvider, SEP_SENTINEL
 
 class RocksDBProvider(BaseProvider):
     def __init__(self, config):
-        self.config = config
+        super(RocksDBProvider, self).__init__(config)
         self.format = config.get('format', 'pickle')
         self.path = config.get('path', 'storage.db')
+        self.db = None
 
-    def k(self, k):
+    @staticmethod
+    def k(k):
         return bytes(k) if six.PY3 else str(k.encode('utf-8'))
 
     def load(self):

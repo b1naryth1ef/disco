@@ -1,10 +1,11 @@
 import six
+import weakref
 import inflection
 
 from collections import deque, namedtuple
-from weakref import WeakValueDictionary
 from gevent.event import Event
 
+from disco.types.base import UNSET
 from disco.util.config import Config
 from disco.util.hashmap import HashMap, DefaultHashMap
 
@@ -88,7 +89,7 @@ class State(object):
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
         'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
-        'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
+        'GuildEmojisUpdate', 'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
         'PresenceUpdate'
     ]
 
@@ -102,9 +103,9 @@ class State(object):
         self.me = None
         self.dms = HashMap()
         self.guilds = HashMap()
-        self.channels = HashMap(WeakValueDictionary())
-        self.users = HashMap(WeakValueDictionary())
-        self.voice_states = HashMap(WeakValueDictionary())
+        self.channels = HashMap(weakref.WeakValueDictionary())
+        self.users = HashMap(weakref.WeakValueDictionary())
+        self.voice_states = HashMap(weakref.WeakValueDictionary())
 
         # If message tracking is enabled, listen to those events
         if self.config.track_messages:
@@ -117,7 +118,7 @@ class State(object):
 
     def unbind(self):
         """
-        Unbinds all bound event listeners for this state object
+        Unbinds all bound event listeners for this state object.
         """
         map(lambda k: k.unbind(), self.listeners)
         self.listeners = []
@@ -185,11 +186,19 @@ class State(object):
         for member in six.itervalues(event.guild.members):
             self.users[member.user.id] = member.user
 
+        for voice_state in six.itervalues(event.guild.voice_states):
+            self.voice_states[voice_state.session_id] = voice_state
+
         if self.config.sync_guild_members:
             event.guild.sync()
 
     def on_guild_update(self, event):
-        self.guilds[event.guild.id].update(event.guild)
+        self.guilds[event.guild.id].update(event.guild, ignored=[
+            'channels',
+            'members',
+            'voice_states',
+            'presences'
+        ])
 
     def on_guild_delete(self, event):
         if event.id in self.guilds:
@@ -208,6 +217,10 @@ class State(object):
         if event.channel.id in self.channels:
             self.channels[event.channel.id].update(event.channel)
 
+            if event.overwrites is not UNSET:
+                self.channels[event.channel.id].overwrites = event.overwrites
+                self.channels[event.channel.id].after_load()
+
     def on_channel_delete(self, event):
         if event.channel.is_guild and event.channel.guild and event.channel.id in event.channel.guild.channels:
             del event.channel.guild.channels[event.channel.id]
@@ -215,18 +228,22 @@ class State(object):
             del self.dms[event.channel.id]
 
     def on_voice_state_update(self, event):
-        # Happy path: we have the voice state and want to update/delete it
-        guild = self.guilds.get(event.state.guild_id)
-        if not guild:
-            return
-
-        if event.state.session_id in guild.voice_states:
+        # Existing connection, we are either moving channels or disconnecting
+        if event.state.session_id in self.voice_states:
+            # Moving channels
             if event.state.channel_id:
-                guild.voice_states[event.state.session_id].update(event.state)
+                self.voice_states[event.state.session_id].update(event.state)
+            # Disconnection
             else:
-                del guild.voice_states[event.state.session_id]
+                if event.state.guild_id in self.guilds:
+                    if event.state.session_id in self.guilds[event.state.guild_id].voice_states:
+                        del self.guilds[event.state.guild_id].voice_states[event.state.session_id]
+                del self.voice_states[event.state.session_id]
+        # New connection
         elif event.state.channel_id:
-            guild.voice_states[event.state.session_id] = event.state
+            if event.state.guild_id in self.guilds:
+                self.guilds[event.state.guild_id].voice_states[event.state.session_id] = event.state
+            self.voice_states[event.state.session_id] = event.state
 
     def on_guild_member_add(self, event):
         if event.member.user.id not in self.users:
@@ -241,6 +258,9 @@ class State(object):
 
     def on_guild_member_update(self, event):
         if event.member.guild_id not in self.guilds:
+            return
+
+        if event.member.id not in self.guilds[event.member.guild_id].members:
             return
 
         self.guilds[event.member.guild_id].members[event.member.id].update(event.member)
@@ -285,6 +305,22 @@ class State(object):
 
         del self.guilds[event.guild_id].roles[event.role_id]
 
+    def on_guild_emojis_update(self, event):
+        if event.guild_id not in self.guilds:
+            return
+
+        self.guilds[event.guild_id].emojis = HashMap({i.id: i for i in event.emojis})
+
     def on_presence_update(self, event):
         if event.user.id in self.users:
+            self.users[event.user.id].update(event.presence.user)
             self.users[event.user.id].presence = event.presence
+            event.presence.user = self.users[event.user.id]
+
+        if event.guild_id not in self.guilds:
+            return
+
+        if event.user.id not in self.guilds[event.guild_id].members:
+            return
+
+        self.guilds[event.guild_id].members[event.user.id].user.update(event.user)

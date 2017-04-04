@@ -2,9 +2,10 @@ import re
 import six
 import copy
 
-
 # Regex which splits out argument parts
-PARTS_RE = re.compile('(\<|\[)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\])')
+PARTS_RE = re.compile('(\<|\[|\{)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\]|\})')
+
+BOOL_OPTS = {'yes': True, 'no': False, 'true': True, 'False': False, '1': True, '0': False}
 
 # Mapping of types
 TYPE_MAP = {
@@ -13,6 +14,20 @@ TYPE_MAP = {
     'float': lambda ctx, data: int(data),
     'snowflake': lambda ctx, data: int(data),
 }
+
+try:
+    import dateparser
+    TYPE_MAP['duration'] = lambda ctx, data: dateparser.parse(data, settings={'TIMEZONE': 'UTC'})
+except ImportError:
+    pass
+
+
+def to_bool(ctx, data):
+    if data in BOOL_OPTS:
+        return BOOL_OPTS[data]
+    raise TypeError
+
+TYPE_MAP['bool'] = to_bool
 
 
 class ArgumentError(Exception):
@@ -41,19 +56,20 @@ class Argument(object):
         self.name = None
         self.count = 1
         self.required = False
+        self.flag = False
         self.types = None
         self.parse(raw)
 
     @property
     def true_count(self):
         """
-        The true number of raw arguments this argument takes
+        The true number of raw arguments this argument takes.
         """
         return self.count or 1
 
     def parse(self, raw):
         """
-        Attempts to parse arguments from their raw form
+        Attempts to parse arguments from their raw form.
         """
         prefix, part = raw
 
@@ -62,23 +78,27 @@ class Argument(object):
         else:
             self.required = False
 
-        if part.endswith('...'):
-            part = part[:-3]
-            self.count = 0
-        elif ' ' in part:
-            split = part.split(' ', 1)
-            part, self.count = split[0], int(split[1])
+        # Whether this is a flag
+        self.flag = (prefix == '{')
 
-        if ':' in part:
-            part, typeinfo = part.split(':')
-            self.types = typeinfo.split('|')
+        if not self.flag:
+            if part.endswith('...'):
+                part = part[:-3]
+                self.count = 0
+            elif ' ' in part:
+                split = part.split(' ', 1)
+                part, self.count = split[0], int(split[1])
+
+            if ':' in part:
+                part, typeinfo = part.split(':')
+                self.types = typeinfo.split('|')
 
         self.name = part.strip()
 
 
 class ArgumentSet(object):
     """
-    A set of :class:`Argument` instances which forms a larger argument specification
+    A set of :class:`Argument` instances which forms a larger argument specification.
 
     Attributes
     ----------
@@ -95,7 +115,7 @@ class ArgumentSet(object):
     @classmethod
     def from_string(cls, line, custom_types=None):
         """
-        Creates a new :class:`ArgumentSet` from a given argument string specification
+        Creates a new :class:`ArgumentSet` from a given argument string specification.
         """
         args = cls(custom_types=custom_types)
 
@@ -131,7 +151,7 @@ class ArgumentSet(object):
 
     def append(self, arg):
         """
-        Add a new :class:`Argument` to this argument specification/set
+        Add a new :class:`Argument` to this argument specification/set.
         """
         if self.args and not self.args[-1].required and arg.required:
             raise Exception('Required argument cannot come after an optional argument')
@@ -145,9 +165,23 @@ class ArgumentSet(object):
         """
         Parse a string of raw arguments into this argument specification.
         """
-        parsed = []
+        parsed = {}
 
-        for index, arg in enumerate(self.args):
+        flags = {i.name: i for i in self.args if i.flag}
+        if flags:
+            new_rawargs = []
+
+            for offset, raw in enumerate(rawargs):
+                if raw.startswith('-'):
+                    raw = raw.lstrip('-')
+                    if raw in flags:
+                        parsed[raw] = True
+                        continue
+                new_rawargs.append(raw)
+
+            rawargs = new_rawargs
+
+        for index, arg in enumerate((arg for arg in self.args if not arg.flag)):
             if not arg.required and index + arg.true_count > len(rawargs):
                 continue
 
@@ -171,20 +205,20 @@ class ArgumentSet(object):
             if (not arg.types or arg.types == ['str']) and isinstance(raw, list):
                 raw = ' '.join(raw)
 
-            parsed.append(raw)
+            parsed[arg.name] = raw
 
         return parsed
 
     @property
     def length(self):
         """
-        The number of arguments in this set/specification
+        The number of arguments in this set/specification.
         """
         return len(self.args)
 
     @property
     def required_length(self):
         """
-        The number of required arguments to compile this set/specificaiton
+        The number of required arguments to compile this set/specificaiton.
         """
         return sum([i.true_count for i in self.args if i.required])

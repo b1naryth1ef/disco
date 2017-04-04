@@ -29,7 +29,7 @@ class Config(object):
         return inst
 
     def from_prefix(self, prefix):
-        prefix = prefix + '_'
+        prefix += '_'
         obj = {}
 
         for k, v in six.iteritems(self.__dict__):

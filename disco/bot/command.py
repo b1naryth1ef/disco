@@ -5,9 +5,11 @@ from holster.enum import Enum
 from disco.bot.parser import ArgumentSet, ArgumentError
 from disco.util.functional import cached_property
 
-REGEX_FMT = '({})'
-ARGS_REGEX = '( (.*)$|$)'
-MENTION_RE = re.compile('<@!?([0-9]+)>')
+ARGS_REGEX = '(?: ((?:\n|.)*)$|$)'
+
+USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
+ROLE_MENTION_RE = re.compile('<@&([0-9]+)>')
+CHANNEL_MENTION_RE = re.compile('<#([0-9]+)>')
 
 CommandLevels = Enum(
     DEFAULT=0,
@@ -42,34 +44,52 @@ class CommandEvent(object):
         self.command = command
         self.msg = msg
         self.match = match
-        self.name = self.match.group(1)
-        self.args = [i for i in self.match.group(2).strip().split(' ') if i]
+        self.name = self.match.group(0)
+        self.args = []
+
+        if self.match.group(1):
+            self.args = [i for i in self.match.group(1).strip().split(' ') if i]
+
+    @property
+    def codeblock(self):
+        if '`' not in self.msg.content:
+            return ' '.join(self.args)
+
+        _, src = self.msg.content.split('`', 1)
+        src = '`' + src
+
+        if src.startswith('```') and src.endswith('```'):
+            src = src[3:-3]
+        elif src.startswith('`') and src.endswith('`'):
+            src = src[1:-1]
+
+        return src
 
     @cached_property
     def member(self):
         """
-        Guild member (if relevant) for the user that created the message
+        Guild member (if relevant) for the user that created the message.
         """
         return self.guild.get_member(self.author)
 
     @property
     def channel(self):
         """
-        Channel the message was created in
+        Channel the message was created in.
         """
         return self.msg.channel
 
     @property
     def guild(self):
         """
-        Guild (if relevant) the message was created in
+        Guild (if relevant) the message was created in.
         """
         return self.msg.guild
 
     @property
     def author(self):
         """
-        Author of the message
+        Author of the message.
         """
         return self.msg.author
 
@@ -107,61 +127,106 @@ class Command(object):
         self.plugin = plugin
         self.func = func
         self.triggers = [trigger]
+
+        self.dispatch_func = None
+        self.raw_args = None
+        self.args = None
+        self.level = None
+        self.group = None
+        self.is_regex = None
+        self.oob = False
+        self.context = {}
+        self.metadata = {}
+
         self.update(*args, **kwargs)
 
-    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None):
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+    def get_docstring(self):
+        return (self.func.__doc__ or '').format(**self.context)
+
+    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None, **kwargs):
         self.triggers += aliases or []
 
-        def resolve_role(ctx, id):
-            return ctx.msg.guild.roles.get(id)
+        def resolve_role(ctx, rid):
+            return ctx.msg.guild.roles.get(rid)
 
-        def resolve_user(ctx, id):
-            return ctx.msg.mentions.get(id)
+        def resolve_user(ctx, uid):
+            if isinstance(uid, int):
+                if uid in ctx.msg.mentions:
+                    return ctx.msg.mentions.get(uid)
+                else:
+                    return ctx.msg.client.state.users.get(uid)
+            else:
+                return ctx.msg.client.state.users.select_one(username=uid[0], discriminator=uid[1])
 
+        def resolve_channel(ctx, cid):
+            if isinstance(cid, (int, long)):
+                return ctx.msg.guild.channels.get(cid)
+            else:
+                return ctx.msg.guild.channels.select_one(name=cid)
+
+        def resolve_guild(ctx, gid):
+            return ctx.msg.client.state.guilds.get(gid)
+
+        self.raw_args = args
         self.args = ArgumentSet.from_string(args or '', {
-            'mention': self.mention_type([resolve_role, resolve_user]),
-            'user': self.mention_type([resolve_user], force=True),
-            'role': self.mention_type([resolve_role], force=True),
+            'user': self.mention_type([resolve_user], USER_MENTION_RE, user=True),
+            'role': self.mention_type([resolve_role], ROLE_MENTION_RE),
+            'channel': self.mention_type([resolve_channel], CHANNEL_MENTION_RE, allow_plain=True),
+            'guild': self.mention_type([resolve_guild]),
         })
 
         self.level = level
         self.group = group
         self.is_regex = is_regex
+        self.oob = oob
+        self.context = context or {}
+        self.metadata = kwargs
 
     @staticmethod
-    def mention_type(getters, force=False):
-        def _f(ctx, i):
-            res = MENTION_RE.match(i)
-            if not res:
-                raise TypeError('Invalid mention: {}'.format(i))
-
-            id = int(res.group(1))
+    def mention_type(getters, reg=None, user=False, allow_plain=False):
+        def _f(ctx, raw):
+            if raw.isdigit():
+                resolved = int(raw)
+            elif user and raw.count('#') == 1 and raw.split('#')[-1].isdigit():
+                username, discrim = raw.split('#')
+                resolved = (username, int(discrim))
+            elif reg:
+                res = reg.match(raw)
+                if res:
+                    resolved = int(res.group(1))
+                else:
+                    if allow_plain:
+                        resolved = raw
+                    else:
+                        raise TypeError('Invalid mention: {}'.format(raw))
+            else:
+                raise TypeError('Invalid mention: {}'.format(raw))
 
             for getter in getters:
-                obj = getter(ctx, id)
+                obj = getter(ctx, resolved)
                 if obj:
                     return obj
 
-            if force:
-                raise TypeError('Cannot resolve mention: {}'.format(id))
-
-            return id
+            raise TypeError('Cannot resolve mention: {}'.format(raw))
         return _f
 
     @cached_property
     def compiled_regex(self):
         """
-        A compiled version of this command's regex
+        A compiled version of this command's regex.
         """
-        return re.compile(self.regex)
+        return re.compile(self.regex, re.I)
 
     @property
     def regex(self):
         """
-        The regex string that defines/triggers this command
+        The regex string that defines/triggers this command.
         """
         if self.is_regex:
-            return REGEX_FMT.format('|'.join(self.triggers))
+            return '|'.join(self.triggers)
         else:
             group = ''
             if self.group:
@@ -169,7 +234,7 @@ class Command(object):
                     group = '{}(?:\w+)? '.format(self.plugin.bot.group_abbrev.get(self.group))
                 else:
                     group = self.group + ' '
-            return REGEX_FMT.format('|'.join(['^' + group + trigger for trigger in self.triggers]) + ARGS_REGEX)
+            return '^{}(?:{})'.format(group, '|'.join(self.triggers)) + ARGS_REGEX
 
     def execute(self, event):
         """
@@ -189,8 +254,11 @@ class Command(object):
             ))
 
         try:
-            args = self.args.parse(event.args, ctx=event)
+            parsed_args = self.args.parse(event.args, ctx=event)
         except ArgumentError as e:
             raise CommandError(e.message)
 
-        return self.func(event, *args)
+        kwargs = {}
+        kwargs.update(self.context)
+        kwargs.update(parsed_args)
+        return self.plugin.dispatch('command', self, event, **kwargs)

@@ -1,3 +1,4 @@
+from disco.types.base import UNSET
 from disco.types.channel import Channel
 from disco.types.guild import Guild, GuildMember, Role
 from disco.types.user import User

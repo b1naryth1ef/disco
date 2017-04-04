@@ -2,9 +2,12 @@ import requests
 import random
 import gevent
 import six
+import sys
 
 from holster.enum import Enum
 
+from disco import VERSION as disco_version
+from requests import __version__ as requests_version
 from disco.util.logging import LoggingClass
 from disco.api.ratelimit import RateLimiter
 
@@ -18,6 +21,12 @@ HTTPMethod = Enum(
 )
 
 
+def to_bytes(obj):
+    if isinstance(obj, six.text_type):
+        return obj.encode('utf-8')
+    return obj
+
+
 class Routes(object):
     """
     Simple Python object-enum of all method/url route combinations available to
@@ -25,18 +34,25 @@ class Routes(object):
     """
     # Gateway
     GATEWAY_GET = (HTTPMethod.GET, '/gateway')
+    GATEWAY_BOT_GET = (HTTPMethod.GET, '/gateway/bot')
 
     # Channels
     CHANNELS = '/channels/{channel}'
     CHANNELS_GET = (HTTPMethod.GET, CHANNELS)
     CHANNELS_MODIFY = (HTTPMethod.PATCH, CHANNELS)
     CHANNELS_DELETE = (HTTPMethod.DELETE, CHANNELS)
+    CHANNELS_TYPING = (HTTPMethod.POST, CHANNELS + '/typing')
     CHANNELS_MESSAGES_LIST = (HTTPMethod.GET, CHANNELS + '/messages')
     CHANNELS_MESSAGES_GET = (HTTPMethod.GET, CHANNELS + '/messages/{message}')
     CHANNELS_MESSAGES_CREATE = (HTTPMethod.POST, CHANNELS + '/messages')
     CHANNELS_MESSAGES_MODIFY = (HTTPMethod.PATCH, CHANNELS + '/messages/{message}')
     CHANNELS_MESSAGES_DELETE = (HTTPMethod.DELETE, CHANNELS + '/messages/{message}')
     CHANNELS_MESSAGES_DELETE_BULK = (HTTPMethod.POST, CHANNELS + '/messages/bulk_delete')
+    CHANNELS_MESSAGES_REACTIONS_GET = (HTTPMethod.GET, CHANNELS + '/messages/{message}/reactions/{emoji}')
+    CHANNELS_MESSAGES_REACTIONS_CREATE = (HTTPMethod.PUT, CHANNELS + '/messages/{message}/reactions/{emoji}/@me')
+    CHANNELS_MESSAGES_REACTIONS_DELETE_ME = (HTTPMethod.DELETE, CHANNELS + '/messages/{message}/reactions/{emoji}/@me')
+    CHANNELS_MESSAGES_REACTIONS_DELETE_USER = (HTTPMethod.DELETE,
+                                               CHANNELS + '/messages/{message}/reactions/{emoji}/{user}')
     CHANNELS_PERMISSIONS_MODIFY = (HTTPMethod.PUT, CHANNELS + '/permissions/{permission}')
     CHANNELS_PERMISSIONS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/permissions/{permission}')
     CHANNELS_INVITES_LIST = (HTTPMethod.GET, CHANNELS + '/invites')
@@ -58,6 +74,9 @@ class Routes(object):
     GUILDS_MEMBERS_LIST = (HTTPMethod.GET, GUILDS + '/members')
     GUILDS_MEMBERS_GET = (HTTPMethod.GET, GUILDS + '/members/{member}')
     GUILDS_MEMBERS_MODIFY = (HTTPMethod.PATCH, GUILDS + '/members/{member}')
+    GUILDS_MEMBERS_ROLES_ADD = (HTTPMethod.PUT, GUILDS + '/members/{member}/roles/{role}')
+    GUILDS_MEMBERS_ROLES_REMOVE = (HTTPMethod.DELETE, GUILDS + '/members/{member}/roles/{role}')
+    GUILDS_MEMBERS_ME_NICK = (HTTPMethod.PATCH, GUILDS + '/members/@me/nick')
     GUILDS_MEMBERS_KICK = (HTTPMethod.DELETE, GUILDS + '/members/{member}')
     GUILDS_BANS_LIST = (HTTPMethod.GET, GUILDS + '/bans')
     GUILDS_BANS_CREATE = (HTTPMethod.PUT, GUILDS + '/bans/{user}')
@@ -79,6 +98,10 @@ class Routes(object):
     GUILDS_EMBED_GET = (HTTPMethod.GET, GUILDS + '/embed')
     GUILDS_EMBED_MODIFY = (HTTPMethod.PATCH, GUILDS + '/embed')
     GUILDS_WEBHOOKS_LIST = (HTTPMethod.GET, GUILDS + '/webhooks')
+    GUILDS_EMOJIS_LIST = (HTTPMethod.GET, GUILDS + '/emojis')
+    GUILDS_EMOJIS_CREATE = (HTTPMethod.POST, GUILDS + '/emojis')
+    GUILDS_EMOJIS_MODIFY = (HTTPMethod.PATCH, GUILDS + '/emojis/{emoji}')
+    GUILDS_EMOJIS_DELETE = (HTTPMethod.DELETE, GUILDS + '/emojis/{emoji}')
 
     # Users
     USERS = '/users'
@@ -111,14 +134,39 @@ class APIException(Exception):
     """
     Exception thrown when an HTTP-client level error occurs. Usually this will
     be a non-success status-code, or a transient network issue.
-    """
-    def __init__(self, msg, status_code=0, content=None):
-        self.status_code = status_code
-        self.content = content
-        self.msg = msg
 
-        if self.status_code:
-            self.msg += ' code: {}'.format(status_code)
+    Attributes
+    ----------
+    status_code : int
+        The status code returned by the API for the request that triggered this
+        error.
+    """
+    def __init__(self, response, retries=None):
+        self.response = response
+        self.retries = retries
+
+        self.code = 0
+        self.msg = 'Request Failed ({})'.format(response.status_code)
+
+        if self.retries:
+            self.msg += " after {} retries".format(self.retries)
+
+        # Try to decode JSON, and extract params
+        try:
+            data = self.response.json()
+
+            if 'code' in data:
+                self.code = data['code']
+                self.msg = data['message']
+            elif len(data) == 1:
+                key, value = list(data.items())[0]
+                self.msg = 'Request Failed: {}: {}'.format(key, ', '.join(value))
+        except ValueError:
+            pass
+
+        # DEPRECATED: left for backwards compat
+        self.status_code = response.status_code
+        self.content = response.content
 
         super(APIException, self).__init__(self.msg)
 
@@ -134,9 +182,18 @@ class HTTPClient(LoggingClass):
     def __init__(self, token):
         super(HTTPClient, self).__init__()
 
+        py_version = '{}.{}.{}'.format(
+            sys.version_info.major,
+            sys.version_info.minor,
+            sys.version_info.micro)
+
         self.limiter = RateLimiter()
         self.headers = {
             'Authorization': 'Bot ' + token,
+            'User-Agent': 'DiscordBot (https://github.com/b1naryth1ef/disco {}) Python/{} requests/{}'.format(
+                disco_version,
+                py_version,
+                requests_version),
         }
 
     def __call__(self, route, args=None, **kwargs):
@@ -182,7 +239,8 @@ class HTTPClient(LoggingClass):
             kwargs['headers'] = self.headers
 
         # Build the bucket URL
-        filtered = {k: (v if v in ('guild', 'channel') else '') for k, v in six.iteritems(args)}
+        args = {k: to_bytes(v) for k, v in six.iteritems(args)}
+        filtered = {k: (v if k in ('guild', 'channel') else '') for k, v in six.iteritems(args)}
         bucket = (route[0].value, route[1].format(**filtered))
 
         # Possibly wait if we're rate limited
@@ -190,6 +248,7 @@ class HTTPClient(LoggingClass):
 
         # Make the actual request
         url = self.BASE_URL + route[1].format(**args)
+        self.log.info('%s %s (%s)', route[0].value, url, kwargs.get('params'))
         r = requests.request(route[0].value, url, **kwargs)
 
         # Update rate limiter
@@ -198,17 +257,18 @@ class HTTPClient(LoggingClass):
         # If we got a success status code, just return the data
         if r.status_code < 400:
             return r
-        elif r.status_code != 429 and 400 < r.status_code < 500:
-            raise APIException('Request failed', r.status_code, r.content)
+        elif r.status_code != 429 and 400 <= r.status_code < 500:
+            raise APIException(r)
         else:
             if r.status_code == 429:
-                self.log.warning('Request responded w/ 429, retrying (but this should not happen, check your clock sync')
+                self.log.warning(
+                    'Request responded w/ 429, retrying (but this should not happen, check your clock sync')
 
             # If we hit the max retries, throw an error
             retry += 1
             if retry > self.MAX_RETRIES:
                 self.log.error('Failing request, hit max retries')
-                raise APIException('Request failed after {} attempts'.format(self.MAX_RETRIES), r.status_code, r.content)
+                raise APIException(r, retries=self.MAX_RETRIES)
 
             backoff = self.random_backoff()
             self.log.warning('Request to `{}` failed with code {}, retrying after {}s ({})'.format(

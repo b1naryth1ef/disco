@@ -18,13 +18,12 @@ parser.add_argument('--config', help='Configuration file', default='config.yaml'
 parser.add_argument('--token', help='Bot Authentication Token', default=None)
 parser.add_argument('--shard-count', help='Total number of shards', default=None)
 parser.add_argument('--shard-id', help='Current shard number/id', default=None)
+parser.add_argument('--shard-auto', help='Automatically run all shards', action='store_true', default=False)
 parser.add_argument('--manhole', action='store_true', help='Enable the manhole', default=None)
 parser.add_argument('--manhole-bind', help='host:port for the manhole to bind too', default=None)
 parser.add_argument('--encoder', help='encoder for gateway data', default=None)
 parser.add_argument('--run-bot', help='run a disco bot on this client', action='store_true', default=False)
 parser.add_argument('--plugin', help='load plugins into the bot', nargs='*', default=[])
-
-logging.basicConfig(level=logging.INFO)
 
 
 def disco_main(run=False):
@@ -42,6 +41,7 @@ def disco_main(run=False):
     from disco.client import Client, ClientConfig
     from disco.bot import Bot, BotConfig
     from disco.util.token import is_valid_token
+    from disco.util.logging import setup_logging
 
     if os.path.exists(args.config):
         config = ClientConfig.from_file(args.config)
@@ -56,12 +56,23 @@ def disco_main(run=False):
         print('Invalid token passed')
         return
 
+    if args.shard_auto:
+        from disco.gateway.sharder import AutoSharder
+        AutoSharder(config).run()
+        return
+
+    # TODO: make configurable
+    setup_logging(level=logging.INFO)
+
     client = Client(config)
 
     bot = None
     if args.run_bot or hasattr(config, 'bot'):
         bot_config = BotConfig(config.bot) if hasattr(config, 'bot') else BotConfig()
-        bot_config.plugins += args.plugin
+        if not hasattr(bot_config, 'plugins'):
+            bot_config.plugins = args.plugin
+        else:
+            bot_config.plugins += args.plugin
         bot = Bot(client, bot_config)
 
     if run:

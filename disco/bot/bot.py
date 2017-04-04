@@ -12,6 +12,7 @@ from disco.bot.plugin import Plugin
 from disco.bot.command import CommandEvent, CommandLevels
 from disco.bot.storage import Storage
 from disco.util.config import Config
+from disco.util.logging import LoggingClass
 from disco.util.serializer import Serializer
 
 
@@ -64,7 +65,7 @@ class BotConfig(Config):
         The directory plugin configuration is located within.
     """
     levels = {}
-    plugins = []
+    plugin_config = {}
 
     commands_enabled = True
     commands_require_mention = True
@@ -88,7 +89,7 @@ class BotConfig(Config):
     storage_config = {}
 
 
-class Bot(object):
+class Bot(LoggingClass):
     """
     Disco's implementation of a simple but extendable Discord bot. Bots consist
     of a set of plugins, and a Disco client.
@@ -114,6 +115,9 @@ class Bot(object):
         self.client = client
         self.config = config or BotConfig()
 
+        # Shard manager
+        self.shards = None
+
         # The context carries information about events in a threadlocal storage
         self.ctx = ThreadLocal()
 
@@ -122,6 +126,7 @@ class Bot(object):
         if self.config.storage_enabled:
             self.storage = Storage(self.ctx, self.config.from_prefix('storage'))
 
+        # If the manhole is enabled, add this bot as a local
         if self.client.config.manhole_enable:
             self.client.manhole_locals['bot'] = self
 
@@ -134,6 +139,12 @@ class Bot(object):
 
             if self.config.commands_allow_edit:
                 self.client.events.on('MessageUpdate', self.on_message_update)
+
+        # If we have a level getter and its a string, try to load it
+        if isinstance(self.config.commands_level_getter, six.string_types):
+            mod, func = self.config.commands_level_getter.rsplit('.', 1)
+            mod = importlib.import_module(mod)
+            self.config.commands_level_getter = getattr(mod, func)
 
         # Stores the last message for every single channel
         self.last_message_cache = {}
@@ -173,10 +184,10 @@ class Bot(object):
     @property
     def commands(self):
         """
-        Generator of all commands this bots plugins have defined
+        Generator of all commands this bots plugins have defined.
         """
         for plugin in six.itervalues(self.plugins):
-            for command in six.itervalues(plugin.commands):
+            for command in plugin.commands:
                 yield command
 
     def recompute(self):
@@ -190,7 +201,7 @@ class Bot(object):
 
     def compute_group_abbrev(self):
         """
-        Computes all possible abbreviations for a command grouping
+        Computes all possible abbreviations for a command grouping.
         """
         self.group_abbrev = {}
         groups = set(command.group for command in self.commands if command.group)
@@ -199,7 +210,7 @@ class Bot(object):
             grp = group
             while grp:
                 # If the group already exists, means someone else thought they
-                #  could use it so we need to
+                #  could use it so we need yank it from them (and not use it)
                 if grp in list(six.itervalues(self.group_abbrev)):
                     self.group_abbrev = {k: v for k, v in six.iteritems(self.group_abbrev) if v != grp}
                 else:
@@ -211,13 +222,14 @@ class Bot(object):
         """
         Computes a single regex which matches all possible command combinations.
         """
-        re_str = '|'.join(command.regex for command in self.commands)
+        commands = list(self.commands)
+        re_str = '|'.join(command.regex for command in commands)
         if re_str:
-            self.command_matches_re = re.compile(re_str)
+            self.command_matches_re = re.compile(re_str, re.I)
         else:
             self.command_matches_re = None
 
-    def get_commands_for_message(self, msg):
+    def get_commands_for_message(self, require_mention, mention_rules, prefix, msg):
         """
         Generator of all commands that a given message object triggers, based on
         the bots plugins and configuration.
@@ -234,19 +246,19 @@ class Bot(object):
         """
         content = msg.content
 
-        if self.config.commands_require_mention:
+        if require_mention:
             mention_direct = msg.is_mentioned(self.client.state.me)
             mention_everyone = msg.mention_everyone
 
             mention_roles = []
             if msg.guild:
                 mention_roles = list(filter(lambda r: msg.is_mentioned(r),
-                    msg.guild.get_member(self.client.state.me).roles))
+                                            msg.guild.get_member(self.client.state.me).roles))
 
             if not any((
-                self.config.commands_mention_rules['user'] and mention_direct,
-                self.config.commands_mention_rules['everyone'] and mention_everyone,
-                self.config.commands_mention_rules['role'] and any(mention_roles),
+                mention_rules.get('user', True) and mention_direct,
+                mention_rules.get('everyone', False) and mention_everyone,
+                mention_rules.get('role', False) and any(mention_roles),
                 msg.channel.is_dm
             )):
                 raise StopIteration
@@ -262,14 +274,14 @@ class Bot(object):
                 content = content.replace('@everyone', '', 1)
             else:
                 for role in mention_roles:
-                    content = content.replace(role.mention, '', 1)
+                    content = content.replace('<@{}>'.format(role), '', 1)
 
             content = content.lstrip()
 
-        if self.config.commands_prefix and not content.startswith(self.config.commands_prefix):
+        if prefix and not content.startswith(prefix):
             raise StopIteration
         else:
-            content = content[len(self.config.commands_prefix):]
+            content = content[len(prefix):]
 
         if not self.command_matches_re or not self.command_matches_re.match(content):
             raise StopIteration
@@ -283,7 +295,7 @@ class Bot(object):
         level = CommandLevels.DEFAULT
 
         if callable(self.config.commands_level_getter):
-            level = self.config.commands_level_getter(actor)
+            level = self.config.commands_level_getter(self, actor)
         else:
             if actor.id in self.config.levels:
                 level = self.config.levels[actor.id]
@@ -320,19 +332,24 @@ class Bot(object):
         bool
             whether any commands where successfully triggered by the message
         """
-        commands = list(self.get_commands_for_message(msg))
+        commands = list(self.get_commands_for_message(
+            self.config.commands_require_mention,
+            self.config.commands_mention_rules,
+            self.config.commands_prefix,
+            msg
+        ))
 
-        if len(commands):
-            result = False
-            for command, match in commands:
-                if not self.check_command_permissions(command, msg):
-                    continue
+        if not len(commands):
+            return False
 
-                if command.plugin.execute(CommandEvent(command, msg, match)):
-                    result = True
-            return result
+        result = False
+        for command, match in commands:
+            if not self.check_command_permissions(command, msg):
+                continue
 
-        return False
+            if command.plugin.execute(CommandEvent(command, msg, match)):
+                result = True
+        return result
 
     def on_message_create(self, event):
         if event.message.author.id == self.client.state.me.id:
@@ -356,7 +373,7 @@ class Bot(object):
 
                 self.last_message_cache[msg.channel_id] = (msg, triggered)
 
-    def add_plugin(self, cls, config=None):
+    def add_plugin(self, cls, config=None, ctx=None):
         """
         Adds and loads a plugin, based on its class.
 
@@ -366,8 +383,12 @@ class Bot(object):
             Plugin class to initialize and load.
         config : Optional
             The configuration to load the plugin with.
+        ctx : Optional[dict]
+            Context (previous state) to pass the plugin. Usually used along w/
+            unload.
         """
         if cls.__name__ in self.plugins:
+            self.log.warning('Attempted to add already added plugin %s', cls.__name__)
             raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
 
         if not config:
@@ -376,9 +397,10 @@ class Bot(object):
             else:
                 config = self.load_plugin_config(cls)
 
-        self.plugins[cls.__name__] = cls(self, config)
-        self.plugins[cls.__name__].load()
+        self.ctx['plugin'] = self.plugins[cls.__name__] = cls(self, config)
+        self.plugins[cls.__name__].load(ctx or {})
         self.recompute()
+        self.ctx.drop()
 
     def rmv_plugin(self, cls):
         """
@@ -392,9 +414,11 @@ class Bot(object):
         if cls.__name__ not in self.plugins:
             raise Exception('Cannot remove non-existant plugin: {}'.format(cls.__name__))
 
-        self.plugins[cls.__name__].unload()
+        ctx = {}
+        self.plugins[cls.__name__].unload(ctx)
         del self.plugins[cls.__name__]
         self.recompute()
+        return ctx
 
     def reload_plugin(self, cls):
         """
@@ -402,13 +426,13 @@ class Bot(object):
         """
         config = self.plugins[cls.__name__].config
 
-        self.rmv_plugin(cls)
+        ctx = self.rmv_plugin(cls)
         module = reload_module(inspect.getmodule(cls))
-        self.add_plugin(getattr(module, cls.__name__), config)
+        self.add_plugin(getattr(module, cls.__name__), config, ctx)
 
     def run_forever(self):
         """
-        Runs this bots core loop forever
+        Runs this bots core loop forever.
         """
         self.client.run_forever()
 
@@ -416,12 +440,14 @@ class Bot(object):
         """
         Adds and loads a plugin, based on its module path.
         """
-
+        self.log.info('Adding plugin module at path "%s"', path)
         mod = importlib.import_module(path)
         loaded = False
 
         for entry in map(lambda i: getattr(mod, i), dir(mod)):
             if inspect.isclass(entry) and issubclass(entry, Plugin) and not entry == Plugin:
+                if getattr(entry, '_shallow', False) and Plugin in entry.__bases__:
+                    continue
                 loaded = True
                 self.add_plugin(entry, config)
 
@@ -430,23 +456,24 @@ class Bot(object):
 
     def load_plugin_config(self, cls):
         name = cls.__name__.lower()
-        if name.startswith('plugin'):
-            name = name[6:]
+        if name.endswith('plugin'):
+            name = name[:-6]
 
         path = os.path.join(
             self.config.plugin_config_dir, name) + '.' + self.config.plugin_config_format
 
-        if not os.path.exists(path):
-            if hasattr(cls, 'config_cls'):
-                return cls.config_cls()
-            return
+        data = {}
+        if name in self.config.plugin_config:
+            data = self.config.plugin_config[name]
 
-        with open(path, 'r') as f:
-            data = Serializer.loads(self.config.plugin_config_format, f.read())
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                data.update(Serializer.loads(self.config.plugin_config_format, f.read()))
 
         if hasattr(cls, 'config_cls'):
             inst = cls.config_cls()
-            inst.update(data)
+            if data:
+                inst.update(data)
             return inst
 
         return data

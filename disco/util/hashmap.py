@@ -45,12 +45,12 @@ class HashMap(UserDict):
     def filter(self, predicate):
         if not callable(predicate):
             raise TypeError('predicate must be callable')
-        return filter(self.values(), predicate)
+        return filter(predicate, self.values())
 
     def map(self, predicate):
         if not callable(predicate):
             raise TypeError('predicate must be callable')
-        return map(self.values(), predicate)
+        return map(predicate, self.values())
 
 
 class DefaultHashMap(defaultdict, HashMap):
