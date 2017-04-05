@@ -74,6 +74,8 @@ class Player(object):
                 self.paused.wait()
                 gevent.sleep(2)
                 self.client.set_speaking(True)
+                self.start = time.time()
+                self.loops = 0
 
             if self.client.state == VoiceState.DISCONNECTED:
                 return
