@@ -36,15 +36,30 @@ class AbstractOpus(object):
         self.frame_size = self.samples_per_frame * self.sample_size
 
 
+class BaseUtil(object):
+    def pipe(self, other, *args, **kwargs):
+        child = other(self, *args, **kwargs)
+        setattr(child, 'metadata', self.metadata)
+        return child
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, value):
+        self._metadata = value
+
+
 @six.add_metaclass(abc.ABCMeta)
-class BasePlayable(object):
+class BasePlayable(BaseUtil):
     @abc.abstractmethod
     def next_frame(self):
         raise NotImplementedError
 
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseInput(object):
+class BaseInput(BaseUtil):
     @abc.abstractmethod
     def read(self, size):
         raise NotImplementedError
@@ -53,15 +68,13 @@ class BaseInput(object):
     def fileobj(self):
         raise NotImplementedError
 
-    def pipe(self, other, *args, **kwargs):
-        return other(self, *args, **kwargs)
 
-
-class OpusFilePlayable(BasePlayable):
+class OpusFilePlayable(BasePlayable, AbstractOpus):
     """
     An input which reads opus data from a file or file-like object.
     """
-    def __init__(self, fobj):
+    def __init__(self, fobj, *args, **kwargs):
+        super(OpusFilePlayable, self).__init__(*args, **kwargs)
         self.fobj = fobj
         self.done = False
 
@@ -104,7 +117,7 @@ class FFmpegInput(BaseInput, AbstractOpus):
             info = info['entries'][0]
 
         result = cls(source=info['url'], *args, **kwargs)
-        result.info = info
+        result.metadata = info
         return result
 
     def read(self, sz):
@@ -221,3 +234,25 @@ class DCADOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
             return
 
         return data
+
+
+class FileProxyPlayable(BasePlayable, AbstractOpus):
+    def __init__(self, other, output, *args, **kwargs):
+        self.flush = kwargs.pop('flush', False)
+        super(FileProxyPlayable, self).__init__(*args, **kwargs)
+        self.other = other
+        self.output = output
+
+    def next_frame(self):
+        frame = self.other.next_frame()
+
+        if frame:
+            self.output.write(struct.pack('<h', len(frame)))
+            self.output.write(frame)
+
+            if self.flush:
+                self.output.flush()
+        else:
+            self.output.flush()
+            self.output.close()
+        return frame
