@@ -1,11 +1,8 @@
 from disco.bot import Plugin
 from disco.bot.command import CommandError
-from disco.voice.player import Player, create_youtube_dl_playables
+from disco.voice.player import Player
+from disco.voice.playable import FFmpegInput, DCADOpusEncoderPlayable
 from disco.voice.client import VoiceException
-
-
-def download(url):
-    return create_youtube_dl_playables(url)
 
 
 class MusicPlugin(Plugin):
@@ -43,7 +40,7 @@ class MusicPlugin(Plugin):
 
     @Plugin.command('play', '<url:str>')
     def on_play(self, event, url):
-        item = list(create_youtube_dl_playables(url))[0]
+        item = FFmpegInput.youtube_dl(url).pipe(DCADOpusEncoderPlayable)
         self.get_player(event.guild.id).queue.put(item)
 
     @Plugin.command('pause')

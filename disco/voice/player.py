@@ -83,9 +83,6 @@ class Player(object):
             if self.client.state != VoiceState.CONNECTED:
                 self.client.state_emitter.wait(VoiceState.CONNECTED)
 
-            if not item.have_frame():
-                return
-
             frame = item.next_frame()
             if frame is None:
                 return

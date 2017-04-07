@@ -86,16 +86,11 @@ class OpusEncoder(BaseOpus):
         'opus_encoder_destroy': ([EncoderStructPtr], None),
     }
 
-    def __init__(self, sampling, channels, application=Application.AUDIO, library_path=None):
+    def __init__(self, sampling_rate, channels, application=Application.AUDIO, library_path=None):
         super(OpusEncoder, self).__init__(library_path)
-        self.sampling_rate = sampling
+        self.sampling_rate = sampling_rate
         self.channels = channels
         self.application = application
-
-        self.frame_length = 20
-        self.sample_size = 2 * self.channels
-        self.samples_per_frame = int(self.sampling_rate / 1000 * self.frame_length)
-        self.frame_size = self.samples_per_frame * self.sample_size
 
         self._inst = None
 
