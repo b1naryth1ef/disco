@@ -102,7 +102,7 @@ class Role(SlottedModel):
 
     @property
     def mention(self):
-        return '<@{}>'.format(self.id)
+        return '<@&{}>'.format(self.id)
 
     @cached_property
     def guild(self):
