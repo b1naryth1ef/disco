@@ -1,12 +1,8 @@
 import sys
 import array
-import struct
-import gevent
 import ctypes
 import ctypes.util
-import subprocess
 
-from gevent.queue import Queue
 from holster.enum import Enum
 
 from disco.util.logging import LoggingClass
@@ -132,7 +128,7 @@ class OpusEncoder(BaseOpus):
         return result
 
     def __del__(self):
-        if self._inst:
+        if hasattr(self, '_inst') and self._inst:
             self.opus_encoder_destroy(self._inst)
             self._inst = None
 

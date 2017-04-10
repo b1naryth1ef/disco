@@ -1,5 +1,6 @@
 import abc
 import six
+import types
 import gevent
 import struct
 import subprocess
@@ -40,6 +41,7 @@ class BaseUtil(object):
     def pipe(self, other, *args, **kwargs):
         child = other(self, *args, **kwargs)
         setattr(child, 'metadata', self.metadata)
+        setattr(child, '_parent', self)
         return child
 
     @property
@@ -99,26 +101,13 @@ class OpusFilePlayable(BasePlayable, AbstractOpus):
 class FFmpegInput(BaseInput, AbstractOpus):
     def __init__(self, source='-', command='avconv', streaming=False, **kwargs):
         super(FFmpegInput, self).__init__(**kwargs)
+        if source:
+            self.source = source
         self.streaming = streaming
-        self.source = source
         self.command = command
 
         self._buffer = None
         self._proc = None
-
-    @classmethod
-    def youtube_dl(cls, url, *args, **kwargs):
-        import youtube_dl
-
-        ydl = youtube_dl.YoutubeDL({'format': 'webm[abr>0]/bestaudio/best'})
-        info = ydl.extract_info(url, download=False)
-
-        if 'entries' in info:
-            info = info['entries'][0]
-
-        result = cls(source=info['url'], *args, **kwargs)
-        result.metadata = info
-        return result
 
     def read(self, sz):
         if self.streaming:
@@ -141,9 +130,15 @@ class FFmpegInput(BaseInput, AbstractOpus):
     @property
     def proc(self):
         if not self._proc:
+            if callable(self.source):
+                self.source = self.source(self)
+
+            if isinstance(self.source, (tuple, list)):
+                self.source, self.metadata = self.source
+
             args = [
                 self.command,
-                '-i', self.source,
+                '-i', str(self.source),
                 '-f', 's16le',
                 '-ar', str(self.sampling_rate),
                 '-ac', str(self.channels),
@@ -152,6 +147,52 @@ class FFmpegInput(BaseInput, AbstractOpus):
             ]
             self._proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE)
         return self._proc
+
+
+class YoutubeDLInput(FFmpegInput):
+    def __init__(self, url=None, ie_info=None, *args, **kwargs):
+        super(YoutubeDLInput, self).__init__(None, *args, **kwargs)
+        self._url = url
+        self._ie_info = ie_info
+        self._info = None
+
+    @property
+    def info(self):
+        if not self._info:
+            import youtube_dl
+            ydl = youtube_dl.YoutubeDL({'format': 'webm[abr>0]/bestaudio/best'})
+
+            if self._url:
+                obj = ydl.extract_info(self._url, download=False, process=False)
+                if 'entries' in obj:
+                    self._ie_info = obj['entries']
+                else:
+                    self._ie_info = [obj]
+
+            self._info = ydl.process_ie_result(self._ie_info, download=False)
+        return self._info
+
+    @property
+    def _metadata(self):
+        return self.info
+
+    @classmethod
+    def many(cls, url, *args, **kwargs):
+        import youtube_dl
+
+        ydl = youtube_dl.YoutubeDL({'format': 'webm[abr>0]/bestaudio/best'})
+        info = ydl.extract_info(url, download=False, process=False)
+
+        if 'entries' not in info:
+            yield cls(ie_info=info, *args, **kwargs)
+            raise StopIteration
+
+        for item in info['entries']:
+            yield cls(ie_info=item, *args, **kwargs)
+
+    @property
+    def source(self):
+        return self.info['url']
 
 
 class BufferedOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
@@ -255,4 +296,31 @@ class FileProxyPlayable(BasePlayable, AbstractOpus):
         else:
             self.output.flush()
             self.output.close()
+        return frame
+
+
+class PlaylistPlayable(BasePlayable, AbstractOpus):
+    def __init__(self, items, *args, **kwargs):
+        super(PlaylistPlayable, self).__init__(*args, **kwargs)
+        self.items = items
+        self.now_playing = None
+
+    def _get_next(self):
+        if isinstance(self.items, types.GeneratorType):
+            return next(self.items, None)
+        return self.items.pop()
+
+    def next_frame(self):
+        if not self.items:
+            return
+
+        if not self.now_playing:
+            self.now_playing = self._get_next()
+            if not self.now_playing:
+                return
+
+        frame = self.now_playing.next_frame()
+        if not frame:
+            return self.next_frame()
+
         return frame

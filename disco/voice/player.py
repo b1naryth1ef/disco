@@ -63,6 +63,14 @@ class Player(object):
         self.events.emit(self.Events.RESUME_PLAY)
 
     def play(self, item):
+        # Grab the first frame before we start anything else, sometimes playables
+        #  can do some lengthy async tasks here to setup the playable and we
+        #  don't want that lerp the first N frames of the playable into playing
+        #  faster
+        frame = item.next_frame()
+        if frame is None:
+            return
+
         start = time.time()
         loops = 0
 
@@ -83,12 +91,12 @@ class Player(object):
             if self.client.state != VoiceState.CONNECTED:
                 self.client.state_emitter.wait(VoiceState.CONNECTED)
 
+            self.client.send_frame(frame)
+            self.client.timestamp += item.samples_per_frame
+
             frame = item.next_frame()
             if frame is None:
                 return
-
-            self.client.send_frame(frame)
-            self.client.timestamp += item.samples_per_frame
 
             next_time = start + 0.02 * loops
             delay = max(0, 0.02 + (next_time - time.time()))
