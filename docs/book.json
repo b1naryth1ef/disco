@@ -1,0 +1,10 @@
+{
+  "title": "Disco",
+  "plugins": ["prism", "-highlight", "hints"],
+	"pluginsConfig": {
+			"anchorjs": {
+					"placement": "left",
+					"visible": "always"
+			}
+	}
+}

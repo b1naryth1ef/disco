@@ -3,3 +3,6 @@ dist/
 disco*.egg-info/
 docs/_build
 storage.db
+
+_book/
+node_modules/
