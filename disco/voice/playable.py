@@ -249,9 +249,9 @@ class DCADOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
             def writer():
                 while True:
                     data = obj.read(2048)
-                    if data > 0:
+                    if len(data) > 0:
                         self._proc.stdin.write(data)
-                    if data < 2048:
+                    if len(data) < 2048:
                         break
 
             if source == subprocess.PIPE:
@@ -270,7 +270,7 @@ class DCADOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
         size = struct.unpack('<h', header)[0]
 
         data = self.proc.stdout.read(size)
-        if len(data) == 0:
+        if len(data) < size:
             self._done = True
             return
 
@@ -324,3 +324,24 @@ class PlaylistPlayable(BasePlayable, AbstractOpus):
             return self.next_frame()
 
         return frame
+
+
+class MemoryBufferedPlayable(BasePlayable, AbstractOpus):
+    def __init__(self, other, *args, **kwargs):
+        from gevent.queue import Queue
+
+        super(MemoryBufferedPlayable, self).__init__(*args, **kwargs)
+        self.frames = Queue()
+        self.other = other
+        gevent.spawn(self._buffer)
+
+    def _buffer(self):
+        while True:
+            frame = self.other.next_frame()
+            if not frame:
+                break
+            self.frames.put(frame)
+        self.frames.put(None)
+
+    def next_frame(self):
+        return self.frames.get()
