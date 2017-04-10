@@ -140,6 +140,10 @@ class Command(object):
 
         self.update(*args, **kwargs)
 
+    @property
+    def name(self):
+        return self.triggers[0]
+
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
 
