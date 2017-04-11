@@ -311,6 +311,12 @@ class APIClient(LoggingClass):
         r = self.http(Routes.USERS_ME_PATCH, json=payload)
         return User.create(self.client, r.json())
 
+    def users_me_dms_create(self, recipient_id):
+        r = self.http(Routes.USERS_ME_DMS_CREATE, json={
+            'recipient_id': recipient_id,
+        })
+        return Channel.create(self.client, r.json())
+
     def invites_get(self, invite):
         r = self.http(Routes.INVITES_GET, dict(invite=invite))
         return Invite.create(self.client, r.json())

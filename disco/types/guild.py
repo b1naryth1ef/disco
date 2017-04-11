@@ -51,6 +51,9 @@ class GuildEmoji(Emoji):
     def __str__(self):
         return u'<:{}:{}>'.format(self.name, self.id)
 
+    def update(self, **kwargs):
+        return self.client.api.guilds_emojis_modify(self.guild_id, self.id, **kwargs)
+
     @property
     def url(self):
         return 'https://discordapp.com/api/emojis/{}.png'.format(self.id)
