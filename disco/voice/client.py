@@ -3,6 +3,8 @@ import socket
 import struct
 import time
 
+import nacl.secret
+
 from holster.enum import Enum
 from holster.emitter import Emitter
 
@@ -22,11 +24,6 @@ VoiceState = Enum(
     VOICE_CONNECTED=6,
 )
 
-# TODO:
-#   - player implementation
-#   - encryption
-#   - cleanup
-
 
 class VoiceException(Exception):
     def __init__(self, msg, client):
@@ -38,11 +35,39 @@ class UDPVoiceClient(LoggingClass):
     def __init__(self, vc):
         super(UDPVoiceClient, self).__init__()
         self.vc = vc
+
+        # The underlying UDP socket
         self.conn = None
+
+        # Connection information
         self.ip = None
         self.port = None
+
         self.run_task = None
         self.connected = False
+
+    def send_frame(self, frame, sequence=None, timestamp=None):
+        # Convert the frame to a bytearray
+        frame = bytearray(frame)
+
+        # First, pack the header (TODO: reuse bytearray?)
+        header = bytearray(24)
+        header[0] = 0x80
+        header[1] = 0x78
+        struct.pack_into('>H', header, 2, sequence or self.vc.sequence)
+        struct.pack_into('>I', header, 4, timestamp or self.vc.timestamp)
+        struct.pack_into('>i', header, 8, self.vc.ssrc)
+
+        # Now encrypt the payload with the nonce as a header
+        raw = self.vc.secret_box.encrypt(bytes(frame), bytes(header)).ciphertext
+
+        # Send the header (sans nonce padding) plus the payload
+        self.send(header[:12] + raw)
+
+        # Increment our sequence counter
+        self.vc.sequence += 1
+        if self.vc.sequence >= 65535:
+            self.vc.sequence = 0
 
     def run(self):
         while True:
@@ -54,26 +79,29 @@ class UDPVoiceClient(LoggingClass):
     def disconnect(self):
         self.run_task.kill()
 
-    def connect(self, host, port, timeout=10):
+    def connect(self, host, port, timeout=10, addrinfo=None):
         self.ip = socket.gethostbyname(host)
         self.port = port
 
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        # Send discovery packet
-        packet = bytearray(70)
-        struct.pack_into('>I', packet, 0, self.vc.ssrc)
-        self.send(packet)
+        if addrinfo:
+            ip, port = addrinfo
+        else:
+            # Send discovery packet
+            packet = bytearray(70)
+            struct.pack_into('>I', packet, 0, self.vc.ssrc)
+            self.send(packet)
 
-        # Wait for a response
-        try:
-            data, addr = gevent.spawn(lambda: self.conn.recvfrom(70)).get(timeout=timeout)
-        except gevent.Timeout:
-            return (None, None)
+            # Wait for a response
+            try:
+                data, addr = gevent.spawn(lambda: self.conn.recvfrom(70)).get(timeout=timeout)
+            except gevent.Timeout:
+                return (None, None)
 
-        # Read IP and port
-        ip = str(data[4:]).split('\x00', 1)[0]
-        port = struct.unpack('<H', data[-2:])[0]
+            # Read IP and port
+            ip = str(data[4:]).split('\x00', 1)[0]
+            port = struct.unpack('<H', data[-2:])[0]
 
         # Spawn read thread so we don't max buffers
         self.connected = True
@@ -86,29 +114,44 @@ class VoiceClient(LoggingClass):
     def __init__(self, channel, encoder=None):
         super(VoiceClient, self).__init__()
 
-        assert channel.is_voice, 'Cannot spawn a VoiceClient for a non-voice channel'
+        if not channel.is_voice:
+            raise ValueError('Cannot spawn a VoiceClient for a non-voice channel')
+
         self.channel = channel
         self.client = self.channel.client
         self.encoder = encoder or JSONEncoder
 
+        # Bind to some WS packets
         self.packets = Emitter(gevent.spawn)
         self.packets.on(VoiceOPCode.READY, self.on_voice_ready)
         self.packets.on(VoiceOPCode.SESSION_DESCRIPTION, self.on_voice_sdp)
 
-        # State
+        # State + state change emitter
         self.state = VoiceState.DISCONNECTED
-        self.connected = gevent.event.Event()
+        self.state_emitter = Emitter(gevent.spawn)
+
+        # Connection metadata
         self.token = None
         self.endpoint = None
         self.ssrc = None
         self.port = None
+        self.secret_box = None
         self.udp = None
+
+        # Voice data state
+        self.sequence = 0
+        self.timestamp = 0
 
         self.update_listener = None
 
         # Websocket connection
         self.ws = None
         self.heartbeat_task = None
+
+    def set_state(self, state):
+        prev_state = self.state
+        self.state = state
+        self.state_emitter.emit(state, prev_state)
 
     def heartbeat(self, interval):
         while True:
@@ -128,7 +171,7 @@ class VoiceClient(LoggingClass):
         }), self.encoder.OPCODE)
 
     def on_voice_ready(self, data):
-        self.state = VoiceState.CONNECTING
+        self.set_state(VoiceState.CONNECTING)
         self.ssrc = data['ssrc']
         self.port = data['port']
 
@@ -146,18 +189,20 @@ class VoiceClient(LoggingClass):
             'data': {
                 'port': port,
                 'address': ip,
-                'mode': 'plain'
+                'mode': 'xsalsa20_poly1305'
             }
         })
 
-    def on_voice_sdp(self, _):
+    def on_voice_sdp(self, sdp):
+        # Create a secret box for encryption/decryption
+        self.secret_box = nacl.secret.SecretBox(bytes(bytearray(sdp['secret_key'])))
+
         # Toggle speaking state so clients learn of our SSRC
         self.set_speaking(True)
         self.set_speaking(False)
         gevent.sleep(0.25)
 
-        self.state = VoiceState.CONNECTED
-        self.connected.set()
+        self.set_state(VoiceState.CONNECTED)
 
     def on_voice_server_update(self, data):
         if self.channel.guild_id != data.guild_id or not data.token:
@@ -167,30 +212,28 @@ class VoiceClient(LoggingClass):
             return
 
         self.token = data.token
-        self.state = VoiceState.AUTHENTICATING
+        self.set_state(VoiceState.AUTHENTICATING)
 
         self.endpoint = data.endpoint.split(':', 1)[0]
-        self.ws = Websocket(
-            'wss://' + self.endpoint,
-            on_message=self.on_message,
-            on_error=self.on_error,
-            on_open=self.on_open,
-            on_close=self.on_close,
-        )
+        self.ws = Websocket('wss://' + self.endpoint)
+        self.ws.emitter.on('on_open', self.on_open)
+        self.ws.emitter.on('on_error', self.on_error)
+        self.ws.emitter.on('on_close', self.on_close)
+        self.ws.emitter.on('on_message', self.on_message)
         self.ws.run_forever()
 
-    def on_message(self, _, msg):
+    def on_message(self, msg):
         try:
             data = self.encoder.decode(msg)
             self.packets.emit(VoiceOPCode[data['op']], data['d'])
         except:
             self.log.exception('Failed to parse voice gateway message: ')
 
-    def on_error(self, _, err):
-        # TODO
+    def on_error(self, err):
+        # TODO: raise an exception here
         self.log.warning('Voice websocket error: {}'.format(err))
 
-    def on_open(self, _):
+    def on_open(self):
         self.send(VoiceOPCode.IDENTIFY, {
             'server_id': self.channel.guild_id,
             'user_id': self.client.state.me.id,
@@ -198,12 +241,15 @@ class VoiceClient(LoggingClass):
             'token': self.token
         })
 
-    def on_close(self, _, code, error):
-        # TODO
+    def on_close(self, code, error):
         self.log.warning('Voice websocket disconnected (%s, %s)', code, error)
 
+        if self.state == VoiceState.CONNECTED:
+            self.log.info('Attempting voice reconnection')
+            self.connect()
+
     def connect(self, timeout=5, mute=False, deaf=False):
-        self.state = VoiceState.AWAITING_ENDPOINT
+        self.set_state(VoiceState.AWAITING_ENDPOINT)
 
         self.update_listener = self.client.events.on('VoiceServerUpdate', self.on_voice_server_update)
 
@@ -214,11 +260,11 @@ class VoiceClient(LoggingClass):
             'channel_id': int(self.channel.id),
         })
 
-        if not self.connected.wait(timeout) or self.state != VoiceState.CONNECTED:
+        if not self.state_emitter.once(VoiceState.CONNECTED, timeout=timeout):
             raise VoiceException('Failed to connect to voice', self)
 
     def disconnect(self):
-        self.state = VoiceState.DISCONNECTED
+        self.set_state(VoiceState.DISCONNECTED)
 
         if self.heartbeat_task:
             self.heartbeat_task.kill()
@@ -236,3 +282,6 @@ class VoiceClient(LoggingClass):
             'guild_id': int(self.channel.guild_id),
             'channel_id': None,
         })
+
+    def send_frame(self, *args, **kwargs):
+        self.udp.send_frame(*args, **kwargs)
