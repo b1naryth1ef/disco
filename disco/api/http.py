@@ -108,7 +108,7 @@ class Routes(object):
     USERS_ME_GET = (HTTPMethod.GET, USERS + '/@me')
     USERS_ME_PATCH = (HTTPMethod.PATCH, USERS + '/@me')
     USERS_ME_GUILDS_LIST = (HTTPMethod.GET, USERS + '/@me/guilds')
-    USERS_ME_GUILDS_LEAVE = (HTTPMethod.DELETE, USERS + '/@me/guilds/{guild}')
+    USERS_ME_GUILDS_DELETE = (HTTPMethod.DELETE, USERS + '/@me/guilds/{guild}')
     USERS_ME_DMS_LIST = (HTTPMethod.GET, USERS + '/@me/channels')
     USERS_ME_DMS_CREATE = (HTTPMethod.POST, USERS + '/@me/channels')
     USERS_ME_CONNECTIONS_LIST = (HTTPMethod.GET, USERS + '/@me/connections')

@@ -420,3 +420,6 @@ class Guild(SlottedModel, Permissible):
 
     def create_channel(self, *args, **kwargs):
         return self.client.api.guilds_channels_create(self.id, *args, **kwargs)
+
+    def leave(self):
+        return self.client.api.users_me_guilds_delete(self.id)

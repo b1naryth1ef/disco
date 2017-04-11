@@ -311,6 +311,9 @@ class APIClient(LoggingClass):
         r = self.http(Routes.USERS_ME_PATCH, json=payload)
         return User.create(self.client, r.json())
 
+    def users_me_guilds_delete(self, guild):
+        self.http(Routes.USERS_ME_GUILDS_DELETE, dict(guild=guild))
+
     def users_me_dms_create(self, recipient_id):
         r = self.http(Routes.USERS_ME_DMS_CREATE, json={
             'recipient_id': recipient_id,
