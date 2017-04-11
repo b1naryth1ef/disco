@@ -309,6 +309,9 @@ class State(object):
         if event.guild_id not in self.guilds:
             return
 
+        for emoji in event.emojis:
+            emoji.guild_id = event.guild_id
+
         self.guilds[event.guild_id].emojis = HashMap({i.id: i for i in event.emojis})
 
     def on_presence_update(self, event):
