@@ -313,6 +313,10 @@ class Guild(SlottedModel, Permissible):
         self.attach(six.itervalues(self.emojis), {'guild_id': self.id})
         self.attach(six.itervalues(self.voice_states), {'guild_id': self.id})
 
+    @cached_property
+    def owner(self):
+        return self.members.get(self.owner_id)
+
     def get_permissions(self, member):
         """
         Get the permissions a user has in this guild.
