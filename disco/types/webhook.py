@@ -1,6 +1,11 @@
+import re
+
 from disco.types.base import SlottedModel, Field, snowflake
 from disco.types.user import User
 from disco.util.functional import cached_property
+
+
+WEBHOOK_URL_RE = re.compile(r'\/api\/webhooks\/(\d+)\/(.[^/]+)')
 
 
 class Webhook(SlottedModel):
@@ -11,6 +16,14 @@ class Webhook(SlottedModel):
     name = Field(str)
     avatar = Field(str)
     token = Field(str)
+
+    @classmethod
+    def from_url(cls, url):
+        results = WEBHOOK_URL_RE.findall(url)
+        if len(results) != 1:
+            return Exception('Invalid Webhook URL')
+
+        return cls(id=results[0][0], token=results[0][1])
 
     @cached_property
     def guild(self):
