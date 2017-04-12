@@ -18,14 +18,17 @@ class Webhook(SlottedModel):
     token = Field(str)
 
     @classmethod
-    def from_url(cls, url):
+    def execute_url(cls, url, **kwargs):
         from disco.api.client import APIClient
 
-        results = WEBHOOK_URL_RE.findall(url, client=APIClient(None))
+        results = WEBHOOK_URL_RE.findall(url)
         if len(results) != 1:
             return Exception('Invalid Webhook URL')
 
-        return cls(id=results[0][0], token=results[0][1])
+        return cls(id=results[0][0], token=results[0][1]).execute(
+            client=APIClient(None),
+            **kwargs
+        )
 
     @cached_property
     def guild(self):
