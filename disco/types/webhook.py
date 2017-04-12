@@ -19,7 +19,9 @@ class Webhook(SlottedModel):
 
     @classmethod
     def from_url(cls, url):
-        results = WEBHOOK_URL_RE.findall(url)
+        from disco.api.client import APIClient
+
+        results = WEBHOOK_URL_RE.findall(url, client=APIClient(None))
         if len(results) != 1:
             return Exception('Invalid Webhook URL')
 
@@ -45,10 +47,11 @@ class Webhook(SlottedModel):
         else:
             return self.client.api.webhooks_modify(self.id, name, avatar)
 
-    def execute(self, content=None, username=None, avatar_url=None, tts=False, fobj=None, embeds=[], wait=False):
+    def execute(self, content=None, username=None, avatar_url=None, tts=False, fobj=None, embeds=[], wait=False, client=None):
         # TODO: support file stuff properly
+        client = client or self.client.api
 
-        return self.client.api.webhooks_token_execute(self.id, self.token, {
+        return client.webhooks_token_execute(self.id, self.token, {
             'content': content,
             'username': username,
             'avatar_url': avatar_url,

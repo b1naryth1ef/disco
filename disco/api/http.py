@@ -189,12 +189,14 @@ class HTTPClient(LoggingClass):
 
         self.limiter = RateLimiter()
         self.headers = {
-            'Authorization': 'Bot ' + token,
             'User-Agent': 'DiscordBot (https://github.com/b1naryth1ef/disco {}) Python/{} requests/{}'.format(
                 disco_version,
                 py_version,
                 requests_version),
         }
+
+        if token:
+            self.headers['Authorization'] = 'Bot ' + token
 
     def __call__(self, route, args=None, **kwargs):
         return self.call(route, args, **kwargs)
