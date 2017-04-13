@@ -88,12 +88,14 @@ class APIClient(LoggingClass):
         r = self.http(Routes.CHANNELS_MESSAGES_GET, dict(channel=channel, message=message))
         return Message.create(self.client, r.json())
 
-    def channels_messages_create(self, channel, content, nonce=None, tts=False, attachment=None, embed=None):
+    def channels_messages_create(self, channel, content=None, nonce=None, tts=False, attachment=None, embed=None):
         payload = {
-            'content': content,
             'nonce': nonce,
             'tts': tts,
         }
+
+        if content:
+            payload['content'] = content
 
         if embed:
             payload['embed'] = embed.to_dict()
