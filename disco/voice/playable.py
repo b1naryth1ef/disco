@@ -46,7 +46,7 @@ class BaseUtil(object):
 
     @property
     def metadata(self):
-        return self._metadata
+        return getattr(self, '_metadata', None)
 
     @metadata.setter
     def metadata(self, value):
