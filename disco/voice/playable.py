@@ -14,7 +14,7 @@ from disco.voice.opus import OpusEncoder
 try:
     from cStringIO import cStringIO as StringIO
 except:
-    from StringIO import StringIO
+    from six import StringIO
 
 
 OPUS_HEADER_SIZE = struct.calcsize('<h')
