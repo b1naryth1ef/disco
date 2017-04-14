@@ -9,7 +9,7 @@ from disco.util.functional import cached_property
 from disco.types.base import (
     SlottedModel, Field, ListField, AutoDictField, snowflake, text, binary, enum, datetime
 )
-from disco.types.user import User, Presence
+from disco.types.user import User
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
 from disco.types.message import Emoji
@@ -300,7 +300,6 @@ class Guild(SlottedModel, Permissible):
     emojis = AutoDictField(GuildEmoji, 'id')
     voice_states = AutoDictField(VoiceState, 'session_id')
     member_count = Field(int)
-    presences = ListField(Presence)
 
     synced = Field(bool, default=False)
 

@@ -153,6 +153,7 @@ class GuildCreate(GatewayEvent):
         and if None, this is a normal guild join event.
     """
     unavailable = Field(bool)
+    presences = ListField(Presence)
 
     @property
     def created(self):

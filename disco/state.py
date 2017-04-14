@@ -315,15 +315,30 @@ class State(object):
         self.guilds[event.guild_id].emojis = HashMap({i.id: i for i in event.emojis})
 
     def on_presence_update(self, event):
-        if event.user.id in self.users:
-            self.users[event.user.id].update(event.presence.user)
-            self.users[event.user.id].presence = event.presence
-            event.presence.user = self.users[event.user.id]
+        # Grab a copy of the user, and clear it out. All the operations below
+        #  do not want the nested user object, as the normaly structure is
+        #  user -> presence, and without clearing this becomes recursive
+        user = event.presence.user
+        user.presence = event.presence
+        event.presence.user = None
 
-        if event.guild_id not in self.guilds:
+        # if we have the user tracked locally, we can just use the presence
+        #  update to update both their presence and the cached user object.
+        if user.id in self.users:
+            self.users[user.id].update(user)
+        else:
+            # Otherwise this user does not exist in our local cache, so we can
+            #  use this opportunity to add them. They will quickly fall out of
+            #  scope and be deleted if they aren't used below
+            self.users[user.id] = user
+
+        # Some updates come with a guild_id and roles the user is in, we should
+        #  use this to update the guild member, but only if we have the guild
+        #  cached.
+        if event.roles is UNSET or event.guild_id not in self.guilds:
             return
 
-        if event.user.id not in self.guilds[event.guild_id].members:
+        if user.id not in self.guilds[event.guild_id].members:
             return
 
-        self.guilds[event.guild_id].members[event.user.id].user.update(event.user)
+        self.guilds[event.guild_id].members[user.id].roles = event.roles
