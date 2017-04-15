@@ -105,7 +105,21 @@ class Client(LoggingClass):
                                                localf=lambda: self.manhole_locals)
             self.manhole.start()
 
-    def update_presence(self, game=None, status=None, afk=False, since=0.0):
+    def update_presence(self, status, game=None, afk=False, since=0.0):
+        """
+        Updates the current clients presence.
+
+        Params
+        ------
+        status : `user.Status`
+            The clients current status.
+        game : `user.Game`
+            If passed, the game object to set for the users presence.
+        afk : bool
+            Whether the client is currently afk.
+        since : float
+            How long the client has been afk for (in seconds).
+        """
         if game and not isinstance(game, Game):
             raise TypeError('Game must be a Game model')
 
@@ -126,12 +140,12 @@ class Client(LoggingClass):
 
     def run(self):
         """
-        Run the client (e.g. the :class:`GatewayClient`) in a new greenlet.
+        Run the client (e.g. the `GatewayClient`) in a new greenlet.
         """
         return gevent.spawn(self.gw.run)
 
     def run_forever(self):
         """
-        Run the client (e.g. the :class:`GatewayClient`) in the current greenlet.
+        Run the client (e.g. the `GatewayClient`) in the current greenlet.
         """
         return self.gw.run()

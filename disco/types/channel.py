@@ -244,7 +244,7 @@ class Channel(SlottedModel, Permissible):
     def create_webhook(self, name=None, avatar=None):
         return self.client.api.channels_webhooks_create(self.id, name, avatar)
 
-    def send_message(self, content, nonce=None, tts=False, attachment=None, embed=None):
+    def send_message(self, content=None, nonce=None, tts=False, attachment=None, embed=None):
         """
         Send a message in this channel.
 
