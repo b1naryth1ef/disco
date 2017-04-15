@@ -176,7 +176,7 @@ class HTTPClient(LoggingClass):
     A simple HTTP client which wraps the requests library, adding support for
     Discords rate-limit headers, authorization, and request/response validation.
     """
-    BASE_URL = 'https://discordapp.com/api/v6'
+    BASE_URL = 'https://discordapp.com/api/v7'
     MAX_RETRIES = 5
 
     def __init__(self, token):
