@@ -25,6 +25,9 @@ class Unset(object):
     def __nonzero__(self):
         return False
 
+    def __bool__(self):
+        return False
+
 
 UNSET = Unset()
 
