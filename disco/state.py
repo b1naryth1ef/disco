@@ -1,5 +1,4 @@
 import six
-import copy
 import weakref
 import inflection
 
@@ -316,14 +315,9 @@ class State(object):
         self.guilds[event.guild_id].emojis = HashMap({i.id: i for i in event.emojis})
 
     def on_presence_update(self, event):
-        # Grab a copy of the entire presence object, and clear the user out. All
-        #  the operations below do not require or want a nested user object, and
-        #  having it set just complicates the general structure. We copy so as
-        #  to avoid interferring with other events that may require the nested
-        #  user object.
+        # TODO: this is recursive, we hackfix in model, but its still lame ATM
         user = event.presence.user
-        user.presence = copy.deepcopy(event.presence)
-        user.presence.user = None
+        user.presence = event.presence
 
         # if we have the user tracked locally, we can just use the presence
         #  update to update both their presence and the cached user object.
