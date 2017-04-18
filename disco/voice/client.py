@@ -3,7 +3,10 @@ import socket
 import struct
 import time
 
-import nacl.secret
+try:
+    import nacl.secret
+except ImportError:
+    print 'WARNING: nacl is not installed, voice support is disabled'
 
 from holster.enum import Enum
 from holster.emitter import Emitter
