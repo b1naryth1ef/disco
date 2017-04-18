@@ -217,10 +217,9 @@ class BufferedOpusEncoderPlayable(BasePlayable, OpusEncoder, AbstractOpus):
             self.frames.put(self.encode(raw, self.samples_per_frame))
             gevent.idle()
         self.source = None
+        self.frames.put(None)
 
     def next_frame(self):
-        if not self.source:
-            return None
         return self.frames.get()
 
 
