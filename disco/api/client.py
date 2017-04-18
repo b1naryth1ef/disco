@@ -109,10 +109,11 @@ class APIClient(LoggingClass):
 
         return Message.create(self.client, r.json())
 
-    def channels_messages_modify(self, channel, message, content, embed=None):
-        payload = {
-            'content': content,
-        }
+    def channels_messages_modify(self, channel, message, content=None, embed=None):
+        payload = {}
+
+        if content:
+            payload['content'] = content
 
         if embed:
             payload['embed'] = embed.to_dict()
