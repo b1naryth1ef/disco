@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import gevent
 import socket
 import struct
@@ -6,7 +8,7 @@ import time
 try:
     import nacl.secret
 except ImportError:
-    print 'WARNING: nacl is not installed, voice support is disabled'
+    print('WARNING: nacl is not installed, voice support is disabled')
 
 from holster.enum import Enum
 from holster.emitter import Emitter

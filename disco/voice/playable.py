@@ -5,26 +5,22 @@ import gevent
 import struct
 import subprocess
 
-
+from gevent.lock import Semaphore
 from gevent.queue import Queue
 
 from disco.voice.opus import OpusEncoder
 
 
 try:
-    from cStringIO import cStringIO as StringIO
+    from cStringIO import cStringIO as BufferedIO
 except:
-    from six import StringIO
+    if six.PY2:
+        from StringIO import StringIO as BufferedIO
+    else:
+        from io import BytesIO as BufferedIO
 
 
 OPUS_HEADER_SIZE = struct.calcsize('<h')
-
-
-# Play from file:
-#  OpusFilePlayable(open('myfile.opus', 'r'))
-#  PCMFileInput(open('myfile.pcm', 'r')).pipe(DCADOpusEncoder) => OpusPlayable
-#  FFMpegInput.youtube_dl('youtube.com/yolo').pipe(DCADOpusEncoder) => OpusPlayable
-#  FFMpegInput.youtube_dl('youtube.com/yolo').pipe(OpusEncoder).pipe(DuplexStream, open('cache_file.opus', 'w')) => OpusPlayable
 
 
 class AbstractOpus(object):
@@ -116,7 +112,7 @@ class FFmpegInput(BaseInput, AbstractOpus):
         # First read blocks until the subprocess finishes
         if not self._buffer:
             data, _ = self.proc.communicate()
-            self._buffer = StringIO(data)
+            self._buffer = BufferedIO(data)
 
         # Subsequent reads can just do dis thang
         return self._buffer.read(sz)
@@ -155,22 +151,24 @@ class YoutubeDLInput(FFmpegInput):
         self._url = url
         self._ie_info = ie_info
         self._info = None
+        self._info_lock = Semaphore()
 
     @property
     def info(self):
-        if not self._info:
-            import youtube_dl
-            ydl = youtube_dl.YoutubeDL({'format': 'webm[abr>0]/bestaudio/best'})
+        with self._info_lock:
+            if not self._info:
+                import youtube_dl
+                ydl = youtube_dl.YoutubeDL({'format': 'webm[abr>0]/bestaudio/best'})
 
-            if self._url:
-                obj = ydl.extract_info(self._url, download=False, process=False)
-                if 'entries' in obj:
-                    self._ie_info = obj['entries']
-                else:
-                    self._ie_info = [obj]
+                if self._url:
+                    obj = ydl.extract_info(self._url, download=False, process=False)
+                    if 'entries' in obj:
+                        self._ie_info = obj['entries'][0]
+                    else:
+                        self._ie_info = obj
 
-            self._info = ydl.process_ie_result(self._ie_info, download=False)
-        return self._info
+                self._info = ydl.process_ie_result(self._ie_info, download=False)
+            return self._info
 
     @property
     def _metadata(self):
@@ -195,11 +193,19 @@ class YoutubeDLInput(FFmpegInput):
         return self.info['url']
 
 
-class BufferedOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
+class BufferedOpusEncoderPlayable(BasePlayable, OpusEncoder, AbstractOpus):
     def __init__(self, source, *args, **kwargs):
         self.source = source
         self.frames = Queue(kwargs.pop('queue_size', 4096))
-        super(BufferedOpusEncoderPlayable, self).__init__(*args, **kwargs)
+
+        # Call the AbstractOpus constructor, as we need properties it sets
+        AbstractOpus.__init__(self, *args, **kwargs)
+
+        # Then call the OpusEncoder constructor, which requires some properties
+        #  that AbstractOpus sets up
+        OpusEncoder.__init__(self, self.sampling_rate, self.channels)
+
+        # Spawn the encoder loop
         gevent.spawn(self._encoder_loop)
 
     def _encoder_loop(self):
