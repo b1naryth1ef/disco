@@ -7,6 +7,8 @@ from holster.emitter import Emitter
 
 from disco.voice.client import VoiceState
 
+MAX_TIMESTAMP = 4294967295
+
 
 class Player(object):
     Events = Enum(
@@ -93,6 +95,8 @@ class Player(object):
 
             self.client.send_frame(frame)
             self.client.timestamp += item.samples_per_frame
+            if self.client.timestamp > MAX_TIMESTAMP:
+                self.client.timestamp = 0
 
             frame = item.next_frame()
             if frame is None:
