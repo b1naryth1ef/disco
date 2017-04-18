@@ -109,7 +109,7 @@ class GatewayClient(LoggingClass):
         self.reconnects = 0
 
     def on_resumed(self, _):
-        self.log.info('RESUME completed, replayed %s events', self.resumed_events)
+        self.log.info('RESUME completed, replayed %s events', self.replayed_events)
         self.reconnects = 0
         self.replaying = False
 
