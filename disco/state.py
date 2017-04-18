@@ -1,4 +1,5 @@
 import six
+import copy
 import weakref
 import inflection
 
@@ -42,10 +43,10 @@ class StateConfig(Config):
         find they do not need and may be experiencing memory pressure can disable
         this feature entirely using this attribute.
     track_messages_size : int
-        The size of the deque for each channel. Using this you can calculate the
-        total number of possible :class:`StackMessage` objects kept in memory,
-        using: `total_mesages_size * total_channels`. This can be tweaked based
-        on usage to help prevent memory pressure.
+        The size of the messages deque for each channel. This value can be used
+        to calculate the total number of possible `StackMessage` objects kept in
+        memory, simply: `total_messages_size * total_channels`. This value can
+        be tweaked based on usage and to help prevent memory pressure.
     sync_guild_members : bool
         If true, guilds will be automatically synced when they are initially loaded
         or joined. Generally this setting is OK for smaller bots, however bots in over
@@ -60,31 +61,31 @@ class StateConfig(Config):
 class State(object):
     """
     The State class is used to track global state based on events emitted from
-    the :class:`GatewayClient`. State tracking is a core component of the Disco
-    client, providing the mechanism for most of the higher-level utility functions.
+    the `GatewayClient`. State tracking is a core component of the Disco client,
+    providing the mechanism for most of the higher-level utility functions.
 
     Attributes
     ----------
     EVENTS : list(str)
         A list of all events the State object binds to
-    client : :class:`disco.client.Client`
+    client : `disco.client.Client`
         The Client instance this state is attached to
-    config : :class:`StateConfig`
+    config : `StateConfig`
         The configuration for this state instance
-    me : :class:`disco.types.user.User`
+    me : `User`
         The currently logged in user
-    dms : dict(snowflake, :class:`disco.types.channel.Channel`)
+    dms : dict(snowflake, `Channel`)
         Mapping of all known DM Channels
-    guilds : dict(snowflake, :class:`disco.types.guild.Guild`)
+    guilds : dict(snowflake, `Guild`)
         Mapping of all known/loaded Guilds
-    channels : dict(snowflake, :class:`disco.types.channel.Channel`)
+    channels : dict(snowflake, `Channel`)
         Weak mapping of all known/loaded Channels
-    users : dict(snowflake, :class:`disco.types.user.User`)
+    users : dict(snowflake, `User`)
         Weak mapping of all known/loaded Users
-    voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
+    voice_states : dict(str, `VoiceState`)
         Weak mapping of all known/active Voice States
-    messages : Optional[dict(snowflake, :class:`deque`)]
-        Mapping of channel ids to deques containing :class:`StackMessage` objects
+    messages : Optional[dict(snowflake, deque)]
+        Mapping of channel ids to deques containing `StackMessage` objects
     """
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
@@ -315,12 +316,14 @@ class State(object):
         self.guilds[event.guild_id].emojis = HashMap({i.id: i for i in event.emojis})
 
     def on_presence_update(self, event):
-        # Grab a copy of the user, and clear it out. All the operations below
-        #  do not want the nested user object, as the normaly structure is
-        #  user -> presence, and without clearing this becomes recursive
+        # Grab a copy of the entire presence object, and clear the user out. All
+        #  the operations below do not require or want a nested user object, and
+        #  having it set just complicates the general structure. We copy so as
+        #  to avoid interferring with other events that may require the nested
+        #  user object.
         user = event.presence.user
-        user.presence = event.presence
-        event.presence.user = None
+        user.presence = copy.deepcopy(event.presence)
+        user.presence.user = None
 
         # if we have the user tracked locally, we can just use the presence
         #  update to update both their presence and the cached user object.

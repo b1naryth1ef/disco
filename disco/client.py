@@ -15,13 +15,13 @@ from disco.util.backdoor import DiscoBackdoorServer
 
 class ClientConfig(Config):
     """
-    Configuration for the :class:`Client`.
+    Configuration for the `Client`.
 
     Attributes
     ----------
     token : str
         Discord authentication token, can be validated using the
-        :func:`disco.util.token.is_valid_token` function.
+        `disco.util.token.is_valid_token` function.
     shard_id : int
         The shard ID for the current client instance.
     shard_count : int
@@ -53,32 +53,32 @@ class Client(LoggingClass):
     """
     Class representing the base entry point that should be used in almost all
     implementation cases. This class wraps the functionality of both the REST API
-    (:class:`disco.api.client.APIClient`) and the realtime gateway API
-    (:class:`disco.gateway.client.GatewayClient`).
+    (`disco.api.client.APIClient`) and the realtime gateway API
+    (`disco.gateway.client.GatewayClient`).
 
     Parameters
     ----------
-    config : :class:`ClientConfig`
+    config : `ClientConfig`
         Configuration for this client instance.
 
     Attributes
     ----------
-    config : :class:`ClientConfig`
+    config : `ClientConfig`
         The runtime configuration for this client.
-    events : :class:`Emitter`
+    events : `Emitter`
         An emitter which emits Gateway events.
-    packets : :class:`Emitter`
+    packets : `Emitter`
         An emitter which emits Gateway packets.
-    state : :class:`State`
+    state : `State`
         The state tracking object.
-    api : :class:`APIClient`
+    api : `APIClient`
         The API client.
-    gw : :class:`GatewayClient`
+    gw : `GatewayClient`
         The gateway client.
     manhole_locals : dict
         Dictionary of local variables for each manhole connection. This can be
         modified to add/modify local variables.
-    manhole : Optional[:class:`BackdoorServer`]
+    manhole : Optional[`BackdoorServer`]
         Gevent backdoor server (if the manhole is enabled).
     """
     def __init__(self, config):
