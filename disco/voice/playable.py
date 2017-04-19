@@ -285,6 +285,7 @@ class DCADOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
 class FileProxyPlayable(BasePlayable, AbstractOpus):
     def __init__(self, other, output, *args, **kwargs):
         self.flush = kwargs.pop('flush', False)
+        self.on_complete = kwargs.pop('on_complete', None)
         super(FileProxyPlayable, self).__init__(*args, **kwargs)
         self.other = other
         self.output = output
@@ -300,6 +301,7 @@ class FileProxyPlayable(BasePlayable, AbstractOpus):
                 self.output.flush()
         else:
             self.output.flush()
+            self.on_complete()
             self.output.close()
         return frame
 
