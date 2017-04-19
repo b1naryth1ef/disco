@@ -16,6 +16,11 @@ with open('requirements.txt') as f:
 with open('README.md') as f:
     readme = f.read()
 
+extras_require = {
+    'voice': ['pynacl==1.1.2'],
+    'performance': ['erlpack==0.3.2'],
+}
+
 setup(
     name='disco-py',
     author='b1nzy',
@@ -27,6 +32,7 @@ setup(
     long_description=readme,
     include_package_data=True,
     install_requires=requirements,
+    extras_require=extras_require,
     test_suite='setup.run_tests',
     classifiers=[
         'Development Status :: 4 - Beta',
