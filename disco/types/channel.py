@@ -244,7 +244,7 @@ class Channel(SlottedModel, Permissible):
     def create_webhook(self, name=None, avatar=None):
         return self.client.api.channels_webhooks_create(self.id, name, avatar)
 
-    def send_message(self, content=None, nonce=None, tts=False, attachment=None, embed=None):
+    def send_message(self, *args, **kwargs):
         """
         Send a message in this channel.
 
@@ -262,7 +262,7 @@ class Channel(SlottedModel, Permissible):
         :class:`disco.types.message.Message`
             The created message.
         """
-        return self.client.api.channels_messages_create(self.id, content, nonce, tts, attachment, embed)
+        return self.client.api.channels_messages_create(self.id, *args, **kwargs)
 
     def connect(self, *args, **kwargs):
         """

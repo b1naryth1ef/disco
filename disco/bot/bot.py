@@ -81,12 +81,13 @@ class BotConfig(Config):
     commands_group_abbrev = True
 
     plugin_config_provider = None
-    plugin_config_format = 'yaml'
+    plugin_config_format = 'json'
     plugin_config_dir = 'config'
 
     storage_enabled = True
-    storage_provider = 'memory'
-    storage_config = {}
+    storage_fsync = True
+    storage_serializer = 'json'
+    storage_path = 'storage.json'
 
 
 class Bot(LoggingClass):

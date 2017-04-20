@@ -3,6 +3,7 @@ import json
 
 from disco.api.http import Routes, HTTPClient
 from disco.util.logging import LoggingClass
+from disco.util.sanitize import S
 
 from disco.types.user import User
 from disco.types.message import Message
@@ -88,13 +89,15 @@ class APIClient(LoggingClass):
         r = self.http(Routes.CHANNELS_MESSAGES_GET, dict(channel=channel, message=message))
         return Message.create(self.client, r.json())
 
-    def channels_messages_create(self, channel, content=None, nonce=None, tts=False, attachment=None, embed=None):
+    def channels_messages_create(self, channel, content=None, nonce=None, tts=False, attachment=None, embed=None, sanitize=False):
         payload = {
             'nonce': nonce,
             'tts': tts,
         }
 
         if content:
+            if sanitize:
+                content = S(content)
             payload['content'] = content
 
         if embed:
@@ -109,10 +112,12 @@ class APIClient(LoggingClass):
 
         return Message.create(self.client, r.json())
 
-    def channels_messages_modify(self, channel, message, content=None, embed=None):
+    def channels_messages_modify(self, channel, message, content=None, embed=None, sanitize=False):
         payload = {}
 
         if content:
+            if sanitize:
+                content = S(content)
             payload['content'] = content
 
         if embed:
