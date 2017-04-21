@@ -65,6 +65,7 @@ class BotConfig(Config):
         The directory plugin configuration is located within.
     """
     levels = {}
+    plugins = []
     plugin_config = {}
 
     commands_enabled = True
@@ -196,28 +197,40 @@ class Bot(LoggingClass):
         Called when a plugin is loaded/unloaded to recompute internal state.
         """
         if self.config.commands_group_abbrev:
-            self.compute_group_abbrev()
+            groups = set(command.group for command in self.commands if command.group)
+            self.group_abbrev = self.compute_group_abbrev(groups)
 
         self.compute_command_matches_re()
 
-    def compute_group_abbrev(self):
+    def compute_group_abbrev(self, groups):
         """
         Computes all possible abbreviations for a command grouping.
         """
-        self.group_abbrev = {}
-        groups = set(command.group for command in self.commands if command.group)
-
+        # For the first pass, we just want to compute each groups possible
+        #  abbreviations that don't conflict with eachother.
+        possible = {}
         for group in groups:
-            grp = group
-            while grp:
-                # If the group already exists, means someone else thought they
-                #  could use it so we need yank it from them (and not use it)
-                if grp in list(six.itervalues(self.group_abbrev)):
-                    self.group_abbrev = {k: v for k, v in six.iteritems(self.group_abbrev) if v != grp}
+            for index in range(len(group)):
+                current = group[:index]
+                if current in possible:
+                    possible[current] = None
                 else:
-                    self.group_abbrev[group] = grp
+                    possible[current] = group
 
-                grp = grp[:-1]
+        # Now, we want to compute the actual shortest abbreivation out of the
+        #  possible ones
+        result = {}
+        for abbrev, group in six.iteritems(possible):
+            if not group:
+                continue
+
+            if group in result:
+                if len(abbrev) < len(result[group]):
+                    result[group] = abbrev
+            else:
+                result[group] = abbrev
+
+        return result
 
     def compute_command_matches_re(self):
         """
