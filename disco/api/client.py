@@ -1,5 +1,6 @@
 import six
 import json
+import warnings
 
 from disco.api.http import Routes, HTTPClient
 from disco.util.logging import LoggingClass
@@ -89,11 +90,19 @@ class APIClient(LoggingClass):
         r = self.http(Routes.CHANNELS_MESSAGES_GET, dict(channel=channel, message=message))
         return Message.create(self.client, r.json())
 
-    def channels_messages_create(self, channel, content=None, nonce=None, tts=False, attachment=None, embed=None, sanitize=False):
+    def channels_messages_create(self, channel, content=None, nonce=None, tts=False,
+            attachment=None, attachments=[], embed=None, sanitize=False):
+
         payload = {
             'nonce': nonce,
             'tts': tts,
         }
+
+        if attachment:
+            attachments = [attachment]
+            warnings.warn(
+                'attachment kwarg has been deprecated, switch to using attachments with a list',
+                DeprecationWarning)
 
         if content:
             if sanitize:
@@ -103,10 +112,22 @@ class APIClient(LoggingClass):
         if embed:
             payload['embed'] = embed.to_dict()
 
-        if attachment:
-            r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), data={'payload_json': json.dumps(payload)}, files={
-                'file': (attachment[0], attachment[1])
-            })
+        if attachments:
+            if len(attachments) > 1:
+                files = {
+                    'file{}'.format(idx): tuple(i) for idx, i in enumerate(attachments)
+                }
+            else:
+                files = {
+                    'file': tuple(attachments[0]),
+                }
+
+            r = self.http(
+                Routes.CHANNELS_MESSAGES_CREATE,
+                dict(channel=channel),
+                data={'payload_json': json.dumps(payload)},
+                files=files
+            )
         else:
             r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), json=payload)
 
