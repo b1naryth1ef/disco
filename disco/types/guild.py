@@ -23,6 +23,17 @@ VerificationLevel = Enum(
     HIGH=3,
 )
 
+ExplicitContentFilterLevel = Enum(
+    NONE=0,
+    WITHOUT_ROLES=1,
+    ALL=2
+)
+
+DefaultMessageNotificationsLevel = Enum(
+    ALL_MESSAGES=0,
+    ONLY_MENTIONS=1,
+)
+
 
 class GuildEmoji(Emoji):
     """
@@ -292,6 +303,8 @@ class Guild(SlottedModel, Permissible):
     afk_timeout = Field(int)
     embed_enabled = Field(bool)
     verification_level = Field(enum(VerificationLevel))
+    explicit_content_filter = Field(enum(ExplicitContentFilterLevel))
+    default_message_notifications = Field(enum(DefaultMessageNotificationsLevel))
     mfa_level = Field(int)
     features = ListField(str)
     members = AutoDictField(GuildMember, 'id')
