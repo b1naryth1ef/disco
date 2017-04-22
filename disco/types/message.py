@@ -1,5 +1,6 @@
 import re
 import six
+import warnings
 import functools
 import unicodedata
 
@@ -315,6 +316,12 @@ class Message(SlottedModel):
         )
 
     def create_reaction(self, emoji):
+        warnings.warn(
+            'Message.create_reaction will be deprecated soon, use Message.add_reaction',
+            DeprecationWarning)
+        return self.add_reaction(emoji)
+
+    def add_reaction(self, emoji):
         if isinstance(emoji, Emoji):
             emoji = emoji.to_string()
         self.client.api.channels_messages_reactions_create(
