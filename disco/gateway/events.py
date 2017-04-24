@@ -614,7 +614,7 @@ class MessageReactionAdd(GatewayEvent):
         self.client.api.channels_messages_reactions_delete(
             self.channel_id,
             self.message_id,
-            self.emoji,
+            self.emoji.to_string() if self.emoji.id else self.emoji.name,
             self.user_id
         )
 
