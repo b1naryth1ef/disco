@@ -615,7 +615,7 @@ class MessageReactionAdd(GatewayEvent):
             self.channel_id,
             self.message_id,
             self.emoji,
-            self.uesr_id
+            self.user_id
         )
 
     @property
