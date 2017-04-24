@@ -314,6 +314,10 @@ class APIClient(LoggingClass):
     def guilds_roles_delete(self, guild, role):
         self.http(Routes.GUILDS_ROLES_DELETE, dict(guild=guild, role=role))
 
+    def guilds_invites_list(self, guild):
+        r = self.http(Routes.GUILDS_INVITES_LIST, dict(guild=guild))
+        return Invite.create_map(self.client, r.json())
+
     def guilds_webhooks_list(self, guild):
         r = self.http(Routes.GUILDS_WEBHOOKS_LIST, dict(guild=guild))
         return Webhook.create_map(self.client, r.json())

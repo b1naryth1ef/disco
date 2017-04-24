@@ -610,6 +610,14 @@ class MessageReactionAdd(GatewayEvent):
     user_id = Field(snowflake)
     emoji = Field(MessageReactionEmoji)
 
+    def delete(self):
+        self.client.api.channels_messages_reactions_delete(
+            self.channel_id,
+            self.message_id,
+            self.emoji,
+            self.uesr_id
+        )
+
     @property
     def channel(self):
         return self.client.state.channels.get(self.channel_id)

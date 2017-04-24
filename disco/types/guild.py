@@ -442,3 +442,9 @@ class Guild(SlottedModel, Permissible):
 
     def leave(self):
         return self.client.api.users_me_guilds_delete(self.id)
+
+    def get_invites(self):
+        return self.client.api.guilds_invites_list(self.id)
+
+    def get_emojis(self):
+        return self.client.api.guilds_emojis_list(self.id)
