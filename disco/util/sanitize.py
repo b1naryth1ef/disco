@@ -9,10 +9,11 @@ MODIFIER_GRAVE_ACCENT = u'\u02CB'
 
 # Regex which matches all possible mention combinations, this may be over-zealous
 #  but its better safe than sorry.
-MENTION_RE = re.compile('<[@|#][!|&]?([0-9]+)>|@everyone')
+MENTION_RE = re.compile('<([@|#][!|&]?[0-9]+>|@everyone|@here)')
 
 
 def _re_sub_mention(mention):
+    mention = mention.group(1)
     if '#' in mention:
         return ZERO_WIDTH_SPACE.join(mention.split('#', 1))
     elif '@' in mention:
