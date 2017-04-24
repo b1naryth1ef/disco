@@ -209,15 +209,22 @@ class Plugin(LoggingClass, PluginDeco):
     def handle_exception(self, greenlet, event):
         pass
 
-    def wait_for_event(self, event_name, **kwargs):
+    def wait_for_event(self, event_name, conditional=None, **kwargs):
         result = AsyncResult()
         listener = None
 
         def _event_callback(event):
             for k, v in kwargs.items():
-                if getattr(event, k) != v:
+                obj = event
+                for inst in k.split('__'):
+                    obj = getattr(obj, inst)
+
+                if obj != v:
                     break
             else:
+                if conditional and not conditional(event):
+                    return
+
                 listener.remove()
                 return result.set(event)
 
