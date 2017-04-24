@@ -324,11 +324,11 @@ class APIClient(LoggingClass):
 
     def guilds_emojis_create(self, guild, **kwargs):
         r = self.http(Routes.GUILDS_EMOJIS_CREATE, dict(guild=guild), json=kwargs)
-        return GuildEmoji.create(self.client, r.json())
+        return GuildEmoji.create(self.client, r.json(), guild_id=guild)
 
     def guilds_emojis_modify(self, guild, emoji, **kwargs):
         r = self.http(Routes.GUILDS_EMOJIS_MODIFY, dict(guild=guild, emoji=emoji), json=kwargs)
-        return GuildEmoji.create(self.client, r.json())
+        return GuildEmoji.create(self.client, r.json(), guild_id=guild)
 
     def guilds_emojis_delete(self, guild, emoji):
         self.http(Routes.GUILDS_EMOJIS_DELETE, dict(guild=guild, emoji=emoji))
