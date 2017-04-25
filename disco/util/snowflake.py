@@ -21,7 +21,7 @@ def to_unix_ms(snowflake):
 
 
 def from_datetime(date):
-    return from_timestamp(int(date.isoformat('%s')))
+    return from_timestamp(int(date.strftime('%s')))
 
 
 def from_timestamp(ts):
