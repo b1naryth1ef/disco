@@ -1,5 +1,5 @@
 gevent==1.2.1
-holster==1.0.13
+holster==1.0.14
 inflection==0.3.1
 requests==2.13.0
 six==1.10.0
