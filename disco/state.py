@@ -184,7 +184,8 @@ class State(object):
         self.channels.update(event.guild.channels)
 
         for member in six.itervalues(event.guild.members):
-            self.users[member.user.id] = member.user
+            if member.user.id not in self.users:
+                self.users[member.user.id] = member.user
 
         for presence in event.presences:
             self.users[presence.user.id].presence = presence
@@ -285,7 +286,8 @@ class State(object):
         for member in event.members:
             member.guild_id = guild.id
             guild.members[member.id] = member
-            self.users[member.id] = member.user
+            if member.id not in self.users:
+                self.users[member.id] = member.user
 
     def on_guild_role_create(self, event):
         if event.guild_id not in self.guilds:
