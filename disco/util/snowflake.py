@@ -2,6 +2,7 @@ import six
 
 from datetime import datetime
 
+UNIX_EPOCH = datetime(1970, 1, 1)
 DISCORD_EPOCH = 1420070400000
 
 
@@ -21,7 +22,7 @@ def to_unix_ms(snowflake):
 
 
 def from_datetime(date):
-    return from_timestamp(int(date.strftime('%s')))
+    return from_timestamp((date - UNIX_EPOCH).total_seconds())
 
 
 def from_timestamp(ts):
