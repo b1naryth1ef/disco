@@ -20,6 +20,14 @@ def to_unix_ms(snowflake):
     return (int(snowflake) >> 22) + DISCORD_EPOCH
 
 
+def from_datetime(date):
+    return from_timestamp(int(date.isoformat('%s')))
+
+
+def from_timestamp(ts):
+    return long(ts * 1000.0 - DISCORD_EPOCH) << 22
+
+
 def to_snowflake(i):
     if isinstance(i, six.integer_types):
         return i
