@@ -2,6 +2,13 @@ from unittest import TestCase
 
 from disco.client import ClientConfig, Client
 from disco.bot.bot import Bot
+from disco.bot.command import Command
+
+
+class MockBot(Bot):
+    @property
+    def commands(self):
+        return getattr(self, '_commands', [])
 
 
 class TestBot(TestCase):
@@ -9,7 +16,7 @@ class TestBot(TestCase):
         self.client = Client(ClientConfig(
             {'config': 'TEST_TOKEN'}
         ))
-        self.bot = Bot(self.client)
+        self.bot = MockBot(self.client)
 
     def test_command_abbreviation(self):
         groups = ['config', 'copy', 'copez', 'copypasta']
@@ -24,3 +31,17 @@ class TestBot(TestCase):
         groups = ['cat', 'cap', 'caz', 'cas']
         result = self.bot.compute_group_abbrev(groups)
         self.assertDictEqual(result, {})
+
+    def test_many_commands(self):
+        self.bot._commands = [
+            Command(None, None, 'test{}'.format(i), '<test:str>')
+            for i in range(1000)
+        ]
+
+        self.bot.compute_command_matches_re()
+        match = self.bot.command_matches_re.match('test5 123')
+        self.assertNotEqual(match, None)
+
+        match = self.bot._commands[0].compiled_regex.match('test0 123 456')
+        self.assertEqual(match.group(1).strip(), 'test0')
+        self.assertEqual(match.group(2).strip(), '123 456')
