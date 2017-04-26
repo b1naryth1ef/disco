@@ -1,8 +1,10 @@
 import six
 import json
+import warnings
 
 from disco.api.http import Routes, HTTPClient
 from disco.util.logging import LoggingClass
+from disco.util.sanitize import S
 
 from disco.types.user import User
 from disco.types.message import Message
@@ -88,29 +90,56 @@ class APIClient(LoggingClass):
         r = self.http(Routes.CHANNELS_MESSAGES_GET, dict(channel=channel, message=message))
         return Message.create(self.client, r.json())
 
-    def channels_messages_create(self, channel, content, nonce=None, tts=False, attachment=None, embed=None):
+    def channels_messages_create(self, channel, content=None, nonce=None, tts=False,
+            attachment=None, attachments=[], embed=None, sanitize=False):
+
         payload = {
-            'content': content,
             'nonce': nonce,
             'tts': tts,
         }
 
+        if attachment:
+            attachments = [attachment]
+            warnings.warn(
+                'attachment kwarg has been deprecated, switch to using attachments with a list',
+                DeprecationWarning)
+
+        if content:
+            if sanitize:
+                content = S(content)
+            payload['content'] = content
+
         if embed:
             payload['embed'] = embed.to_dict()
 
-        if attachment:
-            r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), data={'payload_json': json.dumps(payload)}, files={
-                'file': (attachment[0], attachment[1])
-            })
+        if attachments:
+            if len(attachments) > 1:
+                files = {
+                    'file{}'.format(idx): tuple(i) for idx, i in enumerate(attachments)
+                }
+            else:
+                files = {
+                    'file': tuple(attachments[0]),
+                }
+
+            r = self.http(
+                Routes.CHANNELS_MESSAGES_CREATE,
+                dict(channel=channel),
+                data={'payload_json': json.dumps(payload)},
+                files=files
+            )
         else:
             r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), json=payload)
 
         return Message.create(self.client, r.json())
 
-    def channels_messages_modify(self, channel, message, content, embed=None):
-        payload = {
-            'content': content,
-        }
+    def channels_messages_modify(self, channel, message, content=None, embed=None, sanitize=False):
+        payload = {}
+
+        if content:
+            if sanitize:
+                content = S(content)
+            payload['content'] = content
 
         if embed:
             payload['embed'] = embed.to_dict()
@@ -285,6 +314,10 @@ class APIClient(LoggingClass):
     def guilds_roles_delete(self, guild, role):
         self.http(Routes.GUILDS_ROLES_DELETE, dict(guild=guild, role=role))
 
+    def guilds_invites_list(self, guild):
+        r = self.http(Routes.GUILDS_INVITES_LIST, dict(guild=guild))
+        return Invite.create_map(self.client, r.json())
+
     def guilds_webhooks_list(self, guild):
         r = self.http(Routes.GUILDS_WEBHOOKS_LIST, dict(guild=guild))
         return Webhook.create_map(self.client, r.json())
@@ -295,11 +328,11 @@ class APIClient(LoggingClass):
 
     def guilds_emojis_create(self, guild, **kwargs):
         r = self.http(Routes.GUILDS_EMOJIS_CREATE, dict(guild=guild), json=kwargs)
-        return GuildEmoji.create(self.client, r.json())
+        return GuildEmoji.create(self.client, r.json(), guild_id=guild)
 
     def guilds_emojis_modify(self, guild, emoji, **kwargs):
         r = self.http(Routes.GUILDS_EMOJIS_MODIFY, dict(guild=guild, emoji=emoji), json=kwargs)
-        return GuildEmoji.create(self.client, r.json())
+        return GuildEmoji.create(self.client, r.json(), guild_id=guild)
 
     def guilds_emojis_delete(self, guild, emoji):
         self.http(Routes.GUILDS_EMOJIS_DELETE, dict(guild=guild, emoji=emoji))
@@ -310,6 +343,15 @@ class APIClient(LoggingClass):
     def users_me_patch(self, payload):
         r = self.http(Routes.USERS_ME_PATCH, json=payload)
         return User.create(self.client, r.json())
+
+    def users_me_guilds_delete(self, guild):
+        self.http(Routes.USERS_ME_GUILDS_DELETE, dict(guild=guild))
+
+    def users_me_dms_create(self, recipient_id):
+        r = self.http(Routes.USERS_ME_DMS_CREATE, json={
+            'recipient_id': recipient_id,
+        })
+        return Channel.create(self.client, r.json())
 
     def invites_get(self, invite):
         r = self.http(Routes.INVITES_GET, dict(invite=invite))

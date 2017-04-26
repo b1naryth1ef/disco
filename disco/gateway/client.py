@@ -53,6 +53,8 @@ class GatewayClient(LoggingClass):
         self.session_id = None
         self.reconnects = 0
         self.shutting_down = False
+        self.replaying = False
+        self.replayed_events = 0
 
         # Cached gateway URL
         self._cached_gateway_url = None
@@ -81,6 +83,8 @@ class GatewayClient(LoggingClass):
         obj = GatewayEvent.from_dispatch(self.client, packet)
         self.log.debug('Dispatching %s', obj.__class__.__name__)
         self.client.events.emit(obj.__class__.__name__, obj)
+        if self.replaying:
+            self.replayed_events += 1
 
     def handle_heartbeat(self, _):
         self._send(OPCode.HEARTBEAT, self.seq)
@@ -105,8 +109,9 @@ class GatewayClient(LoggingClass):
         self.reconnects = 0
 
     def on_resumed(self, _):
-        self.log.info('Recieved RESUMED')
+        self.log.info('RESUME completed, replayed %s events', self.replayed_events)
         self.reconnects = 0
+        self.replaying = False
 
     def connect_and_run(self, gateway_url=None):
         if not gateway_url:
@@ -154,6 +159,7 @@ class GatewayClient(LoggingClass):
     def on_open(self):
         if self.seq and self.session_id:
             self.log.info('WS Opened: attempting resume w/ SID: %s SEQ: %s', self.session_id, self.seq)
+            self.replaying = True
             self.send(OPCode.RESUME, {
                 'token': self.client.config.token,
                 'session_id': self.session_id,
@@ -187,6 +193,8 @@ class GatewayClient(LoggingClass):
         if self.shutting_down:
             self.log.info('WS Closed: shutting down')
             return
+
+        self.replaying = False
 
         # Track reconnect attempts
         self.reconnects += 1

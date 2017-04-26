@@ -1,26 +1,87 @@
-from .providers import load_provider
+import os
+
+from six.moves import UserDict
+
+from disco.util.hashmap import HashMap
+from disco.util.serializer import Serializer
+
+
+class StorageHashMap(HashMap):
+    def __init__(self, data):
+        self.data = data
+
+
+class ContextAwareProxy(UserDict):
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    @property
+    def data(self):
+        return self.ctx()
+
+
+class StorageDict(UserDict):
+    def __init__(self, parent, data):
+        self._parent = parent
+        self.data = data
+
+    def update(self, other):
+        self.data.update(other)
+        self._parent._update()
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+        self._parent._update()
+
+    def __delitem__(self, key):
+        del self.data[key]
+        self._parent._update()
 
 
 class Storage(object):
     def __init__(self, ctx, config):
-        self.ctx = ctx
-        self.config = config
-        self.provider = load_provider(config.provider)(config.config)
-        self.provider.load()
-        self.root = self.provider.root()
+        self._ctx = ctx
+        self._path = config.path
+        self._serializer = config.serializer
+        self._fsync = config.fsync
+        self._data = {}
 
-    @property
-    def plugin(self):
-        return self.root.ensure('plugins').ensure(self.ctx['plugin'].name)
+        if os.path.exists(self._path):
+            with open(self._path, 'r') as f:
+                self._data = Serializer.loads(self._serializer, f.read())
 
-    @property
-    def guild(self):
-        return self.plugin.ensure('guilds').ensure(self.ctx['guild'].id)
+    def __getitem__(self, key):
+        if key not in self._data:
+            self._data[key] = {}
+        return StorageHashMap(StorageDict(self, self._data[key]))
 
-    @property
-    def channel(self):
-        return self.plugin.ensure('channels').ensure(self.ctx['channel'].id)
+    def _update(self):
+        if self._fsync:
+            self.save()
 
-    @property
-    def user(self):
-        return self.plugin.ensure('users').ensure(self.ctx['user'].id)
+    def save(self):
+        if not self._path:
+            return
+
+        with open(self._path, 'w') as f:
+            f.write(Serializer.dumps(self._serializer, self._data))
+
+    def guild(self, key):
+        return ContextAwareProxy(
+            lambda: self['_g{}:{}'.format(self._ctx['guild'].id, key)]
+        )
+
+    def channel(self, key):
+        return ContextAwareProxy(
+            lambda: self['_c{}:{}'.format(self._ctx['channel'].id, key)]
+        )
+
+    def plugin(self, key):
+        return ContextAwareProxy(
+            lambda: self['_p{}:{}'.format(self._ctx['plugin'].name, key)]
+        )
+
+    def user(self, key):
+        return ContextAwareProxy(
+            lambda: self['_u{}:{}'.format(self._ctx['user'].id, key)]
+        )

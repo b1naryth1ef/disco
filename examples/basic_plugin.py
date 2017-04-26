@@ -50,7 +50,7 @@ class BasicPlugin(Plugin):
         if not users:
             event.msg.reply("Couldn't find user for your query: `{}`".format(query))
         elif len(users) > 1:
-            event.msg.reply('I found too many userse ({}) for your query: `{}`'.format(len(users), query))
+            event.msg.reply('I found too many users ({}) for your query: `{}`'.format(len(users), query))
         else:
             user = users[0]
             parts = []

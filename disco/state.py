@@ -42,10 +42,10 @@ class StateConfig(Config):
         find they do not need and may be experiencing memory pressure can disable
         this feature entirely using this attribute.
     track_messages_size : int
-        The size of the deque for each channel. Using this you can calculate the
-        total number of possible :class:`StackMessage` objects kept in memory,
-        using: `total_mesages_size * total_channels`. This can be tweaked based
-        on usage to help prevent memory pressure.
+        The size of the messages deque for each channel. This value can be used
+        to calculate the total number of possible `StackMessage` objects kept in
+        memory, simply: `total_messages_size * total_channels`. This value can
+        be tweaked based on usage and to help prevent memory pressure.
     sync_guild_members : bool
         If true, guilds will be automatically synced when they are initially loaded
         or joined. Generally this setting is OK for smaller bots, however bots in over
@@ -60,31 +60,31 @@ class StateConfig(Config):
 class State(object):
     """
     The State class is used to track global state based on events emitted from
-    the :class:`GatewayClient`. State tracking is a core component of the Disco
-    client, providing the mechanism for most of the higher-level utility functions.
+    the `GatewayClient`. State tracking is a core component of the Disco client,
+    providing the mechanism for most of the higher-level utility functions.
 
     Attributes
     ----------
     EVENTS : list(str)
         A list of all events the State object binds to
-    client : :class:`disco.client.Client`
+    client : `disco.client.Client`
         The Client instance this state is attached to
-    config : :class:`StateConfig`
+    config : `StateConfig`
         The configuration for this state instance
-    me : :class:`disco.types.user.User`
+    me : `User`
         The currently logged in user
-    dms : dict(snowflake, :class:`disco.types.channel.Channel`)
+    dms : dict(snowflake, `Channel`)
         Mapping of all known DM Channels
-    guilds : dict(snowflake, :class:`disco.types.guild.Guild`)
+    guilds : dict(snowflake, `Guild`)
         Mapping of all known/loaded Guilds
-    channels : dict(snowflake, :class:`disco.types.channel.Channel`)
+    channels : dict(snowflake, `Channel`)
         Weak mapping of all known/loaded Channels
-    users : dict(snowflake, :class:`disco.types.user.User`)
+    users : dict(snowflake, `User`)
         Weak mapping of all known/loaded Users
-    voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
+    voice_states : dict(str, `VoiceState`)
         Weak mapping of all known/active Voice States
-    messages : Optional[dict(snowflake, :class:`deque`)]
-        Mapping of channel ids to deques containing :class:`StackMessage` objects
+    messages : Optional[dict(snowflake, deque)]
+        Mapping of channel ids to deques containing `StackMessage` objects
     """
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
@@ -184,7 +184,11 @@ class State(object):
         self.channels.update(event.guild.channels)
 
         for member in six.itervalues(event.guild.members):
-            self.users[member.user.id] = member.user
+            if member.user.id not in self.users:
+                self.users[member.user.id] = member.user
+
+        for presence in event.presences:
+            self.users[presence.user.id].presence = presence
 
         for voice_state in six.itervalues(event.guild.voice_states):
             self.voice_states[voice_state.session_id] = voice_state
@@ -282,7 +286,8 @@ class State(object):
         for member in event.members:
             member.guild_id = guild.id
             guild.members[member.id] = member
-            self.users[member.id] = member.user
+            if member.id not in self.users:
+                self.users[member.id] = member.user
 
     def on_guild_role_create(self, event):
         if event.guild_id not in self.guilds:
@@ -309,18 +314,33 @@ class State(object):
         if event.guild_id not in self.guilds:
             return
 
+        for emoji in event.emojis:
+            emoji.guild_id = event.guild_id
+
         self.guilds[event.guild_id].emojis = HashMap({i.id: i for i in event.emojis})
 
     def on_presence_update(self, event):
-        if event.user.id in self.users:
-            self.users[event.user.id].update(event.presence.user)
-            self.users[event.user.id].presence = event.presence
-            event.presence.user = self.users[event.user.id]
+        # TODO: this is recursive, we hackfix in model, but its still lame ATM
+        user = event.presence.user
+        user.presence = event.presence
 
-        if event.guild_id not in self.guilds:
+        # if we have the user tracked locally, we can just use the presence
+        #  update to update both their presence and the cached user object.
+        if user.id in self.users:
+            self.users[user.id].update(user)
+        else:
+            # Otherwise this user does not exist in our local cache, so we can
+            #  use this opportunity to add them. They will quickly fall out of
+            #  scope and be deleted if they aren't used below
+            self.users[user.id] = user
+
+        # Some updates come with a guild_id and roles the user is in, we should
+        #  use this to update the guild member, but only if we have the guild
+        #  cached.
+        if event.roles is UNSET or event.guild_id not in self.guilds:
             return
 
-        if event.user.id not in self.guilds[event.guild_id].members:
+        if user.id not in self.guilds[event.guild_id].members:
             return
 
-        self.guilds[event.guild_id].members[event.user.id].user.update(event.user)
+        self.guilds[event.guild_id].members[user.id].roles = event.roles

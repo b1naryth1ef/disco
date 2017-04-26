@@ -40,6 +40,10 @@ class PermissionValue(object):
         self.value = value
 
     def can(self, *perms):
+        # Administrator permission overwrites all others
+        if self.administrator:
+            return True
+
         for perm in perms:
             if isinstance(perm, EnumAttr):
                 perm = perm.value

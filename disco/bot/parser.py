@@ -15,12 +15,6 @@ TYPE_MAP = {
     'snowflake': lambda ctx, data: int(data),
 }
 
-try:
-    import dateparser
-    TYPE_MAP['duration'] = lambda ctx, data: dateparser.parse(data, settings={'TIMEZONE': 'UTC'})
-except ImportError:
-    pass
-
 
 def to_bool(ctx, data):
     if data in BOOL_OPTS:

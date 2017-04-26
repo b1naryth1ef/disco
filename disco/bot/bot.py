@@ -65,6 +65,7 @@ class BotConfig(Config):
         The directory plugin configuration is located within.
     """
     levels = {}
+    plugins = []
     plugin_config = {}
 
     commands_enabled = True
@@ -81,12 +82,13 @@ class BotConfig(Config):
     commands_group_abbrev = True
 
     plugin_config_provider = None
-    plugin_config_format = 'yaml'
+    plugin_config_format = 'json'
     plugin_config_dir = 'config'
 
     storage_enabled = True
-    storage_provider = 'memory'
-    storage_config = {}
+    storage_fsync = True
+    storage_serializer = 'json'
+    storage_path = 'storage.json'
 
 
 class Bot(LoggingClass):
@@ -195,35 +197,47 @@ class Bot(LoggingClass):
         Called when a plugin is loaded/unloaded to recompute internal state.
         """
         if self.config.commands_group_abbrev:
-            self.compute_group_abbrev()
+            groups = set(command.group for command in self.commands if command.group)
+            self.group_abbrev = self.compute_group_abbrev(groups)
 
         self.compute_command_matches_re()
 
-    def compute_group_abbrev(self):
+    def compute_group_abbrev(self, groups):
         """
         Computes all possible abbreviations for a command grouping.
         """
-        self.group_abbrev = {}
-        groups = set(command.group for command in self.commands if command.group)
-
+        # For the first pass, we just want to compute each groups possible
+        #  abbreviations that don't conflict with eachother.
+        possible = {}
         for group in groups:
-            grp = group
-            while grp:
-                # If the group already exists, means someone else thought they
-                #  could use it so we need yank it from them (and not use it)
-                if grp in list(six.itervalues(self.group_abbrev)):
-                    self.group_abbrev = {k: v for k, v in six.iteritems(self.group_abbrev) if v != grp}
+            for index in range(len(group)):
+                current = group[:index]
+                if current in possible:
+                    possible[current] = None
                 else:
-                    self.group_abbrev[group] = grp
+                    possible[current] = group
 
-                grp = grp[:-1]
+        # Now, we want to compute the actual shortest abbreivation out of the
+        #  possible ones
+        result = {}
+        for abbrev, group in six.iteritems(possible):
+            if not group:
+                continue
+
+            if group in result:
+                if len(abbrev) < len(result[group]):
+                    result[group] = abbrev
+            else:
+                result[group] = abbrev
+
+        return result
 
     def compute_command_matches_re(self):
         """
         Computes a single regex which matches all possible command combinations.
         """
         commands = list(self.commands)
-        re_str = '|'.join(command.regex for command in commands)
+        re_str = '|'.join(command.regex(grouped=False) for command in commands)
         if re_str:
             self.command_matches_re = re.compile(re_str, re.I)
         else:
@@ -267,7 +281,10 @@ class Bot(LoggingClass):
                 if msg.guild:
                     member = msg.guild.get_member(self.client.state.me)
                     if member:
-                        content = content.replace(member.mention, '', 1)
+                        # If nickname is set, filter both the normal and nick mentions
+                        if member.nick:
+                            content = content.replace(member.mention, '', 1)
+                        content = content.replace(member.user.mention, '', 1)
                 else:
                     content = content.replace(self.client.state.me.mention, '', 1)
             elif mention_everyone:
@@ -355,10 +372,10 @@ class Bot(LoggingClass):
         if event.message.author.id == self.client.state.me.id:
             return
 
-        if self.config.commands_allow_edit:
-            self.last_message_cache[event.message.channel_id] = (event.message, False)
+        result = self.handle_message(event.message)
 
-        self.handle_message(event.message)
+        if self.config.commands_allow_edit:
+            self.last_message_cache[event.message.channel_id] = (event.message, result)
 
     def on_message_update(self, event):
         if self.config.commands_allow_edit:

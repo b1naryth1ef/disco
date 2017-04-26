@@ -15,13 +15,13 @@ from disco.util.backdoor import DiscoBackdoorServer
 
 class ClientConfig(Config):
     """
-    Configuration for the :class:`Client`.
+    Configuration for the `Client`.
 
     Attributes
     ----------
     token : str
         Discord authentication token, can be validated using the
-        :func:`disco.util.token.is_valid_token` function.
+        `disco.util.token.is_valid_token` function.
     shard_id : int
         The shard ID for the current client instance.
     shard_count : int
@@ -53,32 +53,32 @@ class Client(LoggingClass):
     """
     Class representing the base entry point that should be used in almost all
     implementation cases. This class wraps the functionality of both the REST API
-    (:class:`disco.api.client.APIClient`) and the realtime gateway API
-    (:class:`disco.gateway.client.GatewayClient`).
+    (`disco.api.client.APIClient`) and the realtime gateway API
+    (`disco.gateway.client.GatewayClient`).
 
     Parameters
     ----------
-    config : :class:`ClientConfig`
+    config : `ClientConfig`
         Configuration for this client instance.
 
     Attributes
     ----------
-    config : :class:`ClientConfig`
+    config : `ClientConfig`
         The runtime configuration for this client.
-    events : :class:`Emitter`
+    events : `Emitter`
         An emitter which emits Gateway events.
-    packets : :class:`Emitter`
+    packets : `Emitter`
         An emitter which emits Gateway packets.
-    state : :class:`State`
+    state : `State`
         The state tracking object.
-    api : :class:`APIClient`
+    api : `APIClient`
         The API client.
-    gw : :class:`GatewayClient`
+    gw : `GatewayClient`
         The gateway client.
     manhole_locals : dict
         Dictionary of local variables for each manhole connection. This can be
         modified to add/modify local variables.
-    manhole : Optional[:class:`BackdoorServer`]
+    manhole : Optional[`BackdoorServer`]
         Gevent backdoor server (if the manhole is enabled).
     """
     def __init__(self, config):
@@ -105,7 +105,21 @@ class Client(LoggingClass):
                                                localf=lambda: self.manhole_locals)
             self.manhole.start()
 
-    def update_presence(self, game=None, status=None, afk=False, since=0.0):
+    def update_presence(self, status, game=None, afk=False, since=0.0):
+        """
+        Updates the current clients presence.
+
+        Params
+        ------
+        status : `user.Status`
+            The clients current status.
+        game : `user.Game`
+            If passed, the game object to set for the users presence.
+        afk : bool
+            Whether the client is currently afk.
+        since : float
+            How long the client has been afk for (in seconds).
+        """
         if game and not isinstance(game, Game):
             raise TypeError('Game must be a Game model')
 
@@ -126,12 +140,12 @@ class Client(LoggingClass):
 
     def run(self):
         """
-        Run the client (e.g. the :class:`GatewayClient`) in a new greenlet.
+        Run the client (e.g. the `GatewayClient`) in a new greenlet.
         """
         return gevent.spawn(self.gw.run)
 
     def run_forever(self):
         """
-        Run the client (e.g. the :class:`GatewayClient`) in the current greenlet.
+        Run the client (e.g. the `GatewayClient`) in the current greenlet.
         """
         return self.gw.run()

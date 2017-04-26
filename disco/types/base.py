@@ -6,8 +6,9 @@ import functools
 from holster.enum import BaseEnumMeta, EnumAttr
 from datetime import datetime as real_datetime
 
-from disco.util.functional import CachedSlotProperty
+from disco.util.chains import Chainable
 from disco.util.hashmap import HashMap
+from disco.util.functional import CachedSlotProperty
 
 DATETIME_FORMATS = [
     '%Y-%m-%dT%H:%M:%S.%f',
@@ -23,6 +24,9 @@ def get_item_by_path(obj, path):
 
 class Unset(object):
     def __nonzero__(self):
+        return False
+
+    def __bool__(self):
         return False
 
 
@@ -270,15 +274,7 @@ class ModelMeta(type):
         return super(ModelMeta, mcs).__new__(mcs, name, parents, dct)
 
 
-class AsyncChainable(object):
-    __slots__ = []
-
-    def after(self, delay):
-        gevent.sleep(delay)
-        return self
-
-
-class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
+class Model(six.with_metaclass(ModelMeta, Chainable)):
     __slots__ = ['client']
 
     def __init__(self, *args, **kwargs):
@@ -293,6 +289,10 @@ class Model(six.with_metaclass(ModelMeta, AsyncChainable)):
 
         self.load(obj)
         self.validate()
+
+    def after(self, delay):
+        gevent.sleep(delay)
+        return self
 
     def validate(self):
         pass

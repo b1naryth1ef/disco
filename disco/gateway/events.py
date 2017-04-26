@@ -49,6 +49,8 @@ class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
         """
         Create this GatewayEvent class from data and the client.
         """
+        cls.raw_data = obj
+
         # If this event is wrapping a model, pull its fields
         if hasattr(cls, '_wraps_model'):
             alias, model = cls._wraps_model
@@ -151,6 +153,7 @@ class GuildCreate(GatewayEvent):
         and if None, this is a normal guild join event.
     """
     unavailable = Field(bool)
+    presences = ListField(Presence)
 
     @property
     def created(self):
@@ -606,6 +609,14 @@ class MessageReactionAdd(GatewayEvent):
     message_id = Field(snowflake)
     user_id = Field(snowflake)
     emoji = Field(MessageReactionEmoji)
+
+    def delete(self):
+        self.client.api.channels_messages_reactions_delete(
+            self.channel_id,
+            self.message_id,
+            self.emoji.to_string() if self.emoji.id else self.emoji.name,
+            self.user_id
+        )
 
     @property
     def channel(self):

@@ -9,7 +9,7 @@ from disco.util.functional import cached_property
 from disco.types.base import (
     SlottedModel, Field, ListField, AutoDictField, snowflake, text, binary, enum, datetime
 )
-from disco.types.user import User, Presence
+from disco.types.user import User
 from disco.types.voice import VoiceState
 from disco.types.channel import Channel
 from disco.types.message import Emoji
@@ -21,6 +21,17 @@ VerificationLevel = Enum(
     LOW=1,
     MEDIUM=2,
     HIGH=3,
+)
+
+ExplicitContentFilterLevel = Enum(
+    NONE=0,
+    WITHOUT_ROLES=1,
+    ALL=2
+)
+
+DefaultMessageNotificationsLevel = Enum(
+    ALL_MESSAGES=0,
+    ONLY_MENTIONS=1,
 )
 
 
@@ -50,6 +61,12 @@ class GuildEmoji(Emoji):
 
     def __str__(self):
         return u'<:{}:{}>'.format(self.name, self.id)
+
+    def update(self, **kwargs):
+        return self.client.api.guilds_emojis_modify(self.guild_id, self.id, **kwargs)
+
+    def delete(self):
+        return self.client.api.guilds_emojis_delete(self.guild_id, self.id)
 
     @property
     def url(self):
@@ -102,7 +119,7 @@ class Role(SlottedModel):
 
     @property
     def mention(self):
-        return '<@{}>'.format(self.id)
+        return '<@&{}>'.format(self.id)
 
     @cached_property
     def guild(self):
@@ -289,6 +306,8 @@ class Guild(SlottedModel, Permissible):
     afk_timeout = Field(int)
     embed_enabled = Field(bool)
     verification_level = Field(enum(VerificationLevel))
+    explicit_content_filter = Field(enum(ExplicitContentFilterLevel))
+    default_message_notifications = Field(enum(DefaultMessageNotificationsLevel))
     mfa_level = Field(int)
     features = ListField(str)
     members = AutoDictField(GuildMember, 'id')
@@ -297,7 +316,6 @@ class Guild(SlottedModel, Permissible):
     emojis = AutoDictField(GuildEmoji, 'id')
     voice_states = AutoDictField(VoiceState, 'session_id')
     member_count = Field(int)
-    presences = ListField(Presence)
 
     synced = Field(bool, default=False)
 
@@ -309,6 +327,10 @@ class Guild(SlottedModel, Permissible):
         self.attach(six.itervalues(self.roles), {'guild_id': self.id})
         self.attach(six.itervalues(self.emojis), {'guild_id': self.id})
         self.attach(six.itervalues(self.voice_states), {'guild_id': self.id})
+
+    @cached_property
+    def owner(self):
+        return self.members.get(self.owner_id)
 
     def get_permissions(self, member):
         """
@@ -417,3 +439,12 @@ class Guild(SlottedModel, Permissible):
 
     def create_channel(self, *args, **kwargs):
         return self.client.api.guilds_channels_create(self.id, *args, **kwargs)
+
+    def leave(self):
+        return self.client.api.users_me_guilds_delete(self.id)
+
+    def get_invites(self):
+        return self.client.api.guilds_invites_list(self.id)
+
+    def get_emojis(self):
+        return self.client.api.guilds_emojis_list(self.id)

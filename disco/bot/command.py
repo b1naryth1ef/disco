@@ -6,6 +6,7 @@ from disco.bot.parser import ArgumentSet, ArgumentError
 from disco.util.functional import cached_property
 
 ARGS_REGEX = '(?: ((?:\n|.)*)$|$)'
+ARGS_UNGROUPED_REGEX = '(?: (?:\n|.)*$|$)'
 
 USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
 ROLE_MENTION_RE = re.compile('<@&([0-9]+)>')
@@ -44,11 +45,11 @@ class CommandEvent(object):
         self.command = command
         self.msg = msg
         self.match = match
-        self.name = self.match.group(0)
+        self.name = self.match.group(1).strip()
         self.args = []
 
-        if self.match.group(1):
-            self.args = [i for i in self.match.group(1).strip().split(' ') if i]
+        if self.match.group(2):
+            self.args = [i for i in self.match.group(2).strip().split(' ') if i]
 
     @property
     def codeblock(self):
@@ -140,6 +141,10 @@ class Command(object):
 
         self.update(*args, **kwargs)
 
+    @property
+    def name(self):
+        return self.triggers[0]
+
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
 
@@ -218,10 +223,9 @@ class Command(object):
         """
         A compiled version of this command's regex.
         """
-        return re.compile(self.regex, re.I)
+        return re.compile(self.regex(), re.I)
 
-    @property
-    def regex(self):
+    def regex(self, grouped=True):
         """
         The regex string that defines/triggers this command.
         """
@@ -231,10 +235,13 @@ class Command(object):
             group = ''
             if self.group:
                 if self.group in self.plugin.bot.group_abbrev:
-                    group = '{}(?:\w+)? '.format(self.plugin.bot.group_abbrev.get(self.group))
+                    group = '(?:\w+)? '.format(self.plugin.bot.group_abbrev.get(self.group))
                 else:
                     group = self.group + ' '
-            return '^{}(?:{})'.format(group, '|'.join(self.triggers)) + ARGS_REGEX
+            return ('^{}({})' if grouped else '^{}(?:{})').format(
+                group,
+                '|'.join(self.triggers)
+            ) + (ARGS_REGEX if grouped else ARGS_UNGROUPED_REGEX)
 
     def execute(self, event):
         """
@@ -247,9 +254,10 @@ class Command(object):
             Whether this command was successful
         """
         if len(event.args) < self.args.required_length:
-            raise CommandError('{} requires {} arguments (passed {})'.format(
+            raise CommandError(u'Command {} requires {} arguments (`{}`) passed {}'.format(
                 event.name,
                 self.args.required_length,
+                self.raw_args,
                 len(event.args)
             ))
 

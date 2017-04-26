@@ -1,4 +1,4 @@
-from disco.types.base import SlottedModel, Field, datetime 
+from disco.types.base import SlottedModel, Field, datetime
 from disco.types.user import User
 from disco.types.guild import Guild
 from disco.types.channel import Channel
@@ -40,7 +40,7 @@ class Invite(SlottedModel):
     created_at = Field(datetime)
 
     @classmethod
-    def create(cls, channel, max_age=86400, max_uses=0, temporary=False, unique=False):
+    def create_for_channel(cls, channel, max_age=86400, max_uses=0, temporary=False, unique=False):
         return channel.client.api.channels_invites_create(
             channel.id,
             max_age=max_age,

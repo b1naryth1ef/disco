@@ -1,3 +1,4 @@
+import re
 import six
 
 from six.moves import map
@@ -9,6 +10,9 @@ from disco.types.user import User
 from disco.types.base import SlottedModel, Field, AutoDictField, snowflake, enum, text
 from disco.types.permissions import Permissions, Permissible, PermissionValue
 from disco.voice.client import VoiceClient
+
+
+NSFW_RE = re.compile('^nsfw(-|$)')
 
 
 ChannelType = Enum(
@@ -180,6 +184,13 @@ class Channel(SlottedModel, Permissible):
         return self.type in (ChannelType.DM, ChannelType.GROUP_DM)
 
     @property
+    def is_nsfw(self):
+        """
+        Whether this channel is an NSFW channel.
+        """
+        return self.type == ChannelType.GUILD_TEXT and NSFW_RE.match(self.name)
+
+    @property
     def is_voice(self):
         """
         Whether this channel supports voice.
@@ -244,7 +255,7 @@ class Channel(SlottedModel, Permissible):
     def create_webhook(self, name=None, avatar=None):
         return self.client.api.channels_webhooks_create(self.id, name, avatar)
 
-    def send_message(self, content, nonce=None, tts=False, attachment=None, embed=None):
+    def send_message(self, *args, **kwargs):
         """
         Send a message in this channel.
 
@@ -262,7 +273,7 @@ class Channel(SlottedModel, Permissible):
         :class:`disco.types.message.Message`
             The created message.
         """
-        return self.client.api.channels_messages_create(self.id, content, nonce, tts, attachment, embed)
+        return self.client.api.channels_messages_create(self.id, *args, **kwargs)
 
     def connect(self, *args, **kwargs):
         """
