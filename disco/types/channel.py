@@ -1,3 +1,4 @@
+import re
 import six
 
 from six.moves import map
@@ -9,6 +10,9 @@ from disco.types.user import User
 from disco.types.base import SlottedModel, Field, AutoDictField, snowflake, enum, text
 from disco.types.permissions import Permissions, Permissible, PermissionValue
 from disco.voice.client import VoiceClient
+
+
+NSFW_RE = re.compile('^nsfw(-|$)')
 
 
 ChannelType = Enum(
@@ -178,6 +182,13 @@ class Channel(SlottedModel, Permissible):
         Whether this channel is a DM (does not belong to a guild).
         """
         return self.type in (ChannelType.DM, ChannelType.GROUP_DM)
+
+    @property
+    def is_nsfw(self):
+        """
+        Whether this channel is an NSFW channel.
+        """
+        return self.type == ChannelType.GUILD_TEXT and NSFW_RE.match(self.name)
 
     @property
     def is_voice(self):
