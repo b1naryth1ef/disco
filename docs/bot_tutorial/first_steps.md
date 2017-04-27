@@ -51,3 +51,5 @@ If all is successful, you can then test your bot by mentioning it with the comma
 ```
 @tutorial#1234 ping
 ```
+
+At this point, you've achieved the creation and setup of a very simple bot. Now lets work on understanding and working with more Disco features.

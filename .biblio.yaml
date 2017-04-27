@@ -5,4 +5,4 @@ rules:
     parser: numpy
 
 outputs:
-  - {type: markdown, path: _build, title: 'Disco Documentation'}
+  - {type: markdown, path: docs/api/, title: 'Disco Documentation'}

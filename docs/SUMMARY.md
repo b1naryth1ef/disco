@@ -4,10 +4,9 @@
 * [Installation and Setup](installation.md)
 * [Bot Tutorial](bot_tutorial/intro.md)
   * [Creating and Running a Bot](bot_tutorial/first_steps.md)
-  * [Writing a Plugin](bot_tutorial/writing_a_plugin.md)
-  * Building Blocks
-    * [Commands](bot_tutorial/building_block_commands.md)
-    * [Listeners](bot_tutorial/building_block_listeners.md)
+  * [Plugins](bot_tutorial/building_block_plugins.md)
+  * [Commands](bot_tutorial/building_block_commands.md)
+  * [Listeners](bot_tutorial/building_block_listeners.md)
   * [Message Embeds](bot_tutorial/message_embeds.md)
   * [Advanced](bot_tutorial/advanced.md)
 * API Docs
