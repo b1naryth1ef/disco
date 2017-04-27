@@ -1,6 +1,6 @@
 # Disco
 
-Disco is a simple, clean and extendable library for the [Discord API](https://dis.gd/docs). Disco is intended to be the easiest option for building both simple and complex API integrations, while also remaining an option for power-users looking to build large bots spanning thousands of servers.
+Disco is a simple, clean and extendable library for the [Discord API](https://dis.gd/docs). Disco is built and aimed at developers looking to quickly start building bots that can be grown and extended to live on thousands of servers, and have immense functionality. To facilitate this, Disco provides a clean and simple interface which gets out of the way, but never sacrifices functionality. Disco is actively used by the staff at Discord to help us build and test Discord.
 
 ## Stability
 

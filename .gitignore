@@ -1,9 +1,13 @@
 build/
 dist/
 disco*.egg-info/
-docs/_build
 storage.db
-_book/
-node_modules/
 storage.json
 *.dca
+.eggs/
+
+# Documentation stuff
+docs/api/
+docs/_build
+_book/
+node_modules/
