@@ -49,6 +49,8 @@ class Storage(object):
         if os.path.exists(self._path):
             with open(self._path, 'r') as f:
                 self._data = Serializer.loads(self._serializer, f.read())
+                if not self._data:
+                    self._data = {}
 
     def __getitem__(self, key):
         if key not in self._data:
