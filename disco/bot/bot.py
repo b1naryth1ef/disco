@@ -390,13 +390,13 @@ class Bot(LoggingClass):
 
                 self.last_message_cache[msg.channel_id] = (msg, triggered)
 
-    def add_plugin(self, cls, config=None, ctx=None):
+    def add_plugin(self, inst, config=None, ctx=None):
         """
         Adds and loads a plugin, based on its class.
 
         Parameters
         ----------
-        cls : subclass of :class:`disco.bot.plugin.Plugin`
+        inst : subclass (or instance therein) of `disco.bot.plugin.Plugin`
             Plugin class to initialize and load.
         config : Optional
             The configuration to load the plugin with.
@@ -404,18 +404,21 @@ class Bot(LoggingClass):
             Context (previous state) to pass the plugin. Usually used along w/
             unload.
         """
-        if cls.__name__ in self.plugins:
-            self.log.warning('Attempted to add already added plugin %s', cls.__name__)
-            raise Exception('Cannot add already added plugin: {}'.format(cls.__name__))
+        if inspect.isclass(inst):
+            if not config:
+                if callable(self.config.plugin_config_provider):
+                    config = self.config.plugin_config_provider(inst)
+                else:
+                    config = self.load_plugin_config(inst)
 
-        if not config:
-            if callable(self.config.plugin_config_provider):
-                config = self.config.plugin_config_provider(cls)
-            else:
-                config = self.load_plugin_config(cls)
+            inst = inst(self, config)
 
-        self.ctx['plugin'] = self.plugins[cls.__name__] = cls(self, config)
-        self.plugins[cls.__name__].load(ctx or {})
+        if inst.__class__.__name__ in self.plugins:
+            self.log.warning('Attempted to add already added plugin %s', inst.__class__.__name__)
+            raise Exception('Cannot add already added plugin: {}'.format(inst.__class__.__name__))
+
+        self.ctx['plugin'] = self.plugins[inst.__class__.__name__] = inst
+        self.plugins[inst.__class__.__name__].load(ctx or {})
         self.recompute()
         self.ctx.drop()
 
