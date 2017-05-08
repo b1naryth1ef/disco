@@ -1,3 +1,4 @@
+import six
 import sys
 import array
 import ctypes
@@ -142,7 +143,10 @@ class OpusEncoder(BaseOpus):
             raise Exception('Failed to encode: {}'.format(ret))
 
         # TODO: py3
-        return array.array('b', data[:ret]).tostring()
+        if six.PY3:
+            return array.array('b', data[:ret]).tobytes()
+        else:
+            return array.array('b', data[:ret]).tostring()
 
 
 class OpusDecoder(BaseOpus):
