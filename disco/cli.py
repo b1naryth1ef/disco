@@ -24,6 +24,7 @@ parser.add_argument('--manhole-bind', help='host:port for the manhole to bind to
 parser.add_argument('--encoder', help='encoder for gateway data', default=None)
 parser.add_argument('--run-bot', help='run a disco bot on this client', action='store_true', default=False)
 parser.add_argument('--plugin', help='load plugins into the bot', nargs='*', default=[])
+parser.add_argument('--log-level', help='log level', default='info')
 
 
 def disco_main(run=False):
@@ -62,7 +63,7 @@ def disco_main(run=False):
         return
 
     # TODO: make configurable
-    setup_logging(level=logging.INFO)
+    setup_logging(level=getattr(logging, args.log_level.upper()))
 
     client = Client(config)
 

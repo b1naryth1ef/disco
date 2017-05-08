@@ -153,7 +153,11 @@ class VoiceClient(LoggingClass):
         self.ws = None
         self.heartbeat_task = None
 
+    def __repr__(self):
+        return u'<VoiceClient {}>'.format(self.channel)
+
     def set_state(self, state):
+        self.log.debug('[%s] state %s -> %s', self, self.state, state)
         prev_state = self.state
         self.state = state
         self.state_emitter.emit(state, prev_state)
@@ -170,25 +174,30 @@ class VoiceClient(LoggingClass):
         })
 
     def send(self, op, data):
+        self.log.debug('[%s] sending OP %s (data = %s)', self, op, data)
         self.ws.send(self.encoder.encode({
             'op': op.value,
             'd': data,
         }), self.encoder.OPCODE)
 
     def on_voice_ready(self, data):
+        self.log.info('[%s] Recived Voice READY payload, attempting to negotiate voice connection w/ remote', self)
         self.set_state(VoiceState.CONNECTING)
         self.ssrc = data['ssrc']
         self.port = data['port']
 
         self.heartbeat_task = gevent.spawn(self.heartbeat, data['heartbeat_interval'])
 
+        self.log.debug('[%s] Attempting IP discovery over UDP to %s:%s', self, self.endpoint, self.port)
         self.udp = UDPVoiceClient(self)
         ip, port = self.udp.connect(self.endpoint, self.port)
 
         if not ip:
+            self.log.error('Failed to discover our IP, perhaps a NAT or firewall is fucking us')
             self.disconnect()
             return
 
+        self.log.debug('[%s] IP discovery completed (ip = %s, port = %s), sending SELECT_PROTOCOL', self, ip, port)
         self.send(VoiceOPCode.SELECT_PROTOCOL, {
             'protocol': 'udp',
             'data': {
@@ -199,6 +208,7 @@ class VoiceClient(LoggingClass):
         })
 
     def on_voice_sdp(self, sdp):
+        self.log.info('[%s] Recieved session description, connection completed', self)
         # Create a secret box for encryption/decryption
         self.secret_box = nacl.secret.SecretBox(bytes(bytearray(sdp['secret_key'])))
 
@@ -215,6 +225,8 @@ class VoiceClient(LoggingClass):
 
         if self.token and self.token != data.token:
             return
+
+        self.log.info('[%s] Recieved VOICE_SERVER_UPDATE (state = %s)', self, self.state)
 
         self.token = data.token
         self.set_state(VoiceState.AUTHENTICATING)
@@ -236,7 +248,7 @@ class VoiceClient(LoggingClass):
 
     def on_error(self, err):
         # TODO: raise an exception here
-        self.log.warning('Voice websocket error: {}'.format(err))
+        self.log.error('[%s] Voice websocket error: %s', self, err)
 
     def on_open(self):
         self.send(VoiceOPCode.IDENTIFY, {
@@ -247,13 +259,14 @@ class VoiceClient(LoggingClass):
         })
 
     def on_close(self, code, error):
-        self.log.warning('Voice websocket disconnected (%s, %s)', code, error)
+        self.log.warning('[%s] Voice websocket disconnected (%s, %s)', self, code, error)
 
         if self.state == VoiceState.CONNECTED:
             self.log.info('Attempting voice reconnection')
             self.connect()
 
     def connect(self, timeout=5, mute=False, deaf=False):
+        self.log.debug('[%s] Attempting connection', self)
         self.set_state(VoiceState.AWAITING_ENDPOINT)
 
         self.update_listener = self.client.events.on('VoiceServerUpdate', self.on_voice_server_update)
@@ -269,6 +282,7 @@ class VoiceClient(LoggingClass):
             raise VoiceException('Failed to connect to voice', self)
 
     def disconnect(self):
+        self.log.debug('[%s] disconnect called', self)
         self.set_state(VoiceState.DISCONNECTED)
 
         if self.heartbeat_task:
