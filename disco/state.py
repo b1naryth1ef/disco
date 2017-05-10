@@ -286,8 +286,11 @@ class State(object):
         for member in event.members:
             member.guild_id = guild.id
             guild.members[member.id] = member
+
             if member.id not in self.users:
                 self.users[member.id] = member.user
+            else:
+                member.user = self.users[member.id]
 
     def on_guild_role_create(self, event):
         if event.guild_id not in self.guilds:
