@@ -147,6 +147,7 @@ class APIException(Exception):
 
         self.code = 0
         self.msg = 'Request Failed ({})'.format(response.status_code)
+        self.errors = {}
 
         if self.retries:
             self.msg += " after {} retries".format(self.retries)
@@ -157,7 +158,8 @@ class APIException(Exception):
 
             if 'code' in data:
                 self.code = data['code']
-                self.msg = data['message']
+                self.errors = data.get('errors', {})
+                self.msg = '{} ({} - {})'.format(data['message'], self.code, self.errors)
             elif len(data) == 1:
                 key, value = list(data.items())[0]
                 self.msg = 'Request Failed: {}: {}'.format(key, ', '.join(value))
