@@ -448,3 +448,23 @@ class Guild(SlottedModel, Permissible):
 
     def get_emojis(self):
         return self.client.api.guilds_emojis_list(self.id)
+
+    def get_icon_url(self, fmt='webp', size=1024):
+        if not self.icon:
+            return ''
+
+        return 'https://cdn.discordapp.com/icons/{}/{}.{}?size={}'.format(self.id, self.icon, fmt, size)
+
+    def get_splash_url(self, fmt='webp', size=1024):
+        if not self.splash:
+            return ''
+
+        return 'https://cdn.discordapp.com/splashes/{}/{}.{}?size={}'.format(self.id, self.splash, fmt, size)
+
+    @property
+    def icon_url(self):
+        return self.get_icon_url()
+
+    @property
+    def splash_url(self):
+        return self.get_splash_url()
