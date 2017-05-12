@@ -301,34 +301,20 @@ class Message(SlottedModel):
         """
         return self.client.api.channels_messages_delete(self.channel_id, self.id)
 
-    def get_reactors_iter(self, emoji, *args, **kwargs):
+    def get_reactors(self, emoji, *args, **kwargs):
         """
         Returns an iterator which paginates the reactors for the given emoji.
+
+        Returns
+        -------
+        Paginator(`User`)
+            An iterator which handles pagination of reactors.
         """
         if isinstance(emoji, Emoji):
             emoji = emoji.to_string()
 
         return Paginator(
             self.client.api.channels_messages_reactions_get,
-            self.channel_id,
-            self.id,
-            emoji,
-            *args,
-            **kwargs)
-
-    def get_reactors(self, emoji, *args, **kwargs):
-        """
-        Returns an list of users who reacted to this message with the given emoji.
-
-        Returns
-        -------
-        list(:class:`User`)
-            The users who reacted.
-        """
-        if isinstance(emoji, Emoji):
-            emoji = emoji.to_string()
-
-        return self.client.api.channels_messages_reactions_get(
             self.channel_id,
             self.id,
             emoji,
