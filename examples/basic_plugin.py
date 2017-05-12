@@ -12,7 +12,7 @@ class BasicPlugin(Plugin):
         self.log.info('Message created: {}: {}'.format(msg.author, msg.content))
 
     @Plugin.command('echo', '<content:str...>')
-    def on_test_command(self, event, content):
+    def on_echo_command(self, event, content):
         event.msg.reply(content)
 
     @Plugin.command('spam', '<count:int> <content:str...>')

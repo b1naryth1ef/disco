@@ -22,8 +22,9 @@ HTTPMethod = Enum(
 
 
 def to_bytes(obj):
-    if isinstance(obj, six.text_type):
-        return obj.encode('utf-8')
+    if six.PY2:
+        if isinstance(obj, six.text_type):
+            return obj.encode('utf-8')
     return obj
 
 

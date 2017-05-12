@@ -155,8 +155,11 @@ class APIClient(LoggingClass):
     def channels_messages_delete_bulk(self, channel, messages):
         self.http(Routes.CHANNELS_MESSAGES_DELETE_BULK, dict(channel=channel), json={'messages': messages})
 
-    def channels_messages_reactions_get(self, channel, message, emoji):
-        r = self.http(Routes.CHANNELS_MESSAGES_REACTIONS_GET, dict(channel=channel, message=message, emoji=emoji))
+    def channels_messages_reactions_get(self, channel, message, emoji, after=None, limit=100):
+        r = self.http(
+            Routes.CHANNELS_MESSAGES_REACTIONS_GET,
+            dict(channel=channel, message=message, emoji=emoji),
+            params={'after': after, 'limit': limit})
         return User.create_map(self.client, r.json())
 
     def channels_messages_reactions_create(self, channel, message, emoji):

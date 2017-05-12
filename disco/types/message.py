@@ -10,6 +10,7 @@ from disco.types.base import (
     SlottedModel, Field, ListField, AutoDictField, snowflake, text,
     datetime, enum
 )
+from disco.util.paginator import Paginator
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.user import User
@@ -300,7 +301,22 @@ class Message(SlottedModel):
         """
         return self.client.api.channels_messages_delete(self.channel_id, self.id)
 
-    def get_reactors(self, emoji):
+    def get_reactors_iter(self, emoji, *args, **kwargs):
+        """
+        Returns an iterator which paginates the reactors for the given emoji.
+        """
+        if isinstance(emoji, Emoji):
+            emoji = emoji.to_string()
+
+        return Paginator(
+            self.client.api.channels_messages_reactions_get,
+            self.channel_id,
+            self.id,
+            emoji,
+            *args,
+            **kwargs)
+
+    def get_reactors(self, emoji, *args, **kwargs):
         """
         Returns an list of users who reacted to this message with the given emoji.
 
@@ -309,11 +325,15 @@ class Message(SlottedModel):
         list(:class:`User`)
             The users who reacted.
         """
+        if isinstance(emoji, Emoji):
+            emoji = emoji.to_string()
+
         return self.client.api.channels_messages_reactions_get(
             self.channel_id,
             self.id,
-            emoji
-        )
+            emoji,
+            *args,
+            **kwargs)
 
     def create_reaction(self, emoji):
         warnings.warn(
@@ -322,8 +342,17 @@ class Message(SlottedModel):
         return self.add_reaction(emoji)
 
     def add_reaction(self, emoji):
+        """
+        Adds a reaction to the message.
+
+        Parameters
+        ----------
+        emoji : Emoji|str
+            An emoji or string representing an emoji
+        """
         if isinstance(emoji, Emoji):
             emoji = emoji.to_string()
+
         self.client.api.channels_messages_reactions_create(
             self.channel_id,
             self.id,
