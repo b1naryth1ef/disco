@@ -51,6 +51,6 @@ Using the default bot configuration, we can now run this script like so:
 
 `python -m disco.cli --token="MY_DISCORD_TOKEN" --run-bot --plugin simpleplugin`
 
-And commands can be triggered by mentioning the bot (configued by the BotConfig.command\_require\_mention flag):
+And commands can be triggered by mentioning the bot (configured by the BotConfig.command\_require\_mention flag):
 
 ![](http://i.imgur.com/Vw6T8bi.png)
