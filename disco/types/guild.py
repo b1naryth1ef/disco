@@ -7,7 +7,7 @@ from disco.api.http import APIException
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.base import (
-    SlottedModel, Field, ListField, AutoDictField, snowflake, text, binary, enum, datetime
+    SlottedModel, Field, ListField, AutoDictField, snowflake, text, enum, datetime
 )
 from disco.types.user import User
 from disco.types.voice import VoiceState
@@ -269,9 +269,9 @@ class Guild(SlottedModel, Permissible):
     name : str
         Guild's name.
     icon : str
-        Guild's icon (as PNG binary data).
+        Guild's icon hash
     splash : str
-        Guild's splash image (as PNG binary data).
+        Guild's splash image hash
     region : str
         Voice region.
     afk_timeout : int
@@ -300,9 +300,9 @@ class Guild(SlottedModel, Permissible):
     afk_channel_id = Field(snowflake)
     embed_channel_id = Field(snowflake)
     name = Field(text)
-    icon = Field(binary)
-    splash = Field(binary)
-    region = Field(str)
+    icon = Field(text)
+    splash = Field(text)
+    region = Field(text)
     afk_timeout = Field(int)
     embed_enabled = Field(bool)
     verification_level = Field(enum(VerificationLevel))

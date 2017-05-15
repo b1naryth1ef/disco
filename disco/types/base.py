@@ -209,18 +209,6 @@ def text(obj):
         return str(obj)
 
 
-def binary(obj):
-    if obj is None:
-        return None
-
-    if six.PY2:
-        if isinstance(obj, str):
-            return obj.decode('utf-8')
-        return unicode(obj)
-    else:
-        return bytes(obj, 'utf-8')
-
-
 def with_equality(field):
     class T(object):
         def __eq__(self, other):

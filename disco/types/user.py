@@ -1,6 +1,6 @@
 from holster.enum import Enum
 
-from disco.types.base import SlottedModel, Field, snowflake, text, binary, with_equality, with_hash
+from disco.types.base import SlottedModel, Field, snowflake, text, with_equality, with_hash
 
 DefaultAvatars = Enum(
     BLURPLE=0,
@@ -14,11 +14,11 @@ DefaultAvatars = Enum(
 class User(SlottedModel, with_equality('id'), with_hash('id')):
     id = Field(snowflake)
     username = Field(text)
-    avatar = Field(binary)
-    discriminator = Field(str)
+    avatar = Field(text)
+    discriminator = Field(text)
     bot = Field(bool, default=False)
     verified = Field(bool)
-    email = Field(str)
+    email = Field(text)
 
     presence = Field(None)
 
