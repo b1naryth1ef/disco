@@ -350,7 +350,8 @@ class Guild(SlottedModel, Permissible):
 
         value = PermissionValue(self.roles.get(self.id).permissions)
 
-        for role in map(self.roles.get, member.roles):
+        # Iterate over all roles the user has (plus the @everyone role)
+        for role in map(self.roles.get, member.roles + [self.id]):
             value += role.permissions
 
         return value
