@@ -1,0 +1,8 @@
+name: Disco
+
+rules:
+  disco/*.py:
+    parser: numpy
+
+outputs:
+  - {type: markdown, path: docs/api/, title: 'Disco Documentation'}
