@@ -59,7 +59,7 @@ class PermissionOverwrite(ChannelSubType):
     channel_id = Field(snowflake)
 
     @classmethod
-    def create(cls, channel, entity, allow=0, deny=0):
+    def create_for_channel(cls, channel, entity, allow=0, deny=0):
         from disco.types.guild import Role
 
         ptype = PermissionOverwriteType.ROLE if isinstance(entity, Role) else PermissionOverwriteType.MEMBER
@@ -200,77 +200,120 @@ class Channel(SlottedModel, Permissible):
     @property
     def messages(self):
         """
-        a default :class:`MessageIterator` for the channel.
+        A default `MessageIterator` for the channel, can be used to quickly and
+        easily iterate over the channels entire message history. For more control,
+        use `Channel.messages_iter`.
         """
         return self.messages_iter()
 
     @cached_property
     def guild(self):
         """
-        Guild this channel belongs to (if relevant).
+        Guild this channel belongs to (or None if not applicable).
         """
         return self.client.state.guilds.get(self.guild_id)
 
     def messages_iter(self, **kwargs):
         """
-        Creates a new :class:`MessageIterator` for the channel with the given
-        keyword arguments.
+        Creates a new `MessageIterator` for the channel with the given keyword
+        arguments.
         """
         return MessageIterator(self.client, self, **kwargs)
 
     def get_message(self, message):
+        """
+        Attempts to fetch and return a `Message` from the message object
+        or id.
+
+        Returns
+        -------
+        `Message`
+            The fetched message
+        """
         return self.client.api.channels_messages_get(self.id, to_snowflake(message))
 
     def get_invites(self):
         """
         Returns
         -------
-        list(:class:`disco.types.invite.Invite`)
-            All invites for this channel.
+        list(`Invite`)
+            Returns a list of all invites for this channel.
         """
         return self.client.api.channels_invites_list(self.id)
 
     def create_invite(self, *args, **kwargs):
+        """
+        Attempts to create a new invite with the given arguments. For more
+        information see `Invite.create_for_channel`.
+
+        Returns
+        -------
+        `Invite`
+        """
+
         from disco.types.invite import Invite
-        return Invite.create(self, *args, **kwargs)
+        return Invite.create_for_channel(self, *args, **kwargs)
 
     def get_pins(self):
         """
         Returns
         -------
-        list(:class:`disco.types.message.Message`)
-            All pinned messages for this channel.
+        list(`Message`)
+            Returns a list of all pinned messages for this channel.
         """
         return self.client.api.channels_pins_list(self.id)
 
     def create_pin(self, message):
+        """
+        Pins the given message to the channel.
+
+        Params
+        ------
+        message : `Message`|snowflake
+            The message or message ID to pin.
+        """
         self.client.api.channels_pins_create(self.id, to_snowflake(message))
 
     def delete_pin(self, message):
+        """
+        Unpins the given message from the channel.
+
+        Params
+        ------
+        message : `Message`|snowflake
+            The message or message ID to pin.
+        """
         self.client.api.channels_pins_delete(self.id, to_snowflake(message))
 
     def get_webhooks(self):
+        """
+        Returns
+        -------
+        list(`Webhook`)
+            Returns a list of all webhooks for this channel.
+        """
         return self.client.api.channels_webhooks_list(self.id)
 
-    def create_webhook(self, name=None, avatar=None):
-        return self.client.api.channels_webhooks_create(self.id, name, avatar)
-
-    def send_message(self, *args, **kwargs):
+    def create_webhook(self, *args, **kwargs):
         """
-        Send a message in this channel.
-
-        Parameters
-        ----------
-        content : str
-            The message contents to send.
-        nonce : Optional[snowflake]
-            The nonce to attach to the message.
-        tts : Optional[bool]
-            Whether this is a TTS message.
+        Creates a webhook for this channel. See `APIClient.channels_webhooks_create`
+        for more information.
 
         Returns
         -------
-        :class:`disco.types.message.Message`
+        `Webhook`
+            The created webhook.
+        """
+        return self.client.api.channels_webhooks_create(self.id, *args, **kwargs)
+
+    def send_message(self, *args, **kwargs):
+        """
+        Send a message to this channel. See `APIClient.channels_messages_create`
+        for more information.
+
+        Returns
+        -------
+        `disco.types.message.Message`
             The created message.
         """
         return self.client.api.channels_messages_create(self.id, *args, **kwargs)
@@ -285,7 +328,11 @@ class Channel(SlottedModel, Permissible):
         return vc
 
     def create_overwrite(self, *args, **kwargs):
-        return PermissionOverwrite.create(self, *args, **kwargs)
+        """
+        Creates a `PermissionOverwrite` for this channel. See
+        `PermissionOverwrite.create_for_channel` for more information.
+        """
+        return PermissionOverwrite.create_for_channel(self, *args, **kwargs)
 
     def delete_message(self, message):
         """
@@ -293,7 +340,7 @@ class Channel(SlottedModel, Permissible):
 
         Args
         ----
-        message : snowflake|:class:`disco.types.message.Message`
+        message : snowflake|`Message`
             The message to delete.
         """
         self.client.api.channels_messages_delete(self.id, to_snowflake(message))
@@ -306,7 +353,7 @@ class Channel(SlottedModel, Permissible):
 
         Args
         ----
-        messages : list[snowflake|:class:`disco.types.message.Message`]
+        messages : list(snowflake|`Message`)
             List of messages (or message ids) to delete. All messages must originate
             from this channel.
         """
