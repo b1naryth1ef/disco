@@ -484,7 +484,7 @@ class Bot(LoggingClass):
 
         data = {}
         if name in self.config.plugin_config:
-            data = self.config.plugin_config[name]
+            data.update(self.config.plugin_config[name])
 
         if os.path.exists(path):
             with open(path, 'r') as f:
