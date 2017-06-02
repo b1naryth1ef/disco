@@ -1,4 +1,5 @@
 import re
+import argparse
 
 from holster.enum import Enum
 
@@ -7,6 +8,7 @@ from disco.util.functional import cached_property
 
 ARGS_REGEX = '(?: ((?:\n|.)*)$|$)'
 ARGS_UNGROUPED_REGEX = '(?: (?:\n|.)*$|$)'
+SPLIT_SPACES_NO_QUOTE = re.compile(r'["|\']([^"\']+)["|\']|(\S+)')
 
 USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
 ROLE_MENTION_RE = re.compile('<@&([0-9]+)>')
@@ -19,6 +21,11 @@ CommandLevels = Enum(
     ADMIN=100,
     OWNER=500,
 )
+
+
+class PluginArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise CommandError(message)
 
 
 class CommandEvent(object):
@@ -138,6 +145,7 @@ class Command(object):
         self.oob = False
         self.context = {}
         self.metadata = {}
+        self.parser = None
 
         self.update(*args, **kwargs)
 
@@ -151,7 +159,7 @@ class Command(object):
     def get_docstring(self):
         return (self.func.__doc__ or '').format(**self.context)
 
-    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None, **kwargs):
+    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None, parser=False, **kwargs):
         self.triggers += aliases or []
 
         def resolve_role(ctx, rid):
@@ -175,13 +183,14 @@ class Command(object):
         def resolve_guild(ctx, gid):
             return ctx.msg.client.state.guilds.get(gid)
 
-        self.raw_args = args
-        self.args = ArgumentSet.from_string(args or '', {
-            'user': self.mention_type([resolve_user], USER_MENTION_RE, user=True),
-            'role': self.mention_type([resolve_role], ROLE_MENTION_RE),
-            'channel': self.mention_type([resolve_channel], CHANNEL_MENTION_RE, allow_plain=True),
-            'guild': self.mention_type([resolve_guild]),
-        })
+        if args:
+            self.raw_args = args
+            self.args = ArgumentSet.from_string(args, {
+                'user': self.mention_type([resolve_user], USER_MENTION_RE, user=True),
+                'role': self.mention_type([resolve_role], ROLE_MENTION_RE),
+                'channel': self.mention_type([resolve_channel], CHANNEL_MENTION_RE, allow_plain=True),
+                'guild': self.mention_type([resolve_guild]),
+            })
 
         self.level = level
         self.group = group
@@ -189,6 +198,9 @@ class Command(object):
         self.oob = oob
         self.context = context or {}
         self.metadata = kwargs
+
+        if parser:
+            self.parser = PluginArgumentParser(prog=self.name, add_help=False)
 
     @staticmethod
     def mention_type(getters, reg=None, user=False, allow_plain=False):
@@ -253,20 +265,27 @@ class Command(object):
         bool
             Whether this command was successful
         """
-        if len(event.args) < self.args.required_length:
-            raise CommandError(u'Command {} requires {} arguments (`{}`) passed {}'.format(
-                event.name,
-                self.args.required_length,
-                self.raw_args,
-                len(event.args)
-            ))
+        parsed_kwargs = {}
 
-        try:
-            parsed_args = self.args.parse(event.args, ctx=event)
-        except ArgumentError as e:
-            raise CommandError(e.message)
+        if self.args:
+            if len(event.args) < self.args.required_length:
+                raise CommandError(u'Command {} requires {} arguments (`{}`) passed {}'.format(
+                    event.name,
+                    self.args.required_length,
+                    self.raw_args,
+                    len(event.args)
+                ))
+
+            try:
+                parsed_kwargs = self.args.parse(event.args, ctx=event)
+            except ArgumentError as e:
+                raise CommandError(e.message)
+        elif self.parser:
+            event.parser = self.parser
+            parsed_kwargs['args'] = self.parser.parse_args(
+                [i[0] or i[1] for i in SPLIT_SPACES_NO_QUOTE.findall(' '.join(event.args))])
 
         kwargs = {}
         kwargs.update(self.context)
-        kwargs.update(parsed_args)
+        kwargs.update(parsed_kwargs)
         return self.plugin.dispatch('command', self, event, **kwargs)

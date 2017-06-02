@@ -66,3 +66,11 @@ class BasicPlugin(Plugin):
             event.msg.reply('```\n{}\n```'.format(
                 '\n'.join(parts)
             ))
+
+    @Plugin.command('test', parser=True)
+    @Plugin.parser.add_argument('-a', '--asdf', help='wow')
+    @Plugin.parser.add_argument('--help', action='store_true')
+    def on_test(self, event, args):
+        if args.help:
+            return event.msg.reply(event.parser.format_help())
+        event.msg.reply(args.asdf)

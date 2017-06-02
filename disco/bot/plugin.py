@@ -12,11 +12,7 @@ from disco.util.logging import LoggingClass
 from disco.bot.command import Command, CommandError
 
 
-class PluginDeco(object):
-    """
-    A utility mixin which provides various function decorators that a plugin
-    author can use to create bound event/command handlers.
-    """
+class BasePluginDeco(object):
     Prio = Priority
 
     # TODO: dont smash class methods
@@ -70,6 +66,7 @@ class PluginDeco(object):
         """
         Creates a new command attached to the function.
         """
+
         return cls.add_meta_deco({
             'type': 'command',
             'args': args,
@@ -122,6 +119,25 @@ class PluginDeco(object):
             'args': args,
             'kwargs': kwargs,
         })
+
+    @classmethod
+    def add_argument(cls, *args, **kwargs):
+        """
+        Adds an argument to the argument parser.
+        """
+        return cls.add_meta_deco({
+            'type': 'parser.add_argument',
+            'args': args,
+            'kwargs': kwargs,
+        })
+
+
+class PluginDeco(BasePluginDeco):
+    """
+    A utility mixin which provides various function decorators that a plugin
+    author can use to create bound event/command handlers.
+    """
+    parser = BasePluginDeco
 
 
 class Plugin(LoggingClass, PluginDeco):
@@ -191,7 +207,7 @@ class Plugin(LoggingClass, PluginDeco):
         self._post = {'command': [], 'listener': []}
 
         for member in self.meta_funcs:
-            for meta in member.meta:
+            for meta in reversed(member.meta):
                 self.bind_meta(member, meta)
 
     def bind_meta(self, member, meta):
@@ -205,6 +221,14 @@ class Plugin(LoggingClass, PluginDeco):
         elif meta['type'].startswith('pre_') or meta['type'].startswith('post_'):
             when, typ = meta['type'].split('_', 1)
             self.register_trigger(typ, when, member)
+        elif meta['type'].startswith('parser.'):
+            for command in self.commands:
+                if command.func == member:
+                    getattr(command.parser, meta['type'].split('.', 1)[-1])(
+                        *meta['args'],
+                        **meta['kwargs'])
+        else:
+            raise Exception('unhandled meta type {}'.format(meta))
 
     def handle_exception(self, greenlet, event):
         pass
