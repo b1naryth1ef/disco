@@ -64,15 +64,12 @@ class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
         return cls(obj, client)
 
     def __getattr__(self, name):
-        if six.PY3:
-            _proxy = object.__getattr__(self, '_proxy', None)
-            if _proxy:
-                return getattr(_proxy, name)
-        else:
-            if hasattr(self, '_proxy'):
-                return getattr(getattr(self, self._proxy), name)
+        try:
+            _proxy = object.__getattribute__(self, '_proxy')
+        except AttributeError:
+            return object.__getattribute__(self, name)
 
-        return object.__getattribute__(self, name)
+        return getattr(getattr(self, _proxy), name)
 
 
 def debug(func=None, match=None):
