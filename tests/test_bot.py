@@ -5,6 +5,10 @@ from disco.bot.bot import Bot
 from disco.bot.command import Command
 
 
+class Object(object):
+    pass
+
+
 class MockBot(Bot):
     @property
     def commands(self):
@@ -27,6 +31,10 @@ class TestBot(TestCase):
             'copez': 'cope',
         })
 
+        self.assertDictEqual(self.bot.compute_group_abbrev(['test']), {
+            'test': 't',
+        })
+
     def test_command_abbreivation_conflicting(self):
         groups = ['cat', 'cap', 'caz', 'cas']
         result = self.bot.compute_group_abbrev(groups)
@@ -45,3 +53,19 @@ class TestBot(TestCase):
         match = self.bot._commands[0].compiled_regex.match('test0 123 456')
         self.assertEqual(match.group(1).strip(), 'test0')
         self.assertEqual(match.group(2).strip(), '123 456')
+
+    def test_command_grouping_greadyness(self):
+        plugin = Object()
+        plugin.bot = self.bot
+
+        self.bot._commands = [
+            Command(plugin, None, 'a', group='test'),
+            Command(plugin, None, 'b', group='test')
+        ]
+
+        self.bot.recompute()
+        self.assertNotEqual(self.bot.command_matches_re.match('test a'), None)
+        self.assertNotEqual(self.bot.command_matches_re.match('te a'), None)
+        self.assertNotEqual(self.bot.command_matches_re.match('t b'), None)
+        self.assertEqual(self.bot.command_matches_re.match('testing b'), None)
+        self.assertEqual(self.bot.command_matches_re.match('testlmao a'), None)

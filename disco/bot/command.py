@@ -247,7 +247,8 @@ class Command(object):
             group = ''
             if self.group:
                 if self.group in self.plugin.bot.group_abbrev:
-                    group = '{}(?:\w+)? '.format(self.plugin.bot.group_abbrev.get(self.group))
+                    rest = self.plugin.bot.group_abbrev[self.group]
+                    group = '{}(?:{}) '.format(rest, ''.join(c + u'?' for c in self.group[len(rest):]))
                 else:
                     group = self.group + ' '
             return ('^{}({})' if grouped else '^{}(?:{})').format(

@@ -210,7 +210,7 @@ class Bot(LoggingClass):
         #  abbreviations that don't conflict with eachother.
         possible = {}
         for group in groups:
-            for index in range(len(group)):
+            for index in range(1, len(group)):
                 current = group[:index]
                 if current in possible:
                     possible[current] = None
