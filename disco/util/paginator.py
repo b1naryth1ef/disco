@@ -20,7 +20,7 @@ class Paginator(object):
         result = self.func(*self.args, **self.kwargs)
 
         if not len(result):
-            raise StopIteration
+            return
 
         self._buffer.extend(result)
         self._after = self._key(result[-1])

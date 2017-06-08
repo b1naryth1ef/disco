@@ -17,7 +17,7 @@ def take(seq, count):
     for _ in range(count):
         i = next(seq, NO_MORE_SENTINEL)
         if i is NO_MORE_SENTINEL:
-            raise StopIteration
+            return
         yield i
 
 

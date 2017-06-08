@@ -275,7 +275,7 @@ class Bot(LoggingClass):
                 mention_rules.get('role', False) and any(mention_roles),
                 msg.channel.is_dm
             )):
-                raise StopIteration
+                return
 
             if mention_direct:
                 if msg.guild:
@@ -296,12 +296,12 @@ class Bot(LoggingClass):
             content = content.lstrip()
 
         if prefix and not content.startswith(prefix):
-            raise StopIteration
+            return
         else:
             content = content[len(prefix):]
 
         if not self.command_matches_re or not self.command_matches_re.match(content):
-            raise StopIteration
+            return
 
         for command in self.commands:
             match = command.compiled_regex.match(content)

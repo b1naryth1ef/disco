@@ -432,7 +432,7 @@ class MessageIterator(object):
                 limit=self.chunk_size)
 
         if not len(self._buffer):
-            raise StopIteration
+            return
 
         self.after = None
         self.before = None

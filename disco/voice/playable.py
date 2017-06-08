@@ -183,7 +183,7 @@ class YoutubeDLInput(FFmpegInput):
 
         if 'entries' not in info:
             yield cls(ie_info=info, *args, **kwargs)
-            raise StopIteration
+            return
 
         for item in info['entries']:
             yield cls(ie_info=item, *args, **kwargs)
