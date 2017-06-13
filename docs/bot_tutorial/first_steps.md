@@ -10,10 +10,15 @@ Once you have a Discord bot account, you can then setup your workspace. For now 
 
 ```
 disco-tutorial/
-	config.yaml
-	plugins/
-		tutorial.py
+  config.yaml
+  plugins/
+    __init__.py
+    tutorial.py
 ```
+
+{% hint style='tip' %}
+The \_\_init\_\_.py file is required for Python to find your plugin, but it can remain empty.
+{% endhint %}
 
 
 Within the config file, paste the following template configuration and modify the token key to contain the token you obtained above:
