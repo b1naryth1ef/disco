@@ -30,3 +30,23 @@ class ExamplePlugin(Plugin):
 ```
 
 During the unload sequence all greenlets which the plugin owns (e.g. greenlets for command or listener callbacks, any spawned with `Plugin.spawn`) are terminated. In the case where command callbacks should continue execution past the unload point (e.g. in the case where a plugin reloads itself), you should pass `oob=True` to the `Plugin.command` decorator.
+
+## Configuration
+
+Disco supports a framework for dynamically passing configuration to plugins. By default, configuration files live within the `config/` directory, and are named after the plugin, e.g. `ExamplePlugin` would be configured via `config/example.json`. Adding support for configuration within your plugin can be done via a decorator:
+
+```python
+from disco.bot import Plugin, PluginConfig
+
+class ExamplePluginConfig(PluginConfig):
+    var1 = "test"
+    var2 = True
+
+
+@Plugin.with_config(ExamplePluginConfig)
+class ExamplePlugin(Plugin):
+    def load(self, ctx):
+        super(ExamplePlugin, self).load(ctx)
+        assert self.config.var1 == "test"
+        assert self.config.var2
+```
