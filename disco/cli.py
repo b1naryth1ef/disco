@@ -25,6 +25,7 @@ parser.add_argument('--encoder', help='encoder for gateway data', default=None)
 parser.add_argument('--run-bot', help='run a disco bot on this client', action='store_true', default=False)
 parser.add_argument('--plugin', help='load plugins into the bot', nargs='*', default=[])
 parser.add_argument('--log-level', help='log level', default='info')
+parser.add_argument('--http-bind', help='bind information for http server', default=None)
 
 
 def disco_main(run=False):
@@ -74,6 +75,13 @@ def disco_main(run=False):
             bot_config.plugins = args.plugin
         else:
             bot_config.plugins += args.plugin
+
+        if args.http_bind:
+            bot_config.http_enabled = True
+            host, port = args.http_bind.split(':', 1)
+            bot_config.http_host = host
+            bot_config.http_port = int(port)
+
         bot = Bot(client, bot_config)
 
     if run:

@@ -1,81 +1,63 @@
 from disco.bot import Plugin
+from disco.util.sanitize import S
 
 
 class BasicPlugin(Plugin):
-    @Plugin.command('reload')
-    def on_reload(self, event):
-        self.reload()
-        event.msg.reply('Reloaded!')
+    @Plugin.command('ping')
+    def on_ping_command(self, event):
+        # Generally all the functionality you need to interact with is contained
+        #  within the event object passed to command and event handlers.
+        event.msg.reply('Pong!')
 
     @Plugin.listen('MessageCreate')
-    def on_message_create(self, msg):
-        self.log.info('Message created: {}: {}'.format(msg.author, msg.content))
+    def on_message_create(self, event):
+        # All of Discord's events can be listened too and handled easily
+        self.log.info(u'{}: {}'.format(event.author, event.content))
 
     @Plugin.command('echo', '<content:str...>')
     def on_echo_command(self, event, content):
-        event.msg.reply(content)
+        # Commands can take a set of arguments that are validated by Disco itself
+        #  and content sent via messages can be automatically sanitized to avoid
+        #  mentions/etc.
+        event.msg.reply(content, santize=True)
 
-    @Plugin.command('spam', '<count:int> <content:str...>')
-    def on_spam_command(self, event, count, content):
-        for i in range(count):
-            event.msg.reply(content)
+    @Plugin.command('add', '<a:int> <b:int>', group='math')
+    def on_math_add_command(self, event, a, b):
+        # Commands can be grouped together for a cleaner user-facing interface.
+        event.msg.reply('{}'.format(a + b))
 
-    @Plugin.command('count', group='messages')
-    def on_stats(self, event):
-        msg = event.msg.reply('Ok, one moment...')
-        msg_count = 0
-
-        for msgs in event.channel.messages_iter(bulk=True):
-            msg_count += len(msgs)
-
-        msg.edit('{} messages'.format(msg_count))
+    @Plugin.command('sub', '<a:int> <b:int>', group='math')
+    def on_math_sub_command(self, event, a, b):
+        event.msg.reply('{}'.format(a - b))
 
     @Plugin.command('tag', '<name:str> [value:str...]')
     def on_tag(self, event, name, value=None):
+        # Plugins can easily store data locally using Disco's built in storage
         tags = self.storage.guild.ensure('tags')
 
         if value:
             tags[name] = value
-            event.msg.reply(':ok_hand:')
+            event.msg.reply(u':ok_hand: created tag `{}`'.format(S(name)))
         else:
             if name in tags:
                 return event.msg.reply(tags[name])
             else:
-                return event.msg.reply('Unknown tag: `{}`'.format(name))
-
-    @Plugin.command('info', '<query:str...>')
-    def on_info(self, event, query):
-        users = list(self.state.users.select({'username': query}, {'id': query}))
-
-        if not users:
-            event.msg.reply("Couldn't find user for your query: `{}`".format(query))
-        elif len(users) > 1:
-            event.msg.reply('I found too many users ({}) for your query: `{}`'.format(len(users), query))
-        else:
-            user = users[0]
-            parts = []
-            parts.append('ID: {}'.format(user.id))
-            parts.append('Username: {}'.format(user.username))
-            parts.append('Discriminator: {}'.format(user.discriminator))
-
-            if event.channel.guild:
-                member = event.channel.guild.get_member(user)
-                parts.append('Nickname: {}'.format(member.nick))
-                parts.append('Joined At: {}'.format(member.joined_at))
-
-            event.msg.reply('```\n{}\n```'.format(
-                '\n'.join(parts)
-            ))
+                return event.msg.reply(u'Unknown tag: `{}`'.format(S(name)))
 
     @Plugin.command('test', parser=True)
     @Plugin.parser.add_argument('-a', '--asdf', help='wow')
     @Plugin.parser.add_argument('--help', action='store_true')
     def on_test(self, event, args):
+        # Disco supports using an argparse.ArgumentParser for parsing commands as
+        #  well, which helps for large complex commands with many options or flags.
         if args.help:
             return event.msg.reply(event.parser.format_help())
         event.msg.reply(args.asdf)
 
     @Plugin.route('/test')
     def on_test_route(self):
-        print 'WOW!'
+        # Disco has built-in support for Flask (if installed and enabled) which
+        #  allows plugins to create HTTP routes.
+        from flask import request
+        print dict(request.headers)
         return 'Hi!'
