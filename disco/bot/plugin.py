@@ -131,6 +131,17 @@ class BasePluginDeco(object):
             'kwargs': kwargs,
         })
 
+    @classmethod
+    def route(cls, *args, **kwargs):
+        """
+        Adds an HTTP route.
+        """
+        return cls.add_meta_deco({
+            'type': 'http.add_route',
+            'args': args,
+            'kwargs': kwargs,
+        })
+
 
 class PluginDeco(BasePluginDeco):
     """
@@ -227,6 +238,9 @@ class Plugin(LoggingClass, PluginDeco):
                     getattr(command.parser, meta['type'].split('.', 1)[-1])(
                         *meta['args'],
                         **meta['kwargs'])
+        elif meta['type'] == 'http.add_route':
+            meta['kwargs']['view_func'] = member
+            self.bot.http.add_url_rule(*meta['args'], **meta['kwargs'])
         else:
             raise Exception('unhandled meta type {}'.format(meta))
 

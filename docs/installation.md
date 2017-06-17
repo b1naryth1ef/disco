@@ -21,6 +21,7 @@ pip install disco[performance]
 | Name | Explanation | Versions |
 |------|-------------|----------|
 | voice | Adds functionality required to connect and use voice | Both |
+| http | Adds a built-in HTTP server w/ Flask, allowing plugins to handle HTTP requests | Both |
 | music | Adds the ability to stream and play music from various third party sites | Both |
 | performance | Adds a faster JSON parser (ujson) and an ETF encoding parser | 2.x Only |
 | sharding | Adds a library which is required to enable auto-sharding | 2.x Only |

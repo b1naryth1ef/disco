@@ -18,6 +18,7 @@ with open('README.md') as f:
 
 extras_require = {
     'voice': ['pynacl==1.1.2'],
+    'http': ['flask==0.12.2'],
     'music': ['youtube_dl==2017.4.26'],
     'performance': ['erlpack==0.3.2', 'ujson==1.35'],
     'sharding': ['gipc==0.6.0'],

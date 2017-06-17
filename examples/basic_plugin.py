@@ -74,3 +74,8 @@ class BasicPlugin(Plugin):
         if args.help:
             return event.msg.reply(event.parser.format_help())
         event.msg.reply(args.asdf)
+
+    @Plugin.route('/test')
+    def on_test_route(self):
+        print 'WOW!'
+        return 'Hi!'
