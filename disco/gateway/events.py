@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import inflection
 import six
 
 from disco.types.user import User, Presence
@@ -8,8 +7,8 @@ from disco.types.channel import Channel, PermissionOverwrite
 from disco.types.message import Message, MessageReactionEmoji
 from disco.types.voice import VoiceState
 from disco.types.guild import Guild, GuildMember, Role, GuildEmoji
-
 from disco.types.base import Model, ModelMeta, Field, ListField, AutoDictField, snowflake, datetime
+from disco.util.string import underscore
 
 # Mapping of discords event name to our event classes
 EVENTS_MAP = {}
@@ -20,7 +19,7 @@ class GatewayEventMeta(ModelMeta):
         obj = super(GatewayEventMeta, mcs).__new__(mcs, name, parents, dct)
 
         if name != 'GatewayEvent':
-            EVENTS_MAP[inflection.underscore(name).upper()] = obj
+            EVENTS_MAP[underscore(name).upper()] = obj
 
         return obj
 

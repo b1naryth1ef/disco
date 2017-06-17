@@ -1,12 +1,12 @@
 import six
 import weakref
-import inflection
 
 from collections import deque, namedtuple
 from gevent.event import Event
 
 from disco.types.base import UNSET
 from disco.util.config import Config
+from disco.util.string import underscore
 from disco.util.hashmap import HashMap, DefaultHashMap
 
 
@@ -131,7 +131,7 @@ class State(object):
         assert not len(self.listeners), 'Binding while already bound is dangerous'
 
         for event in self.EVENTS:
-            func = 'on_' + inflection.underscore(event)
+            func = 'on_' + underscore(event)
             self.listeners.append(self.client.events.on(event, getattr(self, func)))
 
     def fill_messages(self, channel):
