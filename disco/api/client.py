@@ -263,8 +263,11 @@ class APIClient(LoggingClass):
             'position': position,
         })
 
-    def guilds_members_list(self, guild):
-        r = self.http(Routes.GUILDS_MEMBERS_LIST, dict(guild=guild))
+    def guilds_members_list(self, guild, limit=1000, after=None):
+        r = self.http(Routes.GUILDS_MEMBERS_LIST, dict(guild=guild), params=optional(
+            limit=limit,
+            after=after,
+        ))
         return GuildMember.create_hash(self.client, 'id', r.json(), guild_id=guild)
 
     def guilds_members_get(self, guild, member):
