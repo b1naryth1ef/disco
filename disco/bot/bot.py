@@ -303,10 +303,12 @@ class Bot(LoggingClass):
         if not self.command_matches_re or not self.command_matches_re.match(content):
             return
 
+        options = []
         for command in self.commands:
             match = command.compiled_regex.match(content)
             if match:
-                yield (command, match)
+                options.append((command, match))
+        return sorted(options, key=lambda obj: obj[0].group is None)
 
     def get_level(self, actor):
         level = CommandLevels.DEFAULT
@@ -359,14 +361,13 @@ class Bot(LoggingClass):
         if not len(commands):
             return False
 
-        result = False
         for command, match in commands:
             if not self.check_command_permissions(command, msg):
                 continue
 
             if command.plugin.execute(CommandEvent(command, msg, match)):
-                result = True
-        return result
+                return True
+        return False
 
     def on_message_create(self, event):
         if event.message.author.id == self.client.state.me.id:

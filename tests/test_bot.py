@@ -69,3 +69,26 @@ class TestBot(TestCase):
         self.assertNotEqual(self.bot.command_matches_re.match('t b'), None)
         self.assertEqual(self.bot.command_matches_re.match('testing b'), None)
         self.assertEqual(self.bot.command_matches_re.match('testlmao a'), None)
+
+    def test_group_and_command(self):
+        plugin = Object()
+        plugin.bot = self.bot
+
+        self.bot._commands = [
+            Command(plugin, None, 'test'),
+            Command(plugin, None, 'a', group='test'),
+            Command(plugin, None, 'b', group='test'),
+        ]
+
+        self.bot.recompute()
+
+        msg = Object()
+
+        msg.content = '!test a'
+        commands = list(self.bot.get_commands_for_message(False, None, '!', msg))
+        self.assertEqual(commands[0][0], self.bot._commands[1])
+        self.assertEqual(commands[1][0], self.bot._commands[0])
+
+        msg.content = '!test'
+        commands = list(self.bot.get_commands_for_message(False, None, '!', msg))
+        self.assertEqual(commands[0][0], self.bot._commands[0])
