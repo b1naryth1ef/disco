@@ -14,7 +14,7 @@ from gevent import monkey
 monkey.patch_all()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', help='Configuration file', default='config.yaml')
+parser.add_argument('--config', help='Configuration file', default='config.json')
 parser.add_argument('--token', help='Bot Authentication Token', default=None)
 parser.add_argument('--shard-count', help='Total number of shards', default=None)
 parser.add_argument('--shard-id', help='Current shard number/id', default=None)

@@ -1,6 +1,5 @@
-gevent==1.2.1
+gevent==1.2.2
 holster==1.0.15
 requests==2.13.0
 six==1.10.0
 websocket-client==0.40.0
-pyyaml==3.12
