@@ -3,6 +3,17 @@ from disco.util.sanitize import S
 
 
 class BasicPlugin(Plugin):
+    @Plugin.command('auditme')
+    def on_auditme(self, event):
+        invite = event.channel.create_invite(reason='TEST AUDIT')
+        invite.delete(reason='TEST AUDIT 2')
+        # channel = event.guild.create_channel('audit-log-test', 'text', reason='TEST CREATE')
+        # channel.delete(reason='TEST AUDIT 2')
+
+    @Plugin.command('ban', '<user:snowflake> <reason:str...>')
+    def on_ban(self, event, user, reason):
+        event.guild.create_ban(user, reason=reason + u'\U0001F4BF')
+
     @Plugin.command('ping')
     def on_ping_command(self, event):
         # Generally all the functionality you need to interact with is contained
@@ -14,6 +25,7 @@ class BasicPlugin(Plugin):
         # All of Discord's events can be listened too and handled easily
         self.log.info(u'{}: {}'.format(event.author, event.content))
 
+    @Plugin.command('test')
     @Plugin.command('echo', '<content:str...>')
     def on_echo_command(self, event, content):
         # Commands can take a set of arguments that are validated by Disco itself

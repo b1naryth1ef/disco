@@ -56,6 +56,9 @@ class CachedSlotProperty(object):
         self.function = function
         self.__doc__ = getattr(function, '__doc__')
 
+    def set(self, value):
+        setattr(self.stored_name, value)
+
     def __get__(self, instance, owner):
         if instance is None:
             return self

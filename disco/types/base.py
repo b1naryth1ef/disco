@@ -349,8 +349,8 @@ class Model(six.with_metaclass(ModelMeta, Chainable)):
         return inst
 
     @classmethod
-    def create_map(cls, client, data, **kwargs):
-        return list(map(functools.partial(cls.create, client, **kwargs), data))
+    def create_map(cls, client, data, *args, **kwargs):
+        return list(map(functools.partial(cls.create, client, *args, **kwargs), data))
 
     @classmethod
     def create_hash(cls, client, key, data, **kwargs):

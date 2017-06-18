@@ -40,13 +40,8 @@ class Invite(SlottedModel):
     created_at = Field(datetime)
 
     @classmethod
-    def create_for_channel(cls, channel, max_age=86400, max_uses=0, temporary=False, unique=False):
-        return channel.client.api.channels_invites_create(
-            channel.id,
-            max_age=max_age,
-            max_uses=max_uses,
-            temporary=temporary,
-            unique=unique)
+    def create_for_channel(cls, channel, *args, **kwargs):
+        return channel.client.api.channels_invites_create(channel.id, *args, **kwargs)
 
-    def delete(self):
-        self.client.api.invites_delete(self.code)
+    def delete(self, *args, **kwargs):
+        self.client.api.invites_delete(self.code, *args, **kwargs)

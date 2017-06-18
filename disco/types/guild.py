@@ -4,10 +4,11 @@ from holster.enum import Enum
 
 from disco.gateway.packets import OPCode
 from disco.api.http import APIException
+from disco.util.paginator import Paginator
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import cached_property
 from disco.types.base import (
-    SlottedModel, Field, ListField, AutoDictField, snowflake, text, enum, datetime
+    SlottedModel, Field, ListField, AutoDictField, DictField, snowflake, text, enum, datetime
 )
 from disco.types.user import User
 from disco.types.voice import VoiceState
@@ -436,8 +437,8 @@ class Guild(SlottedModel, Permissible):
     def delete_ban(self, user):
         self.client.api.guilds_bans_delete(self.id, to_snowflake(user))
 
-    def create_ban(self, user, delete_message_days=0):
-        self.client.api.guilds_bans_create(self.id, to_snowflake(user), delete_message_days)
+    def create_ban(self, user, *args, **kwargs):
+        self.client.api.guilds_bans_create(self.id, to_snowflake(user), *args, **kwargs)
 
     def create_channel(self, *args, **kwargs):
         return self.client.api.guilds_channels_create(self.id, *args, **kwargs)
@@ -470,3 +471,148 @@ class Guild(SlottedModel, Permissible):
     @property
     def splash_url(self):
         return self.get_splash_url()
+
+    @property
+    def audit_log(self):
+        return Paginator(
+            self.client.api.guilds_auditlogs_list,
+            'before',
+            self.id,
+        )
+
+    def get_audit_log_entries(self, *args, **kwargs):
+        return self.client.api.guilds_auditlogs_list(self.id, *args, **kwargs)
+
+
+AuditLogActionTypes = Enum(
+    GUILD_UPDATE=1,
+    CHANNEL_CREATE=10,
+    CHANNEL_UPDATE=11,
+    CHANNEL_DELETE=12,
+    CHANNEL_OVERWRITE_CREATE=13,
+    CHANNEL_OVERWRITE_UPDATE=14,
+    CHANNEL_OVERWRITE_DELETE=15,
+    MEMBER_KICK=20,
+    MEMBER_PRUNE=21,
+    MEMBER_BAN_ADD=22,
+    MEMBER_BAN_REMOVE=23,
+    MEMBER_UPDATE=24,
+    MEMBER_ROLE_UPDATE=25,
+    ROLE_CREATE=30,
+    ROLE_UPDATE=31,
+    ROLE_DELETE=32,
+    INVITE_CREATE=40,
+    INVITE_UPDATE=41,
+    INVITE_DELETE=42,
+    WEBHOOK_CREATE=50,
+    WEBHOOK_UPDATE=51,
+    WEBHOOK_DELETE=52,
+    EMOJI_CREATE=60,
+    EMOJI_UPDATE=61,
+    EMOJI_DELETE=62,
+    MESSAGE_DELETE=72,
+)
+
+
+GUILD_ACTIONS = (
+    AuditLogActionTypes.GUILD_UPDATE,
+)
+
+CHANNEL_ACTIONS = (
+    AuditLogActionTypes.CHANNEL_CREATE,
+    AuditLogActionTypes.CHANNEL_UPDATE,
+    AuditLogActionTypes.CHANNEL_DELETE,
+    AuditLogActionTypes.CHANNEL_OVERWRITE_CREATE,
+    AuditLogActionTypes.CHANNEL_OVERWRITE_UPDATE,
+    AuditLogActionTypes.CHANNEL_OVERWRITE_DELETE,
+)
+
+MEMBER_ACTIONS = (
+    AuditLogActionTypes.MEMBER_KICK,
+    AuditLogActionTypes.MEMBER_PRUNE,
+    AuditLogActionTypes.MEMBER_BAN_ADD,
+    AuditLogActionTypes.MEMBER_BAN_REMOVE,
+    AuditLogActionTypes.MEMBER_UPDATE,
+    AuditLogActionTypes.MEMBER_ROLE_UPDATE,
+)
+
+ROLE_ACTIONS = (
+    AuditLogActionTypes.ROLE_CREATE,
+    AuditLogActionTypes.ROLE_UPDATE,
+    AuditLogActionTypes.ROLE_DELETE,
+)
+
+INVITE_ACTIONS = (
+    AuditLogActionTypes.INVITE_CREATE,
+    AuditLogActionTypes.INVITE_UPDATE,
+    AuditLogActionTypes.INVITE_DELETE,
+)
+
+WEBHOOK_ACTIONS = (
+    AuditLogActionTypes.WEBHOOK_CREATE,
+    AuditLogActionTypes.WEBHOOK_UPDATE,
+    AuditLogActionTypes.WEBHOOK_DELETE,
+)
+
+EMOJI_ACTIONS = (
+    AuditLogActionTypes.EMOJI_CREATE,
+    AuditLogActionTypes.EMOJI_UPDATE,
+    AuditLogActionTypes.EMOJI_DELETE,
+)
+
+MESSAGE_ACTIONS = (
+    AuditLogActionTypes.MESSAGE_DELETE,
+)
+
+
+class AuditLogObjectChange(SlottedModel):
+    key = Field(text)
+    new_value = Field(text)
+    old_value = Field(text)
+
+
+class AuditLogEntry(SlottedModel):
+    id = Field(snowflake)
+    guild_id = Field(snowflake)
+    user_id = Field(snowflake)
+    target_id = Field(snowflake)
+    action_type = Field(enum(AuditLogActionTypes))
+    changes = ListField(AuditLogObjectChange)
+    options = DictField(text, text)
+    reason = Field(text)
+
+    _cached_target = Field(None)
+
+    @classmethod
+    def create(cls, client, users, webhooks, data, **kwargs):
+        self = super(SlottedModel, cls).create(client, data, **kwargs)
+
+        if self.action_type in MEMBER_ACTIONS:
+            self._cached_target = users[self.target_id]
+        elif self.action_type in WEBHOOK_ACTIONS:
+            self._cached_target = webhooks[self.target_id]
+
+        return self
+
+    @cached_property
+    def guild(self):
+        return self.client.state.guilds.get(self.guild_id)
+
+    @cached_property
+    def user(self):
+        return self.client.state.users.get(self.user_id)
+
+    @cached_property
+    def target(self):
+        if self.action_type in GUILD_ACTIONS:
+            return self.guild
+        elif self.action_type in CHANNEL_ACTIONS:
+            return self.guild.channels.get(self.target_id)
+        elif self.action_type in MEMBER_ACTIONS:
+            return self._cached_target or self.state.users.get(self.target_id)
+        elif self.action_type in ROLE_ACTIONS:
+            return self.guild.roles.get(self.target_id)
+        elif self.action_type in WEBHOOK_ACTIONS:
+            return self._cached_target
+        elif self.action_type in EMOJI_ACTIONS:
+            return self.guild.emojis.get(self.target_id)
