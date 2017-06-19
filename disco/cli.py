@@ -51,8 +51,8 @@ def disco_main(run=False):
         config = ClientConfig()
 
     config.manhole_enable = args.manhole
-    if config.manhole_enable:
-        config.manhole_bind = args.manhole_bind.split(':', 1)
+    if args.manhole_bind:
+        config.manhole_bind = args.manhole_bind
 
     for k, v in six.iteritems(vars(args)):
         if hasattr(config, k) and v is not None:
