@@ -51,7 +51,8 @@ def disco_main(run=False):
         config = ClientConfig()
 
     config.manhole_enable = args.manhole
-    config.manhole_bind = args.manhole_bind.split(':', 1)
+    if config.manhole_enable:
+        config.manhole_bind = args.manhole_bind.split(':', 1)
 
     for k, v in six.iteritems(vars(args)):
         if hasattr(config, k) and v is not None:
@@ -91,6 +92,7 @@ def disco_main(run=False):
         (bot or client).run_forever()
 
     return (bot or client)
+
 
 if __name__ == '__main__':
     disco_main(True)
