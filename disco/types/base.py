@@ -292,8 +292,9 @@ class Model(six.with_metaclass(ModelMeta, Chainable)):
     def load(self, obj, consume=False, skip=None):
         return self.load_into(self, obj, consume, skip)
 
-    def load_into(self, inst, obj, consume=False, skip=None):
-        for name, field in six.iteritems(self._fields):
+    @classmethod
+    def load_into(cls, inst, obj, consume=False, skip=None):
+        for name, field in six.iteritems(cls._fields):
             should_skip = skip and name in skip
 
             if consume and not should_skip:
@@ -312,7 +313,7 @@ class Model(six.with_metaclass(ModelMeta, Chainable)):
                 setattr(inst, field.dst_name, raw)
                 continue
 
-            value = field.try_convert(raw, self.client)
+            value = field.try_convert(raw, inst.client)
             setattr(inst, field.dst_name, value)
 
     def update(self, other, ignored=None):
