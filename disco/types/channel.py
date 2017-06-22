@@ -9,7 +9,6 @@ from disco.util.functional import cached_property, one_or_many, chunks
 from disco.types.user import User
 from disco.types.base import SlottedModel, Field, AutoDictField, snowflake, enum, text
 from disco.types.permissions import Permissions, Permissible, PermissionValue
-from disco.voice.client import VoiceClient
 
 
 NSFW_RE = re.compile('^nsfw(-|$)')
@@ -322,6 +321,7 @@ class Channel(SlottedModel, Permissible):
         """
         Connect to this channel over voice.
         """
+        from disco.voice.client import VoiceClient
         assert self.is_voice, 'Channel must support voice to connect'
         vc = VoiceClient(self)
         vc.connect(*args, **kwargs)
