@@ -66,6 +66,7 @@ class BasicPlugin(Plugin):
             return event.msg.reply(event.parser.format_help())
         event.msg.reply(args.asdf)
 
+    """
     @Plugin.route('/test')
     def on_test_route(self):
         # Disco has built-in support for Flask (if installed and enabled) which
@@ -73,3 +74,4 @@ class BasicPlugin(Plugin):
         from flask import request
         print dict(request.headers)
         return 'Hi!'
+    """
