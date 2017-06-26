@@ -31,6 +31,10 @@ class Emoji(SlottedModel):
     id = Field(snowflake)
     name = Field(text)
 
+    @cached_property
+    def custom(self):
+        return self.id is not None
+
     def __eq__(self, other):
         if isinstance(other, Emoji):
             return self.id == other.id and self.name == other.name
