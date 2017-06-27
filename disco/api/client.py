@@ -26,7 +26,7 @@ def optional(**kwargs):
 
 
 def _reason_header(value):
-    return optional(**{'X-Audit-Log-Reason': quote(to_bytes(value))})
+    return optional(**{'X-Audit-Log-Reason': quote(to_bytes(value)) if value else None})
 
 
 class APIClient(LoggingClass):

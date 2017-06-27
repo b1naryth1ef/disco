@@ -9,3 +9,11 @@ class TestReason(TestCase):
 
         _, kwargs = api.http.calls[0]
         self.assertEqual(kwargs['headers']['X-Audit-Log-Reason'], 'yo%20%F0%9F%92%BF%20test')
+
+    def test_null_reason(self):
+        from tests.utils import TestAPIClient
+        api = TestAPIClient()
+        api.guilds_channels_modify(1, 2, 3, reason=None)
+
+        _, kwargs = api.http.calls[0]
+        self.assertFalse('X-Audit-Log-Reason' in kwargs['headers'])
