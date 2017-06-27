@@ -202,6 +202,8 @@ class HTTPClient(LoggingClass):
         if token:
             self.headers['Authorization'] = 'Bot ' + token
 
+        self.session = requests.Session()
+
     def __call__(self, route, args=None, **kwargs):
         return self.call(route, args, **kwargs)
 
@@ -257,7 +259,7 @@ class HTTPClient(LoggingClass):
         # Make the actual request
         url = self.BASE_URL + route[1].format(**args)
         self.log.info('%s %s (%s)', route[0].value, url, kwargs.get('params'))
-        r = requests.request(route[0].value, url, **kwargs)
+        r = self.session.request(route[0].value, url, **kwargs)
 
         # Update rate limiter
         self.limiter.update(bucket, r)
