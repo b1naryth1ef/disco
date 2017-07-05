@@ -2,7 +2,6 @@ import re
 import six
 import warnings
 import functools
-import unicodedata
 
 from holster.enum import Enum
 
@@ -443,53 +442,26 @@ class Message(SlottedModel):
         return content
 
 
-class MessageTable(object):
-    def __init__(self, sep=' | ', codeblock=True, header_break=True, language=None):
-        self.header = []
-        self.entries = []
-        self.size_index = {}
-        self.sep = sep
-        self.codeblock = codeblock
-        self.header_break = header_break
-        self.language = language
-
-    def recalculate_size_index(self, cols):
-        for idx, col in enumerate(cols):
-            size = len(unicodedata.normalize('NFC', col))
-            if idx not in self.size_index or size > self.size_index[idx]:
-                self.size_index[idx] = size
-
-    def set_header(self, *args):
-        args = list(map(six.text_type, args))
-        self.header = args
-        self.recalculate_size_index(args)
-
-    def add(self, *args):
-        args = list(map(six.text_type, args))
-        self.entries.append(args)
-        self.recalculate_size_index(args)
-
-    def compile_one(self, cols):
-        data = self.sep.lstrip()
-
-        for idx, col in enumerate(cols):
-            padding = ' ' * (self.size_index[idx] - len(col))
-            data += col + padding + self.sep
-
-        return data.rstrip()
+class Sendable(object):
+    """
+    Base class which implements an entity that can be sent as a message to Discord.
+    """
 
     def compile(self):
-        data = []
-        if self.header:
-            data = [self.compile_one(self.header)]
+        """
+        Should return a valid (e.g. properly sized, < 2000 length) message that
+        can be sent to Discord.
+        """
 
-        if self.header and self.header_break:
-            data.append('-' * (sum(self.size_index.values()) + (len(self.header) * len(self.sep)) + 1))
+    @staticmethod
+    def fit(contents, head='```', tail='```', length=2000):
+        contents = Sendable.truncate(contents, tail='', length=length - (len(head) + len(tail)))
+        return u'{}{}{}'.format(head, contents, tail)
 
-        for row in self.entries:
-            data.append(self.compile_one(row))
+    @staticmethod
+    def truncate(contents, tail='...', length=2000):
+        if len(contents) <= length:
+            return contents
 
-        if self.codeblock:
-            return '```{}'.format(self.language if self.language else '') + '\n'.join(data) + '```'
-
-        return '\n'.join(data)
+        to_truncate = len(contents) - length + len(tail)
+        return contents[:-to_truncate] + tail
