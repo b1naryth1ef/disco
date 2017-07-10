@@ -188,7 +188,8 @@ class State(object):
                 self.users[member.user.id] = member.user
 
         for presence in event.presences:
-            self.users[presence.user.id].presence = presence
+            if presence.user.id in self.users:
+                self.users[presence.user.id].presence = presence
 
         for voice_state in six.itervalues(event.guild.voice_states):
             self.voice_states[voice_state.session_id] = voice_state
