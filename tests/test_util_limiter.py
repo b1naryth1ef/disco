@@ -42,5 +42,4 @@ class TestSimpleLimiter(TestCase):
         for _ in range(10):
             limit.check()
 
-
         self.assertEqual(int(time.time() - start), 1)
