@@ -6,33 +6,17 @@ class SimpleLimiter(object):
     def __init__(self, total, per):
         self.total = total
         self.per = per
+        self._lock = gevent.lock.Semaphore(total)
 
         self.count = 0
         self.reset_at = 0
-
-        self.event = None
-
-    def backoff(self):
-        self.event = gevent.event.Event()
-        gevent.sleep(self.reset_at - time.time())
-        self.count = 0
-        self.reset_at = 0
-        if self.event:
-            self.event.set()
         self.event = None
 
     def check(self):
-        if self.event:
-            self.event.wait()
+        self._lock.acquire()
 
-        self.count += 1
+        def _release_lock():
+            gevent.sleep(self.per)
+            self._lock.release()
 
-        if not self.reset_at:
-            self.reset_at = time.time() + self.per
-            return
-        elif self.reset_at < time.time():
-            self.count = 1
-            self.reset_at = time.time()
-
-        if self.count > self.total and self.reset_at > time.time():
-            self.backoff()
+        gevent.spawn(_release_lock)
