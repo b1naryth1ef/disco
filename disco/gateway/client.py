@@ -67,7 +67,7 @@ class GatewayClient(LoggingClass):
         return self._send(op, data)
 
     def _send(self, op, data):
-        self.log.debug('SEND %s', op)
+        self.log.debug('GatewayClient.send %s', op)
         self.packets.emit((SEND, op), data)
         self.ws.send(self.encoder.encode({
             'op': op.value,
@@ -81,7 +81,7 @@ class GatewayClient(LoggingClass):
 
     def handle_dispatch(self, packet):
         obj = GatewayEvent.from_dispatch(self.client, packet)
-        self.log.debug('Dispatching %s', obj.__class__.__name__)
+        self.log.debug('GatewayClient.handle_dispatch %s', obj.__class__.__name__)
         self.client.events.emit(obj.__class__.__name__, obj)
         if self.replaying:
             self.replayed_events += 1
