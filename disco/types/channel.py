@@ -123,6 +123,7 @@ class Channel(SlottedModel, Permissible):
     position = Field(int)
     bitrate = Field(int)
     recipients = AutoDictField(User, 'id')
+    nsfw = Field(bool)
     type = Field(enum(ChannelType))
     overwrites = AutoDictField(PermissionOverwrite, 'id', alias='permission_overwrites')
 
@@ -187,7 +188,7 @@ class Channel(SlottedModel, Permissible):
         """
         Whether this channel is an NSFW channel.
         """
-        return self.type == ChannelType.GUILD_TEXT and NSFW_RE.match(self.name)
+        return self.type == ChannelType.GUILD_TEXT and (self.nsfw or NSFW_RE.match(self.name))
 
     @property
     def is_voice(self):
@@ -398,6 +399,13 @@ class Channel(SlottedModel, Permissible):
         Sets the channels position.
         """
         return self.client.api.channels_modify(self.id, position=position, reason=reason)
+
+    def set_nsfw(self, value, reason=None):
+        """
+        Sets whether the channel is NSFW.
+        """
+        assert (self.type == ChannelType.GUILD_TEXT)
+        return self.client.api.channels_modify(self.id, nsfw=value, reason=reason)
 
     def set_bitrate(self, bitrate, reason=None):
         """
