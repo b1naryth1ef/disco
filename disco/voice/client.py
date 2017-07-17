@@ -226,7 +226,7 @@ class VoiceClient(LoggingClass):
         if self.token and self.token != data.token:
             return
 
-        self.log.info('[%s] Recieved VOICE_SERVER_UPDATE (state = %s)', self, self.state)
+        self.log.info('[%s] Recieved VOICE_SERVER_UPDATE (state = %s / endpoint = %s)', self, self.state, data.endpoint)
 
         self.token = data.token
         self.set_state(VoiceState.AUTHENTICATING)

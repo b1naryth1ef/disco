@@ -1,11 +1,11 @@
 import time
 import gevent
 
-from six.moves import queue
 from holster.enum import Enum
 from holster.emitter import Emitter
 
 from disco.voice.client import VoiceState
+from disco.voice.queue import PlayableQueue
 
 MAX_TIMESTAMP = 4294967295
 
@@ -19,11 +19,11 @@ class Player(object):
         'DISCONNECT'
     )
 
-    def __init__(self, client):
+    def __init__(self, client, queue=None):
         self.client = client
 
         # Queue contains playable items
-        self.queue = queue.Queue()
+        self.queue = queue or PlayableQueue()
 
         # Whether we're playing music (true for lifetime)
         self.playing = True
