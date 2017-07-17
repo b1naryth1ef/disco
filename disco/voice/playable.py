@@ -227,6 +227,7 @@ class DCADOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
     def __init__(self, source, *args, **kwargs):
         self.source = source
         self.command = kwargs.pop('command', 'dcad')
+        self.on_complete = kwargs.pop('on_complete', None)
         super(DCADOpusEncoderPlayable, self).__init__(*args, **kwargs)
 
         self._done = False
@@ -270,6 +271,7 @@ class DCADOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
         header = self.proc.stdout.read(OPUS_HEADER_SIZE)
         if len(header) < OPUS_HEADER_SIZE:
             self._done = True
+            self.on_complete()
             return
 
         size = struct.unpack('<h', header)[0]
@@ -277,6 +279,7 @@ class DCADOpusEncoderPlayable(BasePlayable, AbstractOpus, OpusEncoder):
         data = self.proc.stdout.read(size)
         if len(data) < size:
             self._done = True
+            self.on_complete()
             return
 
         return data
