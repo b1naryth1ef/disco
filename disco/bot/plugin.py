@@ -298,7 +298,7 @@ class Plugin(LoggingClass, PluginDeco):
         try:
             return event.command.execute(event)
         except CommandError as e:
-            event.msg.reply(e.message)
+            event.msg.reply(e.msg)
             return False
         finally:
             self.ctx.drop()

@@ -107,6 +107,8 @@ class CommandError(Exception):
     An exception which is thrown when the arguments for a command are invalid,
     or don't match the command's specifications.
     """
+    def __init__(self, msg):
+        self.msg = msg
 
 
 class Command(object):
@@ -159,7 +161,16 @@ class Command(object):
     def get_docstring(self):
         return (self.func.__doc__ or '').format(**self.context)
 
-    def update(self, args=None, level=None, aliases=None, group=None, is_regex=None, oob=False, context=None, parser=False, **kwargs):
+    def update(self,
+            args=None,
+            level=None,
+            aliases=None,
+            group=None,
+            is_regex=None,
+            oob=False,
+            context=None,
+            parser=False,
+            **kwargs):
         self.triggers += aliases or []
 
         def resolve_role(ctx, rid):
@@ -280,7 +291,7 @@ class Command(object):
             try:
                 parsed_kwargs = self.args.parse(event.args, ctx=event)
             except ArgumentError as e:
-                raise CommandError(e.message)
+                raise CommandError(e.args[0])
         elif self.parser:
             event.parser = self.parser
             parsed_kwargs['args'] = self.parser.parse_args(

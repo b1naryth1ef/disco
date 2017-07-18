@@ -28,6 +28,16 @@ MessageType = Enum(
 
 
 class Emoji(SlottedModel):
+    """
+    Represents either a standard or custom Discord emoji.
+
+    Attributes
+    ----------
+    id : snowflake?
+        The emoji ID (will be none if this is not a custom emoji).
+    name : str
+        The name of this emoji.
+    """
     id = Field(snowflake)
     name = Field(text)
 
@@ -47,22 +57,63 @@ class Emoji(SlottedModel):
 
 
 class MessageReactionEmoji(Emoji):
+    """
+    Represents a emoji which was used as a reaction on a message.
+    """
     pass
 
 
 class MessageReaction(SlottedModel):
+    """
+    A reaction of one emoji (multiple users) to a message.
+
+    Attributes
+    ----------
+    emoji : `MessageReactionEmoji`
+        The emoji which was reacted.
+    count : int
+        The number of users who reacted with this emoji.
+    me : bool
+        Whether the current user reacted with this emoji.
+    """
     emoji = Field(MessageReactionEmoji)
     count = Field(int)
     me = Field(bool)
 
 
 class MessageEmbedFooter(SlottedModel):
+    """
+    A footer for the `MessageEmbed`.
+
+    Attributes
+    ----------
+    text : str
+        The contents of the footer.
+    icon_url : str
+        The URL for the footer icon.
+    proxy_icon_url : str
+        A proxy URL for the footer icon, set by Discord.
+    """
     text = Field(text)
     icon_url = Field(text)
     proxy_icon_url = Field(text)
 
 
 class MessageEmbedImage(SlottedModel):
+    """
+    An image for the `MessageEmbed`.
+
+    Attributes
+    ----------
+    url : str
+        The URL for the image.
+    proxy_url : str
+        A proxy URL for the image, set by Discord.
+    width : int
+        The width of the image, set by Discord.
+    height : int
+        The height of the image, set by Discord.
+    """
     url = Field(text)
     proxy_url = Field(text)
     width = Field(int)
@@ -70,6 +121,20 @@ class MessageEmbedImage(SlottedModel):
 
 
 class MessageEmbedThumbnail(SlottedModel):
+    """
+    A thumbnail for the `MessageEmbed`.
+
+    Attributes
+    ----------
+    url : str
+        The thumbnail URL.
+    proxy_url : str
+        A proxy URL for the thumbnail, set by Discord.
+    width : int
+        The width of the thumbnail, set by Discord.
+    height : int
+        The height of the thumbnail, set by Discord.
+    """
     url = Field(text)
     proxy_url = Field(text)
     width = Field(int)
@@ -77,12 +142,38 @@ class MessageEmbedThumbnail(SlottedModel):
 
 
 class MessageEmbedVideo(SlottedModel):
+    """
+    A video for the `MessageEmbed`.
+
+    Attributes
+    ----------
+    url : str
+        The URL for the video.
+    width : int
+        The width of the video, set by Discord.
+    height : int
+        The height of the video, set by Discord.
+    """
     url = Field(text)
     height = Field(int)
     width = Field(int)
 
 
 class MessageEmbedAuthor(SlottedModel):
+    """
+    An author for the `MessageEmbed`.
+
+    Attributes
+    ----------
+    name : str
+        The name of the author.
+    url : str
+        A URL for the author.
+    icon_url : str
+        A URL to an icon for the author.
+    proxy_icon_url : str
+        A proxy URL for the authors icon, set by Discord.
+    """
     name = Field(text)
     url = Field(text)
     icon_url = Field(text)
@@ -90,6 +181,18 @@ class MessageEmbedAuthor(SlottedModel):
 
 
 class MessageEmbedField(SlottedModel):
+    """
+    A field for the `MessageEmbed`.
+
+    Attributes
+    ----------
+    name : str
+        The name of the field.
+    value : str
+        The value of the field.
+    inline : bool
+        Whether the field renders inline or by itself.
+    """
     name = Field(text)
     value = Field(text)
     inline = Field(bool)
@@ -109,6 +212,20 @@ class MessageEmbed(SlottedModel):
         Description of the embed.
     url : str
         URL of the embed.
+    timestamp : datetime
+        The timestamp for the embed.
+    color : int
+        The color of the embed.
+    footer : `MessageEmbedFooter`
+        The footer of the embed.
+    thumbnail : `MessageEmbedThumbnail`
+        The thumbnail of the embed.
+    video : `MessageEmbedVideo`
+        The video of the embed.
+    author : `MessageEmbedAuthor`
+        The author of the embed.
+    fields : list[`MessageEmbedField]`
+        The fields of the embed.
     """
     title = Field(text)
     type = Field(str, default='rich')
@@ -124,21 +241,39 @@ class MessageEmbed(SlottedModel):
     fields = ListField(MessageEmbedField)
 
     def set_footer(self, *args, **kwargs):
+        """
+        Sets the footer of the embed, see `MessageEmbedFooter`.
+        """
         self.footer = MessageEmbedFooter(*args, **kwargs)
 
     def set_image(self, *args, **kwargs):
+        """
+        Sets the image of the embed, see `MessageEmbedImage`.
+        """
         self.image = MessageEmbedImage(*args, **kwargs)
 
     def set_thumbnail(self, *args, **kwargs):
+        """
+        Sets the thumbnail of the embed, see `MessageEmbedThumbnail`.
+        """
         self.thumbnail = MessageEmbedThumbnail(*args, **kwargs)
 
     def set_video(self, *args, **kwargs):
+        """
+        Sets the video of the embed, see `MessageEmbedVideo`.
+        """
         self.video = MessageEmbedVideo(*args, **kwargs)
 
     def set_author(self, *args, **kwargs):
+        """
+        Sets the author of the embed, see `MessageEmbedAuthor`.
+        """
         self.author = MessageEmbedAuthor(*args, **kwargs)
 
     def add_field(self, *args, **kwargs):
+        """
+        Adds a new field to the embed, see `MessageEmbedField`.
+        """
         self.fields.append(MessageEmbedField(*args, **kwargs))
 
 
@@ -182,7 +317,7 @@ class Message(SlottedModel):
         The ID of this message.
     channel_id : snowflake
         The channel ID this message was sent in.
-    type : ``MessageType``
+    type : `MessageType`
         Type of the message.
     author : :class:`disco.types.user.User`
         The author of this message.
@@ -192,7 +327,7 @@ class Message(SlottedModel):
         The nonce of this message.
     timestamp : datetime
         When this message was created.
-    edited_timestamp : Optional[datetime]
+    edited_timestamp : datetime?
         When this message was last edited.
     tts : bool
         Whether this is a TTS (text-to-speech) message.
@@ -200,14 +335,16 @@ class Message(SlottedModel):
         Whether this message has an @everyone which mentions everyone.
     pinned : bool
         Whether this message is pinned in the channel.
-    mentions : dict(snowflake, :class:`disco.types.user.User`)
-        All users mentioned within this message.
-    mention_roles : list(snowflake)
-        All roles mentioned within this message.
-    embeds : list(:class:`MessageEmbed`)
-        All embeds for this message.
-    attachments : list(:class:`MessageAttachment`)
-        All attachments for this message.
+    mentions : dict[snowflake, `User`]
+        Users mentioned within this message.
+    mention_roles : list[snowflake]
+        IDs for roles mentioned within this message.
+    embeds : list[`MessageEmbed`]
+        Embeds for this message.
+    attachments : list[`MessageAttachment`]
+        Attachments for this message.
+    reactions : list[`MessageReaction`]
+        Reactions for this message.
     """
     id = Field(snowflake)
     channel_id = Field(snowflake)
@@ -235,7 +372,7 @@ class Message(SlottedModel):
         """
         Returns
         -------
-        :class:`disco.types.guild.Guild`
+        `Guild`
             The guild (if applicable) this message was created in.
         """
         return self.channel.guild
@@ -245,7 +382,7 @@ class Message(SlottedModel):
         """
         Returns
         -------
-        :class:`disco.types.guild.GuildMember`
+        `GuildMember`
             The guild member (if applicable) that sent this message.
         """
         return self.channel.guild.get_member(self.author)
@@ -255,25 +392,30 @@ class Message(SlottedModel):
         """
         Returns
         -------
-        :class:`disco.types.channel.Channel`
+        `Channel`
             The channel this message was created in.
         """
         return self.client.state.channels.get(self.channel_id)
 
     def pin(self):
-        return self.channel.create_pin(self)
+        """
+        Pins the message to the channel it was created in.
+        """
+        self.channel.create_pin(self)
 
     def unpin(self):
-        return self.channel.delete_pin(self)
+        """
+        Unpins the message from the channel it was created in.
+        """
+        self.channel.delete_pin(self)
 
     def reply(self, *args, **kwargs):
         """
-        Reply to this message (proxys arguments to
-        :func:`disco.types.channel.Channel.send_message`).
+        Reply to this message (see `Channel.send_message`).
 
         Returns
         -------
-        :class:`Message`
+        `Message`
             The created message object.
         """
         return self.channel.send_message(*args, **kwargs)
@@ -289,7 +431,7 @@ class Message(SlottedModel):
 
         Returns
         -------
-        :class:`Message`
+        `Message`
             The edited message object.
         """
         return self.client.api.channels_messages_modify(self.channel_id, self.id, *args, **kwargs)
@@ -300,7 +442,7 @@ class Message(SlottedModel):
 
         Returns
         -------
-        :class:`Message`
+        `Message`
             The deleted message object.
         """
         return self.client.api.channels_messages_delete(self.channel_id, self.id)
@@ -311,7 +453,7 @@ class Message(SlottedModel):
 
         Returns
         -------
-        Paginator(`User`)
+        `Paginator`(`User`)
             An iterator which handles pagination of reactors.
         """
         if isinstance(emoji, Emoji):
@@ -338,7 +480,7 @@ class Message(SlottedModel):
 
         Parameters
         ----------
-        emoji : Emoji|str
+        emoji : `Emoji`|str
             An emoji or string representing an emoji
         """
         if isinstance(emoji, Emoji):
@@ -350,6 +492,9 @@ class Message(SlottedModel):
             emoji)
 
     def delete_reaction(self, emoji, user=None):
+        """
+        Deletes a reaction from the message.
+        """
         if isinstance(emoji, Emoji):
             emoji = emoji.to_string()
 
@@ -388,6 +533,12 @@ class Message(SlottedModel):
 
     @cached_property
     def with_proper_mentions(self):
+        """
+        Returns
+        -------
+        str
+            The message with mentions replaced w/ their proper form.
+        """
         def replace_user(u):
             return u'@' + six.text_type(u)
 
