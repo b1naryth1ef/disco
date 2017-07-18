@@ -33,7 +33,7 @@ setup(
     extras_require=extras_require,
     test_suite='tests',
     setup_requires=['pytest-runner'],
-    tests_require=['pytest', 'pytest-benchmark'],
+    tests_require=['pytest', 'pytest-benchmark==3.1.0a2'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
