@@ -10,4 +10,7 @@ python:
   - '3.6'
   - 'nightly'
 
+install:
+  - pip install --user -U pip
+
 script: 'python setup.py test'
