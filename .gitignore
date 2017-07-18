@@ -5,6 +5,7 @@ storage.db
 storage.json
 *.dca
 .eggs/
+.cache/
 
 # Documentation stuff
 docs/api/

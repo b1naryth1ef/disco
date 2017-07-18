@@ -32,6 +32,7 @@ setup(
     install_requires=requirements,
     extras_require=extras_require,
     test_suite='tests',
+    tests_require=['pytest', 'pytest-benchmark'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
