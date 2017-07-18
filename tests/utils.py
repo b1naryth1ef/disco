@@ -1,4 +1,4 @@
-from disco.api.client import APIClient
+from disco.api.client import APIClient as _APIClient
 
 
 class CallContainer(object):
@@ -9,7 +9,7 @@ class CallContainer(object):
         self.calls.append((args, kwargs))
 
 
-class TestAPIClient(APIClient):
+class APIClient(_APIClient):
     def __init__(self):
         self.client = None
         self.http = CallContainer()

@@ -32,6 +32,7 @@ setup(
     install_requires=requirements,
     extras_require=extras_require,
     test_suite='tests',
+    setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-benchmark'],
     classifiers=[
         'Development Status :: 4 - Beta',
