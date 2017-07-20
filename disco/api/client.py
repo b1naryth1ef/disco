@@ -2,6 +2,8 @@ import six
 import json
 import warnings
 
+from contextlib import contextmanager
+from gevent.local import local
 from six.moves.urllib.parse import quote
 
 from disco.api.http import Routes, HTTPClient, to_bytes
@@ -27,6 +29,15 @@ def optional(**kwargs):
 
 def _reason_header(value):
     return optional(**{'X-Audit-Log-Reason': quote(to_bytes(value)) if value else None})
+
+
+class Responses(list):
+    def rate_limited_duration(self):
+        return sum([i.rate_limited_duration for i in self])
+
+    @property
+    def rate_limited(self):
+        return self.rate_limited_duration() != 0
 
 
 class APIClient(LoggingClass):
@@ -56,7 +67,30 @@ class APIClient(LoggingClass):
         super(APIClient, self).__init__()
 
         self.client = client
-        self.http = HTTPClient(token)
+        self.http = HTTPClient(token, self._after_requests)
+
+        self._captures = local()
+
+    def _after_requests(self, response):
+        if not hasattr(self._captures, 'responses'):
+            return
+
+        self._captures.responses.append(response)
+
+    @contextmanager
+    def capture(self):
+        """
+        Context manager which captures all requests made, returning a special
+        `Responses` list, which can be used to introspect raw API responses. This
+        method is a low-level utility which should only be used by experienced users.
+        """
+        responses = Responses()
+        self._captures.responses = responses
+
+        try:
+            yield responses
+        finally:
+            delattr(self._captures, 'responses')
 
     def gateway_get(self):
         data = self.http(Routes.GATEWAY_GET).json()
@@ -195,7 +229,10 @@ class APIClient(LoggingClass):
         }, headers=_reason_header(reason))
 
     def channels_permissions_delete(self, channel, permission, reason=None):
-        self.http(Routes.CHANNELS_PERMISSIONS_DELETE, dict(channel=channel, permission=permission), headers=_reason_header(reason))
+        self.http(
+            Routes.CHANNELS_PERMISSIONS_DELETE,
+            dict(channel=channel, permission=permission), headers=_reason_header(reason)
+        )
 
     def channels_invites_list(self, channel):
         r = self.http(Routes.CHANNELS_INVITES_LIST, dict(channel=channel))
@@ -247,7 +284,14 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_CHANNELS_LIST, dict(guild=guild))
         return Channel.create_hash(self.client, 'id', r.json(), guild_id=guild)
 
-    def guilds_channels_create(self, guild, name, channel_type, bitrate=None, user_limit=None, permission_overwrites=[], reason=None):
+    def guilds_channels_create(self,
+            guild,
+            name,
+            channel_type,
+            bitrate=None,
+            user_limit=None,
+            permission_overwrites=[],
+            reason=None):
         payload = {
             'name': name,
             'channel_type': channel_type,

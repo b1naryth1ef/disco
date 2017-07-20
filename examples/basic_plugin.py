@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from disco.bot import Plugin
 from disco.util.sanitize import S
 
@@ -9,6 +11,19 @@ class BasicPlugin(Plugin):
         invite.delete(reason='TEST AUDIT 2')
         # channel = event.guild.create_channel('audit-log-test', 'text', reason='TEST CREATE')
         # channel.delete(reason='TEST AUDIT 2')
+
+    @Plugin.command('ratelimitme')
+    def on_ratelimitme(self, event):
+        msg = event.msg.reply('Hi!')
+
+        with self.client.api.capture() as requests:
+            for i in range(6):
+                msg.edit('Hi {}!'.format(i))
+
+        print('Rate limited {} for {}'.format(
+            requests.rate_limited,
+            requests.rate_limited_duration(),
+        ))
 
     @Plugin.command('ban', '<user:snowflake> <reason:str...>')
     def on_ban(self, event, user, reason):

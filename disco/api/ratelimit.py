@@ -1,6 +1,7 @@
 import time
 import gevent
 
+
 from disco.util.logging import LoggingClass
 
 
@@ -76,18 +77,18 @@ class RouteState(LoggingClass):
         """
         Waits until this route is no longer under a cooldown.
 
-        Parameters
-        ----------
-        timeout : Optional[int]
-            A timeout (in seconds) after which we will give up waiting
-
-
         Returns
         -------
-        bool
-            False if the timeout period expired before the cooldown was finished.
+        float
+            The duration we waited for, in seconds or zero if we didn't have to
+            wait at all.
         """
-        return self.event.wait(timeout)
+        if self.event.is_set():
+            return 0
+
+        start = time.time()
+        self.event.wait()
+        return time.time() - start
 
     def cooldown(self):
         """
@@ -102,6 +103,7 @@ class RouteState(LoggingClass):
         gevent.sleep(delay)
         self.event.set()
         self.event = None
+        return delay
 
 
 class RateLimiter(LoggingClass):
@@ -117,40 +119,37 @@ class RateLimiter(LoggingClass):
     def __init__(self):
         self.states = {}
 
-    def check(self, route, timeout=None):
+    def check(self, route):
         """
         Checks whether a given route can be called. This function will return
         immediately if no rate-limit cooldown is being imposed for the given
-        route, or will wait indefinitely (unless timeout is specified) until
-        the route is finished being cooled down. This function should be called
-        before making a request to the specified route.
+        route, or will wait indefinitely until the route is finished being
+        cooled down. This function should be called before making a request to
+        the specified route.
 
         Parameters
         ----------
         route : tuple(HTTPMethod, str)
             The route that will be checked.
-        timeout : Optional[int]
-            A timeout after which we'll give up waiting for a route's cooldown
-            to expire, and immediately return.
 
         Returns
         -------
-        bool
-            False if the timeout period expired before the route finished cooling
-            down.
+        float
+            The number of seconds we had to wait for this rate limit, or zero
+            if no time was waited.
         """
-        return self._check(None, timeout) and self._check(route, timeout)
+        return self._check(None) + self._check(route)
 
-    def _check(self, route, timeout=None):
+    def _check(self, route):
         if route in self.states:
-            # If we're current waiting, join the club
+            # If the route is being cooled off, we need to wait until its ready
             if self.states[route].chilled:
-                return self.states[route].wait(timeout)
+                return self.states[route].wait()
 
             if self.states[route].next_will_ratelimit:
-                gevent.spawn(self.states[route].cooldown).get(True, timeout)
+                return gevent.spawn(self.states[route].cooldown).get()
 
-        return True
+        return 0
 
     def update(self, route, response):
         """

@@ -132,6 +132,13 @@ class Routes(object):
     WEBHOOKS_TOKEN_EXECUTE = (HTTPMethod.POST, WEBHOOKS + '/{token}')
 
 
+class APIResponse(object):
+    def __init__(self):
+        self.response = None
+        self.exception = None
+        self.rate_limited_duration = 0
+
+
 class APIException(Exception):
     """
     Exception thrown when an HTTP-client level error occurs. Usually this will
@@ -183,7 +190,7 @@ class HTTPClient(LoggingClass):
     BASE_URL = 'https://discordapp.com/api/v7'
     MAX_RETRIES = 5
 
-    def __init__(self, token):
+    def __init__(self, token, after_request=None):
         super(HTTPClient, self).__init__()
 
         py_version = '{}.{}.{}'.format(
@@ -202,6 +209,7 @@ class HTTPClient(LoggingClass):
         if token:
             self.headers['Authorization'] = 'Bot ' + token
 
+        self.after_request = after_request
         self.session = requests.Session()
 
     def __call__(self, route, args=None, **kwargs):
@@ -251,8 +259,10 @@ class HTTPClient(LoggingClass):
         filtered = {k: (v if k in ('guild', 'channel') else '') for k, v in six.iteritems(args)}
         bucket = (route[0].value, route[1].format(**filtered))
 
+        response = APIResponse()
+
         # Possibly wait if we're rate limited
-        self.limiter.check(bucket)
+        response.rate_limited_duration = self.limiter.check(bucket)
 
         self.log.debug('KW: %s', kwargs)
 
@@ -260,6 +270,10 @@ class HTTPClient(LoggingClass):
         url = self.BASE_URL + route[1].format(**args)
         self.log.info('%s %s (%s)', route[0].value, url, kwargs.get('params'))
         r = self.session.request(route[0].value, url, **kwargs)
+
+        if self.after_request:
+            response.response = r
+            self.after_request(response)
 
         # Update rate limiter
         self.limiter.update(bucket, r)
@@ -269,7 +283,8 @@ class HTTPClient(LoggingClass):
             return r
         elif r.status_code != 429 and 400 <= r.status_code < 500:
             self.log.warning('Request failed with code %s: %s', r.status_code, r.content)
-            raise APIException(r)
+            response.exception = APIException(r)
+            raise response.exception
         else:
             if r.status_code == 429:
                 self.log.warning(
