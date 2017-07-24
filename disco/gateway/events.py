@@ -60,7 +60,13 @@ class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
 
             obj[alias] = data
 
-        return cls(obj, client)
+        obj = cls(obj, client)
+
+        if hasattr(cls, '_attach'):
+            field, to = cls._attach
+            setattr(getattr(obj, to[0]), to[1], getattr(obj, field))
+
+        return obj
 
     def __getattr__(self, name):
         try:
@@ -104,6 +110,13 @@ def wraps_model(model, alias=None):
 def proxy(field):
     def deco(cls):
         cls._proxy = field
+        return cls
+    return deco
+
+
+def attach(field, to=None):
+    def deco(cls):
+        cls._attach = (field, to)
         return cls
     return deco
 
@@ -381,6 +394,7 @@ class GuildMemberUpdate(GatewayEvent):
 
 
 @proxy('role')
+@attach('guild_id', to=('role', 'guild_id'))
 class GuildRoleCreate(GatewayEvent):
     """
     Sent when a role is created.
