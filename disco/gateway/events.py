@@ -414,7 +414,6 @@ class GuildRoleCreate(GatewayEvent):
         return self.client.state.guilds.get(self.guild_id)
 
 
-@proxy('role')
 class GuildRoleUpdate(GuildRoleCreate):
     """
     Sent when a role is updated.
