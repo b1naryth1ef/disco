@@ -291,11 +291,14 @@ class APIClient(LoggingClass):
             bitrate=None,
             user_limit=None,
             permission_overwrites=[],
+            parent_id=None,
             reason=None):
+
         payload = {
             'name': name,
             'channel_type': channel_type,
             'permission_overwrites': [i.to_dict() for i in permission_overwrites],
+            'parent_id': parent_id,
         }
 
         if channel_type == 'text':

@@ -19,6 +19,7 @@ ChannelType = Enum(
     DM=1,
     GUILD_VOICE=2,
     GROUP_DM=3,
+    GUILD_CATEGORY=4,
 )
 
 PermissionOverwriteType = Enum(
@@ -175,7 +176,7 @@ class Channel(SlottedModel, Permissible):
         """
         Whether this channel belongs to a guild.
         """
-        return self.type in (ChannelType.GUILD_TEXT, ChannelType.GUILD_VOICE)
+        return self.type in (ChannelType.GUILD_TEXT, ChannelType.GUILD_VOICE, ChannelType.GUILD_CATEGORY)
 
     @property
     def is_dm(self):
@@ -213,6 +214,13 @@ class Channel(SlottedModel, Permissible):
         Guild this channel belongs to (or None if not applicable).
         """
         return self.client.state.guilds.get(self.guild_id)
+
+    @cached_property
+    def parent(self):
+        """
+        Parent this channel belongs to (or None if not applicable).
+        """
+        return self.guild.channels.get(self.parent_id)
 
     def messages_iter(self, **kwargs):
         """
@@ -421,6 +429,16 @@ class Channel(SlottedModel, Permissible):
         """
         assert (self.is_voice)
         return self.client.api.channels_modify(self.id, user_limit=user_limit, reason=reason)
+
+    def set_parent(self, parent, reason=None):
+        """
+        Sets the channels parent.
+        """
+        assert (self.is_guild)
+        return self.client.api.channels_modify(
+            self.id,
+            parent_id=to_snowflake(parent) if parent else parent,
+            reason=reason)
 
 
 class MessageIterator(object):
