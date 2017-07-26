@@ -126,6 +126,7 @@ class Channel(SlottedModel, Permissible):
     nsfw = Field(bool)
     type = Field(enum(ChannelType))
     overwrites = AutoDictField(PermissionOverwrite, 'id', alias='permission_overwrites')
+    parent_id = Field(snowflake)
 
     def __init__(self, *args, **kwargs):
         super(Channel, self).__init__(*args, **kwargs)
@@ -466,10 +467,10 @@ class MessageIterator(object):
         Fills the internal buffer up with :class:`disco.types.message.Message` objects from the API.
         """
         self._buffer = self.client.api.channels_messages_list(
-                self.channel.id,
-                before=self.before,
-                after=self.after,
-                limit=self.chunk_size)
+            self.channel.id,
+            before=self.before,
+            after=self.after,
+            limit=self.chunk_size)
 
         if not len(self._buffer):
             return
