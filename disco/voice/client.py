@@ -51,23 +51,25 @@ class UDPVoiceClient(LoggingClass):
         self.run_task = None
         self.connected = False
 
+        # Buffer used for encoding/sending frames
+        self._buffer = bytearray(24)
+        self._buffer[0] = 0x80
+        self._buffer[1] = 0x78
+
     def send_frame(self, frame, sequence=None, timestamp=None):
         # Convert the frame to a bytearray
         frame = bytearray(frame)
 
-        # First, pack the header (TODO: reuse bytearray?)
-        header = bytearray(24)
-        header[0] = 0x80
-        header[1] = 0x78
-        struct.pack_into('>H', header, 2, sequence or self.vc.sequence)
-        struct.pack_into('>I', header, 4, timestamp or self.vc.timestamp)
-        struct.pack_into('>i', header, 8, self.vc.ssrc)
+        # Pack the rtc header into our buffer
+        struct.pack_into('>H', self._buffer, 2, sequence or self.vc.sequence)
+        struct.pack_into('>I', self._buffer, 4, timestamp or self.vc.timestamp)
+        struct.pack_into('>i', self._buffer, 8, self.vc.ssrc)
 
         # Now encrypt the payload with the nonce as a header
-        raw = self.vc.secret_box.encrypt(bytes(frame), bytes(header)).ciphertext
+        raw = self.vc.secret_box.encrypt(bytes(frame), bytes(self._buffer)).ciphertext
 
         # Send the header (sans nonce padding) plus the payload
-        self.send(header[:12] + raw)
+        self.send(self._buffer[:12] + raw)
 
         # Increment our sequence counter
         self.vc.sequence += 1
@@ -247,7 +249,6 @@ class VoiceClient(LoggingClass):
             self.log.exception('Failed to parse voice gateway message: ')
 
     def on_error(self, err):
-        # TODO: raise an exception here
         self.log.error('[%s] Voice websocket error: %s', self, err)
 
     def on_open(self):

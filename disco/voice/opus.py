@@ -142,7 +142,6 @@ class OpusEncoder(BaseOpus):
         if ret < 0:
             raise Exception('Failed to encode: {}'.format(ret))
 
-        # TODO: py3
         if six.PY3:
             return array.array('b', data[:ret]).tobytes()
         else:
