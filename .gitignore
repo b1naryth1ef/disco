@@ -6,6 +6,7 @@ storage.json
 *.dca
 .eggs/
 .cache/
+__pycache__
 
 # Documentation stuff
 docs/api/

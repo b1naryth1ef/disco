@@ -24,7 +24,7 @@ parser.add_argument('--manhole-bind', help='host:port for the manhole to bind to
 parser.add_argument('--encoder', help='encoder for gateway data', default=None)
 parser.add_argument('--run-bot', help='run a disco bot on this client', action='store_true', default=False)
 parser.add_argument('--plugin', help='load plugins into the bot', nargs='*', default=[])
-parser.add_argument('--log-level', help='log level', default='info')
+parser.add_argument('--log-level', help='log level', default=None)
 parser.add_argument('--http-bind', help='bind information for http server', default=None)
 
 
@@ -53,6 +53,8 @@ def disco_main(run=False):
     config.manhole_enable = args.manhole
     if args.manhole_bind:
         config.manhole_bind = args.manhole_bind
+    if args.log_level:
+        config.log_level = args.log_level
 
     for k, v in six.iteritems(vars(args)):
         if hasattr(config, k) and v is not None:
@@ -67,8 +69,7 @@ def disco_main(run=False):
         AutoSharder(config).run()
         return
 
-    # TODO: make configurable
-    setup_logging(level=getattr(logging, args.log_level.upper()))
+    setup_logging(level=getattr(logging, config.log_level.upper()))
 
     client = Client(config)
 

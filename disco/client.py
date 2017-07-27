@@ -28,6 +28,8 @@ class ClientConfig(Config):
         The total count of shards running.
     max_reconnects : int
         The maximum number of connection retries to make before giving up (0 = never give up).
+    log_level: str
+        The logging level to use.
     manhole_enable : bool
         Whether to enable the manhole (e.g. console backdoor server) utility.
     manhole_bind : tuple(str, int)
@@ -42,6 +44,7 @@ class ClientConfig(Config):
     shard_id = 0
     shard_count = 1
     max_reconnects = 5
+    log_level = 'info'
 
     manhole_enable = False
     manhole_bind = ('127.0.0.1', 8484)
