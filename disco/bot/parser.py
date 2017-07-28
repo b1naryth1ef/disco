@@ -131,6 +131,7 @@ class ArgumentSet(object):
         value : str
             The string value to attempt conversion on.
         """
+        exc = None
         for typ_name in types:
             typ = self.types.get(typ_name)
             if not typ:
@@ -139,9 +140,10 @@ class ArgumentSet(object):
             try:
                 return typ(ctx, value)
             except Exception as e:
+                exc = e
                 continue
 
-        raise e
+        raise exc
 
     def append(self, arg):
         """

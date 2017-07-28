@@ -26,7 +26,10 @@ def from_datetime(date):
 
 
 def from_timestamp(ts):
-    return long(ts * 1000.0 - DISCORD_EPOCH) << 22
+    if six.PY3:
+        return int(ts * 1000.0 - DISCORD_EPOCH) << 22
+    else:
+        return long(ts * 1000.0 - DISCORD_EPOCH) << 22
 
 
 def to_snowflake(i):

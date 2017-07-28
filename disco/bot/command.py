@@ -3,6 +3,8 @@ import argparse
 
 from holster.enum import Enum
 
+from six import integer_types
+
 from disco.bot.parser import ArgumentSet, ArgumentError
 from disco.util.functional import cached_property
 
@@ -186,7 +188,7 @@ class Command(object):
                 return ctx.msg.client.state.users.select_one(username=uid[0], discriminator=uid[1])
 
         def resolve_channel(ctx, cid):
-            if isinstance(cid, (int, long)):
+            if isinstance(cid, integer_types):
                 return ctx.msg.guild.channels.get(cid)
             else:
                 return ctx.msg.guild.channels.select_one(name=cid)

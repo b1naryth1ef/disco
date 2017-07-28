@@ -6,6 +6,7 @@ import pickle
 import logging
 import marshal
 
+from six import integer_types, string_types
 from six.moves import range
 
 from disco.client import Client
@@ -83,7 +84,7 @@ class AutoSharder(object):
 
     @staticmethod
     def dumps(data):
-        if isinstance(data, (basestring, int, long, bool, list, set, dict)):
+        if isinstance(data, (string_types, integer_types, bool, list, set, dict)):
             return '\x01' + marshal.dumps(data)
         elif isinstance(data, object) and data.__class__.__name__ == 'code':
             return '\x01' + marshal.dumps(data)
