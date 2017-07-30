@@ -8,7 +8,6 @@ from datetime import datetime as real_datetime
 
 from disco.util.chains import Chainable
 from disco.util.hashmap import HashMap
-from disco.util.functional import CachedSlotProperty
 
 DATETIME_FORMATS = [
     '%Y-%m-%dT%H:%M:%S.%f',
@@ -31,6 +30,18 @@ class Unset(object):
 
 
 UNSET = Unset()
+
+
+def cached_property(method):
+    method._cached_property = set()
+    return method
+
+
+def strict_cached_property(*args):
+    def _cached_property(method):
+        method._cached_property = set(args)
+        return method
+    return _cached_property
 
 
 class ConversionError(Exception):
@@ -236,29 +247,51 @@ Model = None
 SlottedModel = None
 
 
+def _get_cached_property(name, func):
+    def _getattr(self):
+        try:
+            return getattr(self, '_' + name)
+        except AttributeError:
+            value = func(self)
+            setattr(self, '_' + name, value)
+            return value
+
+    def _setattr(self, value):
+        setattr(self, '_' + name)
+
+    def _delattr(self):
+        delattr(self, '_' + name)
+
+    prop = property(_getattr, _setattr, _delattr)
+    return prop
+
+
 class ModelMeta(type):
     def __new__(mcs, name, parents, dct):
         fields = {}
+        slots = set()
 
         for parent in parents:
             if Model and issubclass(parent, Model) and parent != Model:
                 fields.update(parent._fields)
 
         for k, v in six.iteritems(dct):
+            if hasattr(v, '_cached_property'):
+                dct[k] = _get_cached_property(k, v)
+                slots.add('_' + k)
+
             if not isinstance(v, Field):
                 continue
 
             v.name = k
             fields[k] = v
+            slots.add(k)
 
         if SlottedModel and any(map(lambda k: issubclass(k, SlottedModel), parents)):
-            bases = set(v.stored_name for v in six.itervalues(dct) if isinstance(v, CachedSlotProperty))
+            # Merge our set of field slots with any other slots from the mro
+            dct['__slots__'] = tuple(set(dct.get('__slots__', [])) | slots)
 
-            if '__slots__' in dct:
-                dct['__slots__'] = tuple(set(dct['__slots__']) | set(fields.keys()) | bases)
-            else:
-                dct['__slots__'] = tuple(fields.keys()) + tuple(bases)
-
+            # Remove all fields from the dict
             dct = {k: v for k, v in six.iteritems(dct) if k not in dct['__slots__']}
         else:
             dct = {k: v for k, v in six.iteritems(dct) if k not in fields}

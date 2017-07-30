@@ -6,9 +6,9 @@ from disco.gateway.packets import OPCode
 from disco.api.http import APIException
 from disco.util.paginator import Paginator
 from disco.util.snowflake import to_snowflake
-from disco.util.functional import cached_property
 from disco.types.base import (
-    SlottedModel, Field, ListField, AutoDictField, DictField, snowflake, text, enum, datetime
+    SlottedModel, Field, ListField, AutoDictField, DictField, snowflake, text, enum, datetime,
+    cached_property
 )
 from disco.types.user import User
 from disco.types.voice import VoiceState

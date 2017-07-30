@@ -1,8 +1,7 @@
 import re
 
-from disco.types.base import SlottedModel, Field, snowflake
+from disco.types.base import SlottedModel, Field, snowflake, cached_property
 from disco.types.user import User
-from disco.util.functional import cached_property
 
 
 WEBHOOK_URL_RE = re.compile(r'\/api\/webhooks\/(\d+)\/(.[^/]+)')

@@ -6,7 +6,7 @@ from holster.enum import Enum
 from six import integer_types
 
 from disco.bot.parser import ArgumentSet, ArgumentError
-from disco.util.functional import cached_property
+from disco.util.functional import simple_cached_property
 
 ARGS_REGEX = '(?: ((?:\n|.)*)$|$)'
 ARGS_UNGROUPED_REGEX = '(?: (?:\n|.)*$|$)'
@@ -75,28 +75,28 @@ class CommandEvent(object):
 
         return src
 
-    @cached_property
+    @simple_cached_property
     def member(self):
         """
         Guild member (if relevant) for the user that created the message.
         """
         return self.guild.get_member(self.author)
 
-    @property
+    @simple_cached_property
     def channel(self):
         """
         Channel the message was created in.
         """
         return self.msg.channel
 
-    @property
+    @simple_cached_property
     def guild(self):
         """
         Guild (if relevant) the message was created in.
         """
         return self.msg.guild
 
-    @property
+    @simple_cached_property
     def author(self):
         """
         Author of the message.
@@ -243,7 +243,7 @@ class Command(object):
             raise TypeError('Cannot resolve mention: {}'.format(raw))
         return _f
 
-    @cached_property
+    @simple_cached_property
     def compiled_regex(self):
         """
         A compiled version of this command's regex.

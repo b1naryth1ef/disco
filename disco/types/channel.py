@@ -5,9 +5,9 @@ from six.moves import map
 from holster.enum import Enum
 
 from disco.util.snowflake import to_snowflake
-from disco.util.functional import cached_property, one_or_many, chunks
+from disco.util.functional import one_or_many, chunks
 from disco.types.user import User
-from disco.types.base import SlottedModel, Field, AutoDictField, snowflake, enum, text
+from disco.types.base import SlottedModel, Field, AutoDictField, snowflake, enum, text, cached_property
 from disco.types.permissions import Permissions, Permissible, PermissionValue
 
 

@@ -1,5 +1,4 @@
-from disco.types.base import SlottedModel, Field, snowflake
-from disco.util.functional import cached_property
+from disco.types.base import SlottedModel, Field, snowflake, cached_property
 
 
 class VoiceState(SlottedModel):

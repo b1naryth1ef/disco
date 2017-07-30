@@ -48,28 +48,21 @@ def one_or_many(f):
     return _f
 
 
-class CachedSlotProperty(object):
-    __slots__ = ['stored_name', 'function', '__doc__']
+def simple_cached_property(method):
+    key = '_{}'.format(method.__name__)
 
-    def __init__(self, name, function):
-        self.stored_name = '_' + name
-        self.function = function
-        self.__doc__ = getattr(function, '__doc__')
-
-    def set(self, value):
-        setattr(self.stored_name, value)
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-
+    def _getattr(inst):
         try:
-            return getattr(instance, self.stored_name)
+            return getattr(inst, key)
         except AttributeError:
-            value = self.function(instance)
-            setattr(instance, self.stored_name, value)
+            value = method(inst)
+            setattr(inst, key, value)
             return value
 
+    def _setattr(inst, value):
+        setattr(inst, key, value)
 
-def cached_property(f):
-    return CachedSlotProperty(f.__name__, f)
+    def _delattr(inst):
+        delattr(inst, key)
+
+    return property(_getattr, _setattr, _delattr)
