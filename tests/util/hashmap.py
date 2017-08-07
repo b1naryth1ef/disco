@@ -38,3 +38,9 @@ def test_hashmap_builtins(hashmap):
         assert item in hashmap
 
     assert hashmap.popitem()[1] > 1
+
+
+def test_hashmap_items(hashmap):
+    assert len(list(hashmap.items())) == 100000
+    assert list(hashmap.items())[0][0] == 0
+    assert list(hashmap.items())[0][1] == hashmap[0]
