@@ -474,10 +474,14 @@ class Guild(SlottedModel, Permissible):
 
     @property
     def audit_log(self):
+        return self.audit_log_iter()
+
+    def audit_log_iter(self, **kwargs):
         return Paginator(
             self.client.api.guilds_auditlogs_list,
             'before',
             self.id,
+            **kwargs
         )
 
     def get_audit_log_entries(self, *args, **kwargs):
