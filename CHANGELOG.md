@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.0.12
+
+### Fixes
+
+- Fixed `Paginator` throwing an exception when reaching the end of pagination, instead of just ending its iteration
+
 ## v0.0.11
 
 ### Additions
