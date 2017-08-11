@@ -7,10 +7,6 @@ Disco is a simple and extendable library for the [Discord API](https://discordap
 - Full support for Python 2.x/3.x
 - Evented networking and IO using Gevent
 
-## WARNING
-
-Disco is currently in an early-alpha phase. What you see today may change a lot tomorrow. If you are looking to build a serious bot with this, wait for a stable release.
-
 ## Installation
 
 Disco was built to run both as a generic-use library, and a standalone bot toolkit. Installing disco is as easy as running `pip install disco-py`, however some extra packages are recommended for power-users, namely:
