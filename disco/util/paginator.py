@@ -13,7 +13,7 @@ class Paginator(object):
 
         self._key = kwargs.pop('key', operator.attrgetter('id'))
         self._bulk = kwargs.pop('bulk', False)
-        self._sort_key_value = kwargs.pop(self.sort_key, 0)
+        self._sort_key_value = kwargs.pop(self.sort_key, None)
         self._buffer = []
 
     def fill(self):

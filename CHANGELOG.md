@@ -5,6 +5,7 @@
 ### Fixes
 
 - Fixed `Paginator` throwing an exception when reaching the end of pagination, instead of just ending its iteration
+- Fixed `Paginator` defaulting to start at 0 for all iterations
 
 ## v0.0.11
 
