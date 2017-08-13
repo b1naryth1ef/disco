@@ -27,5 +27,5 @@ def test_cached_property(model):
 def test_cached_property_clear_on_update(model):
     inst = model(a=1, b=3)
     assert inst.value == 4
-    inst.update(model(a=2, b=3))
+    inst.inplace_update(model(a=2, b=3))
     assert inst.value == 5

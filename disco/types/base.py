@@ -76,7 +76,9 @@ class Field(object):
 
             if isinstance(self.deserializer, Field) and self.default is None:
                 self.default = self.deserializer.default
-            elif inspect.isclass(self.deserializer) and issubclass(self.deserializer, Model) and self.default is None and create:
+            elif (inspect.isclass(self.deserializer) and
+                    issubclass(self.deserializer, Model) and
+                    self.default is None and create):
                 self.default = self.deserializer
 
     @property
@@ -356,7 +358,7 @@ class Model(six.with_metaclass(ModelMeta, Chainable)):
             value = field.try_convert(raw, inst.client, consume=consume)
             setattr(inst, field.dst_name, value)
 
-    def update(self, other, ignored=None):
+    def inplace_update(self, other, ignored=None):
         for name in six.iterkeys(self._fields):
             if ignored and name in ignored:
                 continue

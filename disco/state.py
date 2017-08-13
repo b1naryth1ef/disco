@@ -198,7 +198,7 @@ class State(object):
             event.guild.sync()
 
     def on_guild_update(self, event):
-        self.guilds[event.guild.id].update(event.guild, ignored=[
+        self.guilds[event.guild.id].inplace_update(event.guild, ignored=[
             'channels',
             'members',
             'voice_states',
@@ -220,7 +220,7 @@ class State(object):
 
     def on_channel_update(self, event):
         if event.channel.id in self.channels:
-            self.channels[event.channel.id].update(event.channel)
+            self.channels[event.channel.id].inplace_update(event.channel)
 
             if event.overwrites is not UNSET:
                 self.channels[event.channel.id].overwrites = event.overwrites
@@ -237,7 +237,7 @@ class State(object):
         if event.state.session_id in self.voice_states:
             # Moving channels
             if event.state.channel_id:
-                self.voice_states[event.state.session_id].update(event.state)
+                self.voice_states[event.state.session_id].inplace_update(event.state)
             # Disconnection
             else:
                 if event.state.guild_id in self.guilds:
@@ -268,7 +268,7 @@ class State(object):
         if event.member.id not in self.guilds[event.member.guild_id].members:
             return
 
-        self.guilds[event.member.guild_id].members[event.member.id].update(event.member)
+        self.guilds[event.member.guild_id].members[event.member.id].inplace_update(event.member)
 
     def on_guild_member_remove(self, event):
         if event.guild_id not in self.guilds:
@@ -303,7 +303,7 @@ class State(object):
         if event.guild_id not in self.guilds:
             return
 
-        self.guilds[event.guild_id].roles[event.role.id].update(event.role)
+        self.guilds[event.guild_id].roles[event.role.id].inplace_update(event.role)
 
     def on_guild_role_delete(self, event):
         if event.guild_id not in self.guilds:
@@ -331,7 +331,7 @@ class State(object):
         # if we have the user tracked locally, we can just use the presence
         #  update to update both their presence and the cached user object.
         if user.id in self.users:
-            self.users[user.id].update(user)
+            self.users[user.id].inplace_update(user)
         else:
             # Otherwise this user does not exist in our local cache, so we can
             #  use this opportunity to add them. They will quickly fall out of
