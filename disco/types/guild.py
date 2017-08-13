@@ -116,8 +116,8 @@ class Role(SlottedModel):
     def delete(self):
         self.guild.delete_role(self)
 
-    def save(self):
-        self.guild.update_role(self)
+    def update(self, *args, **kwargs):
+        self.guild.update_role(self, *args, **kwargs)
 
     @property
     def mention(self):
@@ -410,15 +410,11 @@ class Guild(SlottedModel, Permissible):
         """
         self.client.api.guilds_roles_delete(self.id, to_snowflake(role))
 
-    def update_role(self, role):
-        return self.client.api.guilds_roles_modify(self.id, role.id, **{
-            'name': role.name,
-            'permissions': role.permissions.value,
-            'position': role.position,
-            'color': role.color,
-            'hoist': role.hoist,
-            'mentionable': role.mentionable,
-        })
+    def update_role(self, role, **kwargs):
+        if 'permissions' in kwargs and isinstance(kwargs['permissions'], PermissionValue):
+            kwargs['permissions'] = kwargs['permissions'].value
+
+        return self.client.api.guilds_roles_modify(self.id, to_snowflake(role), **kwargs)
 
     def sync(self):
         if self.synced:

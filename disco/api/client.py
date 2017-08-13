@@ -389,11 +389,26 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_ROLES_MODIFY_BATCH, dict(guild=guild), json=roles, headers=_reason_header(reason))
         return Role.create_map(self.client, r.json(), guild_id=guild)
 
-    def guilds_roles_modify(self, guild, role, reason=None, **kwargs):
+    def guilds_roles_modify(self, guild, role,
+            name=None,
+            hoist=None,
+            color=None,
+            permissions=None,
+            position=None,
+            mentionable=None,
+            reason=None):
+
         r = self.http(
             Routes.GUILDS_ROLES_MODIFY,
             dict(guild=guild, role=role),
-            json=kwargs,
+            json=optional(
+                name=name,
+                hoist=hoist,
+                color=color,
+                permissions=permissions,
+                position=position,
+                mentionable=mentionable,
+            ),
             headers=_reason_header(reason))
         return Role.create(self.client, r.json(), guild_id=guild)
 
