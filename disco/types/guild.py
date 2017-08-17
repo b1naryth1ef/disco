@@ -268,6 +268,8 @@ class Guild(SlottedModel, Permissible):
         The id of the afk channel.
     embed_channel_id : snowflake
         The id of the embed channel.
+    system_channel_id : snowflake
+        The id of the system channel.
     name : str
         Guild's name.
     icon : str
@@ -301,6 +303,7 @@ class Guild(SlottedModel, Permissible):
     owner_id = Field(snowflake)
     afk_channel_id = Field(snowflake)
     embed_channel_id = Field(snowflake)
+    system_channel_id = Field(snowflake)
     name = Field(text)
     icon = Field(text)
     splash = Field(text)
@@ -467,6 +470,10 @@ class Guild(SlottedModel, Permissible):
     @property
     def splash_url(self):
         return self.get_splash_url()
+
+    @property
+    def system_channel(self):
+        return self.channels.get(self.system_channel_id)
 
     @property
     def audit_log(self):

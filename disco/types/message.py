@@ -22,7 +22,8 @@ MessageType = Enum(
     CALL=3,
     CHANNEL_NAME_CHANGE=4,
     CHANNEL_ICON_CHANGE=5,
-    PINS_ADD=6
+    PINS_ADD=6,
+    GUILD_MEMBER_JOIN=7,
 )
 
 
