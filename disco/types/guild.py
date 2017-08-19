@@ -130,7 +130,7 @@ class Role(SlottedModel):
 
 class GuildBan(SlottedModel):
     user = Field(User)
-    reason = Field(unicode)
+    reason = Field(text)
 
 
 class GuildMember(SlottedModel):
