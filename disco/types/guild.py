@@ -67,8 +67,8 @@ class GuildEmoji(Emoji):
     def update(self, **kwargs):
         return self.client.api.guilds_emojis_modify(self.guild_id, self.id, **kwargs)
 
-    def delete(self):
-        return self.client.api.guilds_emojis_delete(self.guild_id, self.id)
+    def delete(self, **kwargs):
+        return self.client.api.guilds_emojis_delete(self.guild_id, self.id, **kwargs)
 
     @property
     def url(self):
@@ -113,8 +113,8 @@ class Role(SlottedModel):
     def __str__(self):
         return self.name
 
-    def delete(self):
-        self.guild.delete_role(self)
+    def delete(self, **kwargs):
+        self.guild.delete_role(self, **kwargs)
 
     def update(self, *args, **kwargs):
         self.guild.update_role(self, *args, **kwargs)
@@ -182,13 +182,13 @@ class GuildMember(SlottedModel):
         """
         return self.guild.get_voice_state(self)
 
-    def kick(self):
+    def kick(self, **kwargs):
         """
         Kicks the member from the guild.
         """
-        self.client.api.guilds_members_kick(self.guild.id, self.user.id)
+        self.client.api.guilds_members_kick(self.guild.id, self.user.id, **kwargs)
 
-    def ban(self, delete_message_days=0):
+    def ban(self, delete_message_days=0, **kwargs):
         """
         Bans the member from the guild.
 
@@ -197,15 +197,15 @@ class GuildMember(SlottedModel):
         delete_message_days : int
             The number of days to retroactively delete messages for.
         """
-        self.guild.create_ban(self, delete_message_days)
+        self.guild.create_ban(self, delete_message_days, **kwargs)
 
-    def unban(self):
+    def unban(self, **kwargs):
         """
         Unbans the member from the guild.
         """
-        self.guild.delete_ban(self)
+        self.guild.delete_ban(self, **kwargs)
 
-    def set_nickname(self, nickname=None):
+    def set_nickname(self, nickname=None, **kwargs):
         """
         Sets the member's nickname (or clears it if None).
 
@@ -215,18 +215,18 @@ class GuildMember(SlottedModel):
             The nickname (or none to reset) to set.
         """
         if self.client.state.me.id == self.user.id:
-            self.client.api.guilds_members_me_nick(self.guild.id, nick=nickname or '')
+            self.client.api.guilds_members_me_nick(self.guild.id, nick=nickname or '', **kwargs)
         else:
-            self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '')
+            self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '', **kwargs)
 
     def modify(self, **kwargs):
         self.client.api.guilds_members_modify(self.guild.id, self.user.id, **kwargs)
 
-    def add_role(self, role):
-        self.client.api.guilds_members_roles_add(self.guild.id, self.user.id, to_snowflake(role))
+    def add_role(self, role, **kwargs):
+        self.client.api.guilds_members_roles_add(self.guild.id, self.user.id, to_snowflake(role), **kwargs)
 
-    def remove_role(self, role):
-        self.client.api.guilds_members_roles_remove(self.guild.id, self.user.id, to_snowflake(role))
+    def remove_role(self, role, **kwargs):
+        self.client.api.guilds_members_roles_remove(self.guild.id, self.user.id, to_snowflake(role), **kwargs)
 
     @cached_property
     def owner(self):
@@ -396,7 +396,7 @@ class Guild(SlottedModel, Permissible):
 
         return self.members.get(user)
 
-    def create_role(self):
+    def create_role(self, **kwargs):
         """
         Create a new role.
 
@@ -405,13 +405,13 @@ class Guild(SlottedModel, Permissible):
         :class:`Role`
             The newly created role.
         """
-        return self.client.api.guilds_roles_create(self.id)
+        return self.client.api.guilds_roles_create(self.id, **kwargs)
 
-    def delete_role(self, role):
+    def delete_role(self, role, **kwargs):
         """
         Delete a role.
         """
-        self.client.api.guilds_roles_delete(self.id, to_snowflake(role))
+        self.client.api.guilds_roles_delete(self.id, to_snowflake(role), **kwargs)
 
     def update_role(self, role, **kwargs):
         if 'permissions' in kwargs and isinstance(kwargs['permissions'], PermissionValue):
@@ -433,8 +433,8 @@ class Guild(SlottedModel, Permissible):
     def get_bans(self):
         return self.client.api.guilds_bans_list(self.id)
 
-    def delete_ban(self, user):
-        self.client.api.guilds_bans_delete(self.id, to_snowflake(user))
+    def delete_ban(self, user, **kwargs):
+        self.client.api.guilds_bans_delete(self.id, to_snowflake(user), **kwargs)
 
     def create_ban(self, user, *args, **kwargs):
         self.client.api.guilds_bans_create(self.id, to_snowflake(user), *args, **kwargs)

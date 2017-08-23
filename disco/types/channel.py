@@ -79,16 +79,17 @@ class PermissionOverwrite(ChannelSubType):
         value += self.allow
         return value
 
-    def save(self):
+    def save(self, **kwargs):
         self.client.api.channels_permissions_modify(self.channel_id,
                                                     self.id,
                                                     self.allow.value or 0,
                                                     self.deny.value or 0,
-                                                    self.type.name)
+                                                    self.type.name,
+                                                    **kwargs)
         return self
 
-    def delete(self):
-        self.client.api.channels_permissions_delete(self.channel_id, self.id)
+    def delete(self, **kwargs):
+        self.client.api.channels_permissions_delete(self.channel_id, self.id, **kwargs)
 
 
 class Channel(SlottedModel, Permissible):
