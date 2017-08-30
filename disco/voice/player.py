@@ -60,9 +60,10 @@ class Player(object):
         self.events.emit(self.Events.PAUSE_PLAY)
 
     def resume(self):
-        self.paused.set()
-        self.paused = None
-        self.events.emit(self.Events.RESUME_PLAY)
+        if self.paused:
+            self.paused.set()
+            self.paused = None
+            self.events.emit(self.Events.RESUME_PLAY)
 
     def play(self, item):
         # Grab the first frame before we start anything else, sometimes playables

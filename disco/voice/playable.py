@@ -163,7 +163,7 @@ class YoutubeDLInput(FFmpegInput):
                 if self._url:
                     obj = ydl.extract_info(self._url, download=False, process=False)
                     if 'entries' in obj:
-                        self._ie_info = obj['entries'][0]
+                        self._ie_info = list(obj['entries'])[0]
                     else:
                         self._ie_info = obj
 

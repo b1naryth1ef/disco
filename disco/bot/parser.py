@@ -11,7 +11,7 @@ BOOL_OPTS = {'yes': True, 'no': False, 'true': True, 'False': False, '1': True, 
 TYPE_MAP = {
     'str': lambda ctx, data: str(data) if six.PY3 else unicode(data),
     'int': lambda ctx, data: int(data),
-    'float': lambda ctx, data: int(data),
+    'float': lambda ctx, data: float(data),
     'snowflake': lambda ctx, data: int(data),
 }
 
