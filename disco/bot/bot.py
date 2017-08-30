@@ -406,7 +406,7 @@ class Bot(LoggingClass):
 
             msg, triggered = obj
             if msg.id == event.message.id and not triggered:
-                msg.update(event.message)
+                msg.inplace_update(event.message)
                 triggered = self.handle_message(msg)
 
                 self.last_message_cache[msg.channel_id] = (msg, triggered)
