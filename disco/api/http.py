@@ -59,8 +59,8 @@ class Routes(object):
     CHANNELS_INVITES_LIST = (HTTPMethod.GET, CHANNELS + '/invites')
     CHANNELS_INVITES_CREATE = (HTTPMethod.POST, CHANNELS + '/invites')
     CHANNELS_PINS_LIST = (HTTPMethod.GET, CHANNELS + '/pins')
-    CHANNELS_PINS_CREATE = (HTTPMethod.PUT, CHANNELS + '/pins/{pin}')
-    CHANNELS_PINS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/pins/{pin}')
+    CHANNELS_PINS_CREATE = (HTTPMethod.PUT, CHANNELS + '/pins/{message}')
+    CHANNELS_PINS_DELETE = (HTTPMethod.DELETE, CHANNELS + '/pins/{message}')
     CHANNELS_WEBHOOKS_CREATE = (HTTPMethod.POST, CHANNELS + '/webhooks')
     CHANNELS_WEBHOOKS_LIST = (HTTPMethod.GET, CHANNELS + '/webhooks')
 
