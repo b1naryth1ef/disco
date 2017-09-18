@@ -95,16 +95,16 @@ class GatewayClient(LoggingClass):
         self.ws.close()
 
     def handle_invalid_session(self, _):
-        self.log.warning('Recieved INVALID_SESSION, forcing a fresh reconnect')
+        self.log.warning('Received INVALID_SESSION, forcing a fresh reconnect')
         self.session_id = None
         self.ws.close()
 
     def handle_hello(self, packet):
-        self.log.info('Recieved HELLO, starting heartbeater...')
+        self.log.info('Received HELLO, starting heartbeater...')
         self._heartbeat_task = gevent.spawn(self.heartbeat_task, packet['d']['heartbeat_interval'])
 
     def on_ready(self, ready):
-        self.log.info('Recieved READY')
+        self.log.info('Received READY')
         self.session_id = ready.session_id
         self.reconnects = 0
 
