@@ -177,7 +177,7 @@ class MessageEmbedAuthor(SlottedModel):
     name = Field(text)
     url = Field(text)
     icon_url = Field(text)
-    icon_proxy_url = Field(text)
+    proxy_icon_url = Field(text)
 
 
 class MessageEmbedField(SlottedModel):
