@@ -36,9 +36,9 @@ During the unload sequence all greenlets which the plugin owns (e.g. greenlets f
 Disco supports a framework for dynamically passing configuration to plugins. By default, configuration files live within the `config/` directory, and are named after the plugin, e.g. `ExamplePlugin` would be configured via `config/example.json`. Adding support for configuration within your plugin can be done via a decorator:
 
 ```python
-from disco.bot import Plugin, PluginConfig
+from disco.bot import Plugin, Config
 
-class ExamplePluginConfig(PluginConfig):
+class ExamplePluginConfig(Config):
     var1 = "test"
     var2 = True
 
