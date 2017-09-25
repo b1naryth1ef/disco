@@ -478,7 +478,7 @@ class MessageIterator(object):
         self.last = None
         self._buffer = []
 
-        if not any((before, after)) and self.direction == self.Direction.DOWN:
+        if before is None and after is None and self.direction == self.Direction.DOWN:
             raise Exception('Must specify either before or after for downward seeking')
 
     def fill(self):
