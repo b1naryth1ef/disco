@@ -51,7 +51,7 @@ class GatewayClient(LoggingClass):
         # Websocket connection
         self.ws = None
         self.ws_event = gevent.event.Event()
-        self._zlib = zlib.decompressobj()
+        self._zlib = None
         self._buffer = None
 
         # State
@@ -182,6 +182,9 @@ class GatewayClient(LoggingClass):
         raise Exception('WS recieved error: %s', error)
 
     def on_open(self):
+        if self.zlib_stream_enabled:
+            self._zlib = zlib.decompressobj()
+
         if self.seq and self.session_id:
             self.log.info('WS Opened: attempting resume w/ SID: %s SEQ: %s', self.session_id, self.seq)
             self.replaying = True
@@ -209,6 +212,9 @@ class GatewayClient(LoggingClass):
             })
 
     def on_close(self, code, reason):
+        # Make sure we cleanup any old data
+        self._buffer = None
+
         # Kill heartbeater, a reconnect/resume will trigger a HELLO which will
         #  respawn it
         if self._heartbeat_task:
