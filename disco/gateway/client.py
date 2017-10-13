@@ -1,6 +1,4 @@
-import struct
 import gevent
-import array
 import zlib
 import six
 import ssl
@@ -13,7 +11,7 @@ from disco.util.logging import LoggingClass
 from disco.util.limiter import SimpleLimiter
 
 TEN_MEGABYTES = 10490000
-ZLIB_SUFFIX = 0xffff
+ZLIB_SUFFIX = b'\x00\x00\xff\xff'
 
 
 class GatewayClient(LoggingClass):
@@ -143,18 +141,17 @@ class GatewayClient(LoggingClass):
     def on_message(self, msg):
         if self.zlib_stream_enabled:
             if not self._buffer:
-                self._buffer = array.array('c' if six.PY2 else 'b')
+                self._buffer = bytearray()
 
             self._buffer.extend(msg)
 
             if len(msg) < 4:
                 return
 
-            suffix = struct.unpack('>I', msg[-4:])[0]
-            if suffix != ZLIB_SUFFIX:
+            if msg[-4:] != ZLIB_SUFFIX:
                 return
 
-            msg = self._zlib.decompress(self._buffer.tostring()).decode('utf-8')
+            msg = self._zlib.decompress(self._buffer if six.PY3 else str(self._buffer)).decode('utf-8')
             self._buffer = None
         else:
             # Detect zlib and decompress
