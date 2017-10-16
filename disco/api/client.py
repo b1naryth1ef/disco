@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from gevent.local import local
 from six.moves.urllib.parse import quote
 
+from holster.enum import EnumAttr
 from disco.api.http import Routes, HTTPClient, to_bytes
 from disco.util.logging import LoggingClass
 from disco.util.sanitize import S
@@ -286,32 +287,29 @@ class APIClient(LoggingClass):
 
     def guilds_channels_create(self,
             guild,
-            name,
             channel_type,
+            name,
             bitrate=None,
             user_limit=None,
             permission_overwrites=[],
+            nsfw=None,
             parent_id=None,
+            position=None,
             reason=None):
 
         payload = {
             'name': name,
-            'channel_type': channel_type,
+            'type': channel_type.value if isinstance(channel_type, EnumAttr) else channel_type,
             'permission_overwrites': [i.to_dict() for i in permission_overwrites],
             'parent_id': parent_id,
         }
 
-        if channel_type == 'text':
-            pass
-        elif channel_type == 'voice':
-            if bitrate is not None:
-                payload['bitrate'] = bitrate
-
-            if user_limit is not None:
-                payload['user_limit'] = user_limit
-        else:
-            # TODO: better error here?
-            raise Exception('Invalid channel type: {}'.format(channel_type))
+        payload.update(optional(
+            nsfw=nsfw,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            position=position,
+        ))
 
         r = self.http(
             Routes.GUILDS_CHANNELS_CREATE,

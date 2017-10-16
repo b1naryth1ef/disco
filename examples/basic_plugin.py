@@ -9,8 +9,15 @@ class BasicPlugin(Plugin):
     def on_auditme(self, event):
         invite = event.channel.create_invite(reason='TEST AUDIT')
         invite.delete(reason='TEST AUDIT 2')
-        # channel = event.guild.create_channel('audit-log-test', 'text', reason='TEST CREATE')
-        # channel.delete(reason='TEST AUDIT 2')
+        channel = event.guild.create_channel('audit-log-test', 'text', reason='TEST CREATE')
+        channel.delete(reason='TEST AUDIT 2')
+
+    @Plugin.command('create-some-channels')
+    def on_create_some_channels(self, event):
+        category = event.guild.create_category('My Category')
+        event.guild.create_text_channel('text-channel', parent_id=category.id)
+        event.guild.create_voice_channel('voice-channel', parent_id=category.id)
+        event.msg.reply('Ok, created some channels')
 
     @Plugin.command('ratelimitme')
     def on_ratelimitme(self, event):
