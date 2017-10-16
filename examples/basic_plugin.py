@@ -15,8 +15,8 @@ class BasicPlugin(Plugin):
     @Plugin.command('create-some-channels')
     def on_create_some_channels(self, event):
         category = event.guild.create_category('My Category')
-        event.guild.create_text_channel('text-channel', parent_id=category.id)
-        event.guild.create_voice_channel('voice-channel', parent_id=category.id)
+        category.create_text_channel('text-channel')
+        category.create_voice_channel('voice-channel')
         event.msg.reply('Ok, created some channels')
 
     @Plugin.command('ratelimitme')
