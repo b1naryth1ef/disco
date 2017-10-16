@@ -139,7 +139,7 @@ class Channel(SlottedModel, Permissible):
         self.attach(six.itervalues(self.overwrites), {'channel_id': self.id, 'channel': self})
 
     def __str__(self):
-        return u'#{}'.format(self.name)
+        return u'#{}'.format(self.name) if self.name else unicode(self.id)
 
     def __repr__(self):
         return u'<Channel {} ({})>'.format(self.id, self)
