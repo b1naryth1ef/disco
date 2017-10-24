@@ -1,11 +1,29 @@
 # CHANGELOG
 
-## v0.0.12
+## v0.0.12-rc.1
+
+### Additions
+
+- Added support for `Guild.system_channel_id` and `GUILD_MEMBER_JOIN` system message
+- Added `Guild.create_category`, `Guild.create_text_channel` and `Guild.create_voice_channel`
+- Added `Channel.create_text_channel` and `Channel.create_voice_channel` which can be called only on category channels to add sub-channels
 
 ### Fixes
 
+- Fixed the `__str__` method for Channel's displaying (useless) unset data for DMs
+- Fixed a bug with `MessageIterator` related to iterating before or after an ID of 0
+- Fixed incorrect field name (`icon_proxy_url` vs `proxy_icon_url`) in MessageEmbedAuthor model
+- Fixed bugs related to creating and deleting pinned messages
+- Fixed `GuildBan.reason` incorrectly handling unicode reasons
 - Fixed `Paginator` throwing an exception when reaching the end of pagination, instead of just ending its iteration
 - Fixed `Paginator` defaulting to start at 0 for all iterations
+
+### Etc
+
+- **BREAKING** Refactor the way Role's are managed and updated. You should update your code to use `Role.update`
+- **BREAKING** Renamed `Model.update` to `Model.inplace_update`. You should not have to worry about this change unless you explicitly call that method
+- **DEPRECATION** Deprecated the use of `Guild.create_channel`. You should use the explicit channel type creation methods added in this release
+- Expanded `APIClient.guilds_roles_create` to handle more attributes
 
 ## v0.0.11
 
