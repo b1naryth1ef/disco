@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import websocket
-import gevent
 import six
 
 from holster.emitter import Emitter
@@ -21,7 +20,7 @@ class Websocket(LoggingClass, websocket.WebSocketApp):
         LoggingClass.__init__(self)
         websocket.WebSocketApp.__init__(self, *args, **kwargs)
 
-        self.emitter = Emitter(gevent.spawn)
+        self.emitter = Emitter(spawn_each=True)
 
         # Hack to get events to emit
         for var in six.iterkeys(self.__dict__):
