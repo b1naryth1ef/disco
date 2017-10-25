@@ -4,6 +4,7 @@
 
 ### Additions
 
+- Added support for streaming zlib compression to our gateway socket. This is enabled by default and provides significant performance improvements on startup and overall bandwidth usage
 - Added support for `Guild.system_channel_id` and `GUILD_MEMBER_JOIN` system message
 - Added `Guild.create_category`, `Guild.create_text_channel` and `Guild.create_voice_channel`
 - Added `Channel.create_text_channel` and `Channel.create_voice_channel` which can be called only on category channels to add sub-channels
