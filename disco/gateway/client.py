@@ -3,6 +3,8 @@ import zlib
 import six
 import ssl
 
+from websocket import ABNF
+
 from disco.gateway.packets import OPCode, RECV, SEND
 from disco.gateway.events import GatewayEvent
 from disco.gateway.encoding import ENCODERS
@@ -151,7 +153,10 @@ class GatewayClient(LoggingClass):
             if msg[-4:] != ZLIB_SUFFIX:
                 return
 
-            msg = self._zlib.decompress(self._buffer if six.PY3 else str(self._buffer)).decode('utf-8')
+            msg = self._zlib.decompress(self._buffer if six.PY3 else str(self._buffer))
+            # If this encoder is text based, we want to decode the data as utf8
+            if self.encoder.OPCODE == ABNF.OPCODE_TEXT:
+                msg = msg.decode('utf-8')
             self._buffer = None
         else:
             # Detect zlib and decompress
