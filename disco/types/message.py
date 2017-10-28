@@ -43,7 +43,7 @@ class Emoji(SlottedModel):
 
     @cached_property
     def custom(self):
-        return self.id is not None
+        return bool(self.id)
 
     def __eq__(self, other):
         if isinstance(other, Emoji):
