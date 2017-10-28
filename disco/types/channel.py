@@ -24,7 +24,7 @@ ChannelType = Enum(
 
 PermissionOverwriteType = Enum(
     ROLE='role',
-    MEMBER='member'
+    MEMBER='member',
 )
 
 
@@ -69,7 +69,7 @@ class PermissionOverwrite(ChannelSubType):
             type=ptype,
             allow=allow,
             deny=deny,
-            channel_id=channel.id
+            channel_id=channel.id,
         ).save()
 
     @property
@@ -139,7 +139,7 @@ class Channel(SlottedModel, Permissible):
         self.attach(six.itervalues(self.overwrites), {'channel_id': self.id, 'channel': self})
 
     def __str__(self):
-        return u'#{}'.format(self.name) if self.name else unicode(self.id)
+        return u'#{}'.format(self.name) if self.name else six.text_type(self.id)
 
     def __repr__(self):
         return u'<Channel {} ({})>'.format(self.id, self)

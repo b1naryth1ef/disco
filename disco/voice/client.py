@@ -205,8 +205,8 @@ class VoiceClient(LoggingClass):
             'data': {
                 'port': port,
                 'address': ip,
-                'mode': 'xsalsa20_poly1305'
-            }
+                'mode': 'xsalsa20_poly1305',
+            },
         })
 
     def on_voice_sdp(self, sdp):
@@ -245,7 +245,7 @@ class VoiceClient(LoggingClass):
         try:
             data = self.encoder.decode(msg)
             self.packets.emit(VoiceOPCode[data['op']], data['d'])
-        except:
+        except Exception:
             self.log.exception('Failed to parse voice gateway message: ')
 
     def on_error(self, err):
@@ -256,7 +256,7 @@ class VoiceClient(LoggingClass):
             'server_id': self.channel.guild_id,
             'user_id': self.client.state.me.id,
             'session_id': self.client.gw.session_id,
-            'token': self.token
+            'token': self.token,
         })
 
     def on_close(self, code, error):

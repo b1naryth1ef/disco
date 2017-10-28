@@ -70,20 +70,20 @@ class Storage(object):
 
     def guild(self, key):
         return ContextAwareProxy(
-            lambda: self['_g{}:{}'.format(self._ctx['guild'].id, key)]
+            lambda: self['_g{}:{}'.format(self._ctx['guild'].id, key)],
         )
 
     def channel(self, key):
         return ContextAwareProxy(
-            lambda: self['_c{}:{}'.format(self._ctx['channel'].id, key)]
+            lambda: self['_c{}:{}'.format(self._ctx['channel'].id, key)],
         )
 
     def plugin(self, key):
         return ContextAwareProxy(
-            lambda: self['_p{}:{}'.format(self._ctx['plugin'].name, key)]
+            lambda: self['_p{}:{}'.format(self._ctx['plugin'].name, key)],
         )
 
     def user(self, key):
         return ContextAwareProxy(
-            lambda: self['_u{}:{}'.format(self._ctx['user'].id, key)]
+            lambda: self['_u{}:{}'.format(self._ctx['user'].id, key)],
         )

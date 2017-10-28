@@ -16,7 +16,7 @@ class Player(object):
         'STOP_PLAY',
         'PAUSE_PLAY',
         'RESUME_PLAY',
-        'DISCONNECT'
+        'DISCONNECT',
     )
 
     def __init__(self, client, queue=None):

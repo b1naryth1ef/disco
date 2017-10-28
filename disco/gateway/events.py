@@ -630,7 +630,7 @@ class MessageReactionAdd(GatewayEvent):
             self.channel_id,
             self.message_id,
             self.emoji.to_string() if self.emoji.id else self.emoji.name,
-            self.user_id
+            self.user_id,
         )
 
     @property

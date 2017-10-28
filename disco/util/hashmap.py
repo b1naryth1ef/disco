@@ -29,7 +29,7 @@ class HashMap(dict):
 
     def select(self, *args, **kwargs):
         if kwargs:
-            args += tuple([kwargs])
+            args += tuple(kwargs)
 
         for obj in self.values():
             for check in args:

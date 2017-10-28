@@ -9,7 +9,7 @@ from disco.util.paginator import Paginator
 from disco.util.snowflake import to_snowflake
 from disco.types.base import (
     SlottedModel, Field, ListField, AutoDictField, DictField, snowflake, text, enum, datetime,
-    cached_property
+    cached_property,
 )
 from disco.types.user import User
 from disco.types.voice import VoiceState
@@ -29,7 +29,7 @@ VerificationLevel = Enum(
 ExplicitContentFilterLevel = Enum(
     NONE=0,
     WITHOUT_ROLES=1,
-    ALL=2
+    ALL=2,
 )
 
 DefaultMessageNotificationsLevel = Enum(
@@ -449,9 +449,9 @@ class Guild(SlottedModel, Permissible):
         return self.client.api.guilds_channels_create(self.id, *args, **kwargs)
 
     def create_category(self, name, permission_overwrites=[], position=None, reason=None):
-        '''
+        """
         Creates a category within the guild.
-        '''
+        """
         return self.client.api.guilds_channels_create(
             self.id, ChannelType.GUILD_CATEGORY, name=name, permission_overwrites=permission_overwrites,
             position=position, reason=reason,
@@ -465,9 +465,9 @@ class Guild(SlottedModel, Permissible):
             nsfw=None,
             position=None,
             reason=None):
-        '''
+        """
         Creates a text channel within the guild.
-        '''
+        """
         return self.client.api.guilds_channels_create(
             self.id, ChannelType.GUILD_TEXT, name=name, permission_overwrites=permission_overwrites,
             parent_id=parent_id, nsfw=nsfw, position=position, reason=reason,
@@ -482,9 +482,9 @@ class Guild(SlottedModel, Permissible):
             user_limit=None,
             position=None,
             reason=None):
-        '''
+        """
         Creates a voice channel within the guild.
-        '''
+        """
         return self.client.api.guilds_channels_create(
             self.id, ChannelType.GUILD_VOICE, name=name, permission_overwrites=permission_overwrites,
             parent_id=parent_id, bitrate=bitrate, user_limit=user_limit, position=position, reason=None)

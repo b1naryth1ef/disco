@@ -13,7 +13,7 @@ from disco.voice.opus import OpusEncoder
 
 try:
     from cStringIO import cStringIO as BufferedIO
-except:
+except ImportError:
     if six.PY2:
         from StringIO import StringIO as BufferedIO
     else:
@@ -139,7 +139,7 @@ class FFmpegInput(BaseInput, AbstractOpus):
                 '-ar', str(self.sampling_rate),
                 '-ac', str(self.channels),
                 '-loglevel', 'warning',
-                'pipe:1'
+                'pipe:1',
             ]
             self._proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE)
         return self._proc

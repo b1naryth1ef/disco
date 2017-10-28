@@ -136,7 +136,7 @@ class GatewayClient(LoggingClass):
         self.ws.emitter.on('on_close', self.on_close)
         self.ws.emitter.on('on_message', self.on_message)
 
-        self.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+        self.ws.run_forever(sslopt={'cert_reqs': ssl.CERT_NONE})
 
     def on_message(self, msg):
         if self.zlib_stream_enabled:
@@ -157,11 +157,11 @@ class GatewayClient(LoggingClass):
             # Detect zlib and decompress
             is_erlpack = ((six.PY2 and ord(msg[0]) == 131) or (six.PY3 and msg[0] == 131))
             if msg[0] != '{' and not is_erlpack:
-                msg = zlib.decompress(msg, 15, TEN_MEGABYTES).decode("utf-8")
+                msg = zlib.decompress(msg, 15, TEN_MEGABYTES).decode('utf-8')
 
         try:
             data = self.encoder.decode(msg)
-        except:
+        except Exception:
             self.log.exception('Failed to parse gateway message: ')
             return
 
@@ -188,7 +188,7 @@ class GatewayClient(LoggingClass):
             self.send(OPCode.RESUME, {
                 'token': self.client.config.token,
                 'session_id': self.session_id,
-                'seq': self.seq
+                'seq': self.seq,
             })
         else:
             self.log.info('WS Opened: sending identify payload')
@@ -205,7 +205,7 @@ class GatewayClient(LoggingClass):
                     '$browser': 'disco',
                     '$device': 'disco',
                     '$referrer': '',
-                }
+                },
             })
 
     def on_close(self, code, reason):

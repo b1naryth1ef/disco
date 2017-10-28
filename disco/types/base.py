@@ -11,7 +11,7 @@ from disco.util.hashmap import HashMap
 
 DATETIME_FORMATS = [
     '%Y-%m-%dT%H:%M:%S.%f',
-    '%Y-%m-%dT%H:%M:%S'
+    '%Y-%m-%dT%H:%M:%S',
 ]
 
 
@@ -373,7 +373,7 @@ class Model(six.with_metaclass(ModelMeta, Chainable)):
             if isinstance(getattr(type(self), name), property):
                 try:
                     delattr(self, name)
-                except:
+                except Exception:
                     pass
 
     def to_dict(self, ignore=None):
@@ -411,7 +411,7 @@ class Model(six.with_metaclass(ModelMeta, Chainable)):
             for k, v in six.iteritems(data):
                 try:
                     setattr(item, k, v)
-                except:
+                except Exception:
                     pass
 
 

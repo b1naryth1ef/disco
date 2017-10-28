@@ -40,7 +40,7 @@ class ClientConfig(Config):
         should be either 'json' or 'etf'.
     """
 
-    token = ""
+    token = ''
     shard_id = 0
     shard_count = 1
     max_reconnects = 5
@@ -100,7 +100,7 @@ class Client(LoggingClass):
                 'client': self,
                 'state': self.state,
                 'api': self.api,
-                'gw': self.gw
+                'gw': self.gw,
             }
 
             self.manhole = DiscoBackdoorServer(self.config.manhole_bind,

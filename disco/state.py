@@ -90,7 +90,7 @@ class State(object):
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
         'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
         'GuildEmojisUpdate', 'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
-        'PresenceUpdate'
+        'PresenceUpdate',
     ]
 
     def __init__(self, client, config):
@@ -202,7 +202,7 @@ class State(object):
             'channels',
             'members',
             'voice_states',
-            'presences'
+            'presences',
         ])
 
     def on_guild_delete(self, event):

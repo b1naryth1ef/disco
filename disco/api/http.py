@@ -159,7 +159,7 @@ class APIException(Exception):
         self.errors = {}
 
         if self.retries:
-            self.msg += " after {} retries".format(self.retries)
+            self.msg += ' after {} retries'.format(self.retries)
 
         # Try to decode JSON, and extract params
         try:
@@ -298,7 +298,7 @@ class HTTPClient(LoggingClass):
 
             backoff = self.random_backoff()
             self.log.warning('Request to `{}` failed with code {}, retrying after {}s ({})'.format(
-                url, r.status_code, backoff, r.content
+                url, r.status_code, backoff, r.content,
             ))
             gevent.sleep(backoff)
 

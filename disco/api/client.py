@@ -34,7 +34,7 @@ def _reason_header(value):
 
 class Responses(list):
     def rate_limited_duration(self):
-        return sum([i.rate_limited_duration for i in self])
+        return sum(i.rate_limited_duration for i in self)
 
     @property
     def rate_limited(self):
@@ -128,7 +128,7 @@ class APIClient(LoggingClass):
             around=around,
             before=before,
             after=after,
-            limit=limit
+            limit=limit,
         ))
 
         return Message.create_map(self.client, r.json())
@@ -137,8 +137,16 @@ class APIClient(LoggingClass):
         r = self.http(Routes.CHANNELS_MESSAGES_GET, dict(channel=channel, message=message))
         return Message.create(self.client, r.json())
 
-    def channels_messages_create(self, channel, content=None, nonce=None, tts=False,
-            attachment=None, attachments=[], embed=None, sanitize=False):
+    def channels_messages_create(
+            self,
+            channel,
+            content=None,
+            nonce=None,
+            tts=False,
+            attachment=None,
+            attachments=[],
+            embed=None,
+            sanitize=False):
 
         payload = {
             'nonce': nonce,
@@ -173,7 +181,7 @@ class APIClient(LoggingClass):
                 Routes.CHANNELS_MESSAGES_CREATE,
                 dict(channel=channel),
                 data={'payload_json': json.dumps(payload)},
-                files=files
+                files=files,
             )
         else:
             r = self.http(Routes.CHANNELS_MESSAGES_CREATE, dict(channel=channel), json=payload)
@@ -232,7 +240,7 @@ class APIClient(LoggingClass):
     def channels_permissions_delete(self, channel, permission, reason=None):
         self.http(
             Routes.CHANNELS_PERMISSIONS_DELETE,
-            dict(channel=channel, permission=permission), headers=_reason_header(reason)
+            dict(channel=channel, permission=permission), headers=_reason_header(reason),
         )
 
     def channels_invites_list(self, channel):
@@ -244,7 +252,7 @@ class APIClient(LoggingClass):
             'max_age': max_age,
             'max_uses': max_uses,
             'temporary': temporary,
-            'unique': unique
+            'unique': unique,
         }, headers=_reason_header(reason))
         return Invite.create(self.client, r.json())
 
@@ -285,7 +293,8 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_CHANNELS_LIST, dict(guild=guild))
         return Channel.create_hash(self.client, 'id', r.json(), guild_id=guild)
 
-    def guilds_channels_create(self,
+    def guilds_channels_create(
+            self,
             guild,
             channel_type,
             name,
@@ -379,7 +388,9 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_ROLES_LIST, dict(guild=guild))
         return Role.create_map(self.client, r.json(), guild_id=guild)
 
-    def guilds_roles_create(self, guild,
+    def guilds_roles_create(
+            self,
+            guild,
             name=None,
             permissions=None,
             color=None,
@@ -404,7 +415,10 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_ROLES_MODIFY_BATCH, dict(guild=guild), json=roles, headers=_reason_header(reason))
         return Role.create_map(self.client, r.json(), guild_id=guild)
 
-    def guilds_roles_modify(self, guild, role,
+    def guilds_roles_modify(
+            self,
+            guild,
+            role,
             name=None,
             hoist=None,
             color=None,

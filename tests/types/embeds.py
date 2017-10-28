@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from datetime import datetime
 from disco.types.message import MessageEmbed
 
 
@@ -29,4 +28,3 @@ class TestEmbeds(TestCase):
         self.assertEqual(obj['title'], 'Test Title')
         self.assertEqual(obj['description'], 'Test Description')
         self.assertEqual(obj['url'], 'https://test.url/')
-

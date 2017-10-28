@@ -21,7 +21,7 @@ from disco.util.serializer import dump_function, load_function
 def run_shard(config, shard_id, pipe):
     setup_logging(
         level=logging.INFO,
-        format='{} [%(levelname)s] %(asctime)s - %(name)s:%(lineno)d - %(message)s'.format(shard_id)
+        format='{} [%(levelname)s] %(asctime)s - %(name)s:%(lineno)d - %(message)s'.format(shard_id),
     )
 
     config.shard_id = shard_id
@@ -41,17 +41,23 @@ class ShardHelper(object):
         for sid in range(self.count):
             yield sid
 
-    def on(self, id, func):
-        if id == self.bot.client.config.shard_id:
+    def on(self, sid, func):
+        if sid == self.bot.client.config.shard_id:
             result = gevent.event.AsyncResult()
             result.set(func(self.bot))
             return result
 
-        return self.bot.sharder.call(('run_on', ), id, dump_function(func))
+        return self.bot.sharder.call(('run_on', ), sid, dump_function(func))
 
     def all(self, func, timeout=None):
         pool = gevent.pool.Pool(self.count)
-        return dict(zip(range(self.count), pool.imap(lambda i: self.on(i, func).wait(timeout=timeout), range(self.count))))
+        return dict(zip(
+            range(self.count),
+            pool.imap(
+                lambda i: self.on(i, func).wait(timeout=timeout),
+                range(self.count),
+            ),
+        ))
 
     def for_id(self, sid, func):
         shard = calculate_shard(self.count, sid)
@@ -79,7 +85,7 @@ class AutoSharder(object):
 
         logging.basicConfig(
             level=logging.INFO,
-            format='{} [%(levelname)s] %(asctime)s - %(name)s:%(lineno)d - %(message)s'.format(id)
+            format='{} [%(levelname)s] %(asctime)s - %(name)s:%(lineno)d - %(message)s'.format(id),
         )
 
     @staticmethod

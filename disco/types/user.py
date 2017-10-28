@@ -30,7 +30,7 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
             self.id,
             self.avatar,
             fmt,
-            size
+            size,
         )
 
     @property
@@ -65,7 +65,7 @@ Status = Enum(
     'IDLE',
     'DND',
     'INVISIBLE',
-    'OFFLINE'
+    'OFFLINE',
 )
 
 

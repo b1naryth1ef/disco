@@ -217,7 +217,7 @@ class Bot(LoggingClass):
         Called when a plugin is loaded/unloaded to recompute internal state.
         """
         if self.config.commands_group_abbrev:
-            groups = set(command.group for command in self.commands if command.group)
+            groups = {command.group for command in self.commands if command.group}
             self.group_abbrev = self.compute_group_abbrev(groups)
 
         self.compute_command_matches_re()
@@ -293,7 +293,7 @@ class Bot(LoggingClass):
                 mention_rules.get('user', True) and mention_direct,
                 mention_rules.get('everyone', False) and mention_everyone,
                 mention_rules.get('role', False) and any(mention_roles),
-                msg.channel.is_dm
+                msg.channel.is_dm,
             )):
                 return []
 
@@ -375,7 +375,7 @@ class Bot(LoggingClass):
             self.config.commands_require_mention,
             self.config.commands_mention_rules,
             self.config.commands_prefix,
-            msg
+            msg,
         ))
 
         if not len(commands):

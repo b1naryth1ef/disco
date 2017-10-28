@@ -5,11 +5,20 @@ import copy
 # Regex which splits out argument parts
 PARTS_RE = re.compile('(\<|\[|\{)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\]|\})')
 
-BOOL_OPTS = {'yes': True, 'no': False, 'true': True, 'False': False, '1': True, '0': False}
+BOOL_OPTS = {
+    'yes': True,
+    'no': False,
+    'true': True,
+    'False': False,
+    '1': True,
+    '0': False,
+    'on': True,
+    'off': False,
+}
 
 # Mapping of types
 TYPE_MAP = {
-    'str': lambda ctx, data: str(data) if six.PY3 else unicode(data),
+    'str': lambda ctx, data: six.text_type(data),
     'int': lambda ctx, data: int(data),
     'float': lambda ctx, data: float(data),
     'snowflake': lambda ctx, data: int(data),
@@ -20,6 +29,7 @@ def to_bool(ctx, data):
     if data in BOOL_OPTS:
         return BOOL_OPTS[data]
     raise TypeError
+
 
 TYPE_MAP['bool'] = to_bool
 
@@ -190,9 +200,9 @@ class ArgumentSet(object):
                 for idx, r in enumerate(raw):
                     try:
                         raw[idx] = self.convert(ctx, arg.types, r)
-                    except:
+                    except Exception:
                         raise ArgumentError(u'cannot convert `{}` to `{}`'.format(
-                            r, ', '.join(arg.types)
+                            r, ', '.join(arg.types),
                         ))
 
             if arg.count == 1:
@@ -217,4 +227,4 @@ class ArgumentSet(object):
         """
         The number of required arguments to compile this set/specificaiton.
         """
-        return sum([i.true_count for i in self.args if i.required])
+        return sum(i.true_count for i in self.args if i.required)

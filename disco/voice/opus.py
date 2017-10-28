@@ -62,7 +62,7 @@ class BaseOpus(LoggingClass):
 Application = Enum(
     AUDIO=2049,
     VOIP=2048,
-    LOWDELAY=2051
+    LOWDELAY=2051,
 )
 
 

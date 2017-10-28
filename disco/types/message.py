@@ -8,7 +8,7 @@ from holster.enum import Enum
 
 from disco.types.base import (
     SlottedModel, Field, ListField, AutoDictField, snowflake, text,
-    datetime, enum, cached_property
+    datetime, enum, cached_property,
 )
 from disco.util.paginator import Paginator
 from disco.util.snowflake import to_snowflake
