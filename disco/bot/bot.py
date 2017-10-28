@@ -12,7 +12,6 @@ from gevent.wsgi import WSGIServer
 from disco.types.guild import GuildMember
 from disco.bot.plugin import Plugin
 from disco.bot.command import CommandEvent, CommandLevels
-from disco.bot.storage import Storage
 from disco.util.config import Config
 from disco.util.logging import LoggingClass
 from disco.util.serializer import Serializer
@@ -94,11 +93,6 @@ class BotConfig(Config):
     plugin_config_format = 'json'
     plugin_config_dir = 'config'
 
-    storage_enabled = True
-    storage_fsync = True
-    storage_serializer = 'json'
-    storage_path = 'storage.json'
-
     http_enabled = False
     http_host = '0.0.0.0'
     http_port = 7575
@@ -135,11 +129,6 @@ class Bot(LoggingClass):
 
         # The context carries information about events in a threadlocal storage
         self.ctx = ThreadLocal()
-
-        # The storage object acts as a dynamic contextual aware store
-        self.storage = None
-        if self.config.storage_enabled:
-            self.storage = Storage(self.ctx, self.config.from_prefix('storage'))
 
         # If the manhole is enabled, add this bot as a local
         if self.client.config.manhole_enable:

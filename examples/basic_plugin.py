@@ -32,6 +32,13 @@ class BasicPlugin(Plugin):
             requests.rate_limited_duration(),
         ))
 
+    @Plugin.command('safe', '<user_input:str...>')
+    def on_safe(self, event, user_input):
+        # Disco exposes a function that can sanitize user input
+        event.msg.reply(u'No at-everyones here! {}'.format(
+            S(user_input),
+        ))
+
     @Plugin.command('ban', '<user:snowflake> <reason:str...>')
     def on_ban(self, event, user, reason):
         event.guild.create_ban(user, reason=reason + u'\U0001F4BF')
@@ -63,20 +70,6 @@ class BasicPlugin(Plugin):
     @Plugin.command('sub', '<a:int> <b:int>', group='math')
     def on_math_sub_command(self, event, a, b):
         event.msg.reply('{}'.format(a - b))
-
-    @Plugin.command('tag', '<name:str> [value:str...]')
-    def on_tag(self, event, name, value=None):
-        # Plugins can easily store data locally using Disco's built in storage
-        tags = self.storage.guild.ensure('tags')
-
-        if value:
-            tags[name] = value
-            event.msg.reply(u':ok_hand: created tag `{}`'.format(S(name)))
-        else:
-            if name in tags:
-                return event.msg.reply(tags[name])
-            else:
-                return event.msg.reply(u'Unknown tag: `{}`'.format(S(name)))
 
     @Plugin.command('test', parser=True)
     @Plugin.parser.add_argument('-a', '--asdf', help='wow')

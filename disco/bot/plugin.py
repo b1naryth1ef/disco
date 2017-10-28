@@ -179,7 +179,6 @@ class Plugin(LoggingClass, PluginDeco):
         self.client = bot.client
         self.state = bot.client.state
         self.ctx = bot.ctx
-        self.storage = bot.storage
         self.config = config
 
         # General declartions

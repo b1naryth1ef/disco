@@ -9,7 +9,6 @@ from disco.bot.bot import *
 from disco.bot.command import *
 from disco.bot.parser import *
 from disco.bot.plugin import *
-from disco.bot.storage import *
 from disco.gateway.client import *
 from disco.gateway.events import *
 from disco.gateway.ipc import *
