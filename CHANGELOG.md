@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.0.12-rc.2
+
+### Fixes
+
+- A plethora of PEP8 and general syntax changes have been made to cleanup the code
+- Fixed the invocation of holster Emitters to match the latest versions constructor signature
+- Fixed a bug with `Emoji.custom`
+- Fixed a bug in the typing system that would not allow Field's to have a `default` of `None`
+
 ## v0.0.12-rc.1
 
 ### Additions
