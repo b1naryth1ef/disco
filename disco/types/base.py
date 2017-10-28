@@ -55,7 +55,7 @@ class ConversionError(Exception):
 
 
 class Field(object):
-    def __init__(self, value_type, alias=None, default=None, create=True, ignore_dump=None, cast=None, **kwargs):
+    def __init__(self, value_type, alias=None, default=UNSET, create=True, ignore_dump=None, cast=None, **kwargs):
         # TODO: fix default bullshit
         self.true_type = value_type
         self.src_name = alias
@@ -64,21 +64,23 @@ class Field(object):
         self.cast = cast
         self.metadata = kwargs
 
-        if default is not None:
+        # Only set the default value if we where given one
+        if default is not UNSET:
             self.default = default
+        # Attempt to use the instances default type (e.g. from a subclass)
         elif not hasattr(self, 'default'):
-            self.default = None
+            self.default = UNSET
 
         self.deserializer = None
 
         if value_type:
             self.deserializer = self.type_to_deserializer(value_type)
 
-            if isinstance(self.deserializer, Field) and self.default is None:
+            if isinstance(self.deserializer, Field) and self.default is UNSET:
                 self.default = self.deserializer.default
             elif (inspect.isclass(self.deserializer) and
                     issubclass(self.deserializer, Model) and
-                    self.default is None and create):
+                    self.default is UNSET and create):
                 self.default = self.deserializer
 
     @property
@@ -94,7 +96,7 @@ class Field(object):
             self.src_name = name
 
     def has_default(self):
-        return self.default is not None
+        return self.default is not UNSET
 
     def try_convert(self, raw, client, **kwargs):
         try:
