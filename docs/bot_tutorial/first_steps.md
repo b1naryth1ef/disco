@@ -21,7 +21,7 @@ The \_\_init\_\_.py file is required for Python to find your plugin, but it can 
 {% endhint %}
 
 
-Within the config file, paste the following template configuration and modify the token key to contain the token you obtained above:
+Now lets setup the configuration file. To start off with we'll paste the following template in and modify our token key (`MY_BOT_TOKEN_HERE`) to be the token we obtained above. The plugins section tells disco what plugins to load, based on a module path (similar to how Python imports work). In this example we're asking disco to load the plugin contained in the tutorial file within the plugins directory (or "module"). Disco by default loads the first plugin it finds within the module, so you want to make sure each plugin class is contained within its own file.
 
 ```yaml
 token: 'MY_BOT_TOKEN_HERE'
@@ -31,8 +31,8 @@ bot:
 		- plugins.tutorial
 ```
 
-Now, within the python file (`tutorial.py`), lets write some code:
 
+Now we're ready to write our plugin. Plugins are used to isolate the functionality of your bot into components. Plugins can be dynamically loaded, unloaded and reloaded at runtime. Lets start off by writing a plugin with a "ping" command;
 
 ```python
 from disco.bot import Plugin
@@ -44,7 +44,7 @@ class TutorialPlugin(Plugin):
         event.msg.reply('Pong!')
 ```
 
-And finally, we're ready to start and test the bot. We can do this by executing the following command from within our project directory:
+Now that we have a plugin setup and our configuration is ready, we can run and test the bot. We can do this by executing the following command from within our project directory:
 
 
 ```sh

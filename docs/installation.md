@@ -15,7 +15,7 @@ pip install disco-py
 Disco provides a set of optional dependencies which add various bits of functionality or performance changes when installed. These can all be installed in a similar fashion to Disco;
 
 ```sh
-pip install disco[performance]
+pip install disco-py[performance]
 ```
 
 | Name | Explanation | Versions |
