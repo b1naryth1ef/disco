@@ -159,12 +159,18 @@ class Channel(SlottedModel, Permissible):
         member = self.guild.get_member(user)
         base = self.guild.get_permissions(member)
 
-        for ow in six.itervalues(self.overwrites):
-            if ow.id != user.id and ow.id not in member.roles:
-                continue
+        ow_everyone = self.overwrites.get(self.guild_id)
+        if ow_everyone:
+            base += ow_everyone.compiled
 
-            base -= ow.deny
-            base += ow.allow
+        for role_id in member.roles:
+            ow_role = self.overwrites.get(role_id)
+            if ow_role:
+                base += ow_role.compiled
+
+        ow_member = self.overwrites.get(member.user.id)
+        if ow_member:
+            base += ow_member.compiled
 
         return base
 
