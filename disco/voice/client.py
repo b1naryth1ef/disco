@@ -129,13 +129,13 @@ class VoiceClient(LoggingClass):
         self.encoder = encoder or JSONEncoder
 
         # Bind to some WS packets
-        self.packets = Emitter(spawn_each=True)
+        self.packets = Emitter()
         self.packets.on(VoiceOPCode.READY, self.on_voice_ready)
         self.packets.on(VoiceOPCode.SESSION_DESCRIPTION, self.on_voice_sdp)
 
         # State + state change emitter
         self.state = VoiceState.DISCONNECTED
-        self.state_emitter = Emitter(spawn_each=True)
+        self.state_emitter = Emitter()
 
         # Connection metadata
         self.token = None

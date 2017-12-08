@@ -88,8 +88,8 @@ class Client(LoggingClass):
         super(Client, self).__init__()
         self.config = config
 
-        self.events = Emitter(spawn_each=True)
-        self.packets = Emitter(spawn_each=True)
+        self.events = Emitter()
+        self.packets = Emitter()
 
         self.api = APIClient(self.config.token, self)
         self.gw = GatewayClient(self, self.config.max_reconnects, self.config.encoder)
