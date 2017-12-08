@@ -1,5 +1,5 @@
 # disco
-Disco is a simple and extendable library for the [Discord API](https://discordapp.com/developers/docs/intro). Join the Official channel and chat [here](https://discord.gg/XJRZSQk).
+Disco is a simple and extendable library for the [Discord API](https://discordapp.com/developers/docs/intro). Join the Official channel and chat [here](https://discord.gg/WMzzPec).
 
 - Expressive, functional interface that gets out of the way
 - Built for high-performance and efficiency
