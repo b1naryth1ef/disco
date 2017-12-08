@@ -64,20 +64,6 @@ class BasicPlugin(Plugin):
     def on_math_sub_command(self, event, a, b):
         event.msg.reply('{}'.format(a - b))
 
-    @Plugin.command('tag', '<name:str> [value:str...]')
-    def on_tag(self, event, name, value=None):
-        # Plugins can easily store data locally using Disco's built in storage
-        tags = self.storage.guild.ensure('tags')
-
-        if value:
-            tags[name] = value
-            event.msg.reply(u':ok_hand: created tag `{}`'.format(S(name)))
-        else:
-            if name in tags:
-                return event.msg.reply(tags[name])
-            else:
-                return event.msg.reply(u'Unknown tag: `{}`'.format(S(name)))
-
     @Plugin.command('test', parser=True)
     @Plugin.parser.add_argument('-a', '--asdf', help='wow')
     @Plugin.parser.add_argument('--help', action='store_true')
@@ -87,13 +73,3 @@ class BasicPlugin(Plugin):
         if args.help:
             return event.msg.reply(event.parser.format_help())
         event.msg.reply(args.asdf)
-
-    """
-    @Plugin.route('/test')
-    def on_test_route(self):
-        # Disco has built-in support for Flask (if installed and enabled) which
-        #  allows plugins to create HTTP routes.
-        from flask import request
-        print dict(request.headers)
-        return 'Hi!'
-    """
