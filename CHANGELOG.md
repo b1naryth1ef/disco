@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## v0.0.12-rc.3
+
+### Additions
+
+- **BREAKING** Updated holster to v2.0.0 which changes the way emitters work (and removes the previous priorities). A migration guide will be provided post-RC cycle.
+- Added the concept of a `shared_config` which propgates its options to all plugin configs (@enkoder)
+
+### Fixes
+
+- Fixed using the ETF encoder while also using zlib-stream
+- Fixed overwrite calculations in `Channel.get_permissions` (@cookkkie)
+
+### Etc
+
+- Cleaned up various documentation
+- Removed some outdated storage/etc examples
+
 ## v0.0.12-rc.2
 
 ### Fixes
