@@ -21,7 +21,7 @@ The \_\_init\_\_.py file is required for Python to find your plugin, but it can 
 {% endhint %}
 
 
-Now lets setup the configuration file. To start off with we'll paste the following template in and modify our token key (`MY_BOT_TOKEN_HERE`) to be the token we obtained above. The plugins section tells disco what plugins to load, based on a module path (similar to how Python imports work). In this example we're asking disco to load the plugin contained in the tutorial file within the plugins directory (or "module"). Disco by default loads the first plugin it finds within the module, so you want to make sure each plugin class is contained within its own file.
+Now let's setup the configuration file. To start off with we'll paste the following template in and modify our token key (`MY_BOT_TOKEN_HERE`) to be the token we obtained above. The plugins section tells disco what plugins to load, based on a module path (similar to how Python imports work). In this example we're asking disco to load the plugin contained in the tutorial file within the plugins directory (or "module"). Disco by default loads the first plugin it finds within the module, so you want to make sure each plugin class is contained within its own file.
 
 ```yaml
 token: 'MY_BOT_TOKEN_HERE'
