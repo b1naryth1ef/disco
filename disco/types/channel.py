@@ -518,6 +518,8 @@ class MessageIterator(object):
     def fill(self):
         """
         Fills the internal buffer up with :class:`disco.types.message.Message` objects from the API.
+
+        Returns a boolean indicating whether items were added to the buffer.
         """
         self._buffer = self.client.api.channels_messages_list(
             self.channel.id,
@@ -526,7 +528,7 @@ class MessageIterator(object):
             limit=self.chunk_size)
 
         if not len(self._buffer):
-            return
+            return False
 
         self.after = None
         self.before = None
@@ -538,6 +540,8 @@ class MessageIterator(object):
             self._buffer.reverse()
             self.after = self._buffer[-1].id
 
+        return True
+
     def next(self):
         return self.__next__()
 
@@ -546,7 +550,9 @@ class MessageIterator(object):
 
     def __next__(self):
         if not len(self._buffer):
-            self.fill()
+            filled = self.fill()
+            if not filled:
+                raise StopIteration
 
         if self.bulk:
             res = self._buffer
