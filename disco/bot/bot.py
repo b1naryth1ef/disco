@@ -506,7 +506,7 @@ class Bot(LoggingClass):
 
         data = {}
         if self.config.shared_config:
-            data.update(self.config.shared)
+            data.update(self.config.shared_config)
 
         if name in self.config.plugin_config:
             data.update(self.config.plugin_config[name])
