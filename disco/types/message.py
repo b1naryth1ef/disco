@@ -37,9 +37,12 @@ class Emoji(SlottedModel):
         The emoji ID (will be none if this is not a custom emoji).
     name : str
         The name of this emoji.
+    animated : bool
+        Whether this emoji is animated.
     """
     id = Field(snowflake)
     name = Field(text)
+    animated = Field(bool)
 
     @cached_property
     def custom(self):
