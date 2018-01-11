@@ -92,7 +92,16 @@ class Client(LoggingClass):
         self.packets = Emitter()
 
         self.api = APIClient(self.config.token, self)
-        self.gw = GatewayClient(self, self.config.max_reconnects, self.config.encoder)
+        self.gw = GatewayClient(
+            token=self.config.token,
+            shard_id=self.config.shard_id,
+            shard_count=self.config.shard_count,
+            max_reconnects=self.config.max_reconnects,
+            encoder=self.config.encoder,
+            events=self.events,
+            packets=self.packets,
+            client=self,
+        )
         self.state = State(self, StateConfig(self.config.get('state', {})))
 
         if self.config.manhole_enable:

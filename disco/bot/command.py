@@ -120,8 +120,6 @@ class Command(object):
 
     Attributes
     ----------
-    plugin : :class:`disco.bot.plugin.Plugin`
-        The plugin this command is a member of.
     func : function
         The function which is called when this command is triggered.
     trigger : str
@@ -135,8 +133,7 @@ class Command(object):
     is_regex : Optional[bool]
         Whether the triggers for this command should be treated as raw regex.
     """
-    def __init__(self, plugin, func, trigger, *args, **kwargs):
-        self.plugin = plugin
+    def __init__(self, func, trigger, *args, **kwargs):
         self.func = func
         self.triggers = [trigger]
 
@@ -216,6 +213,8 @@ class Command(object):
         if parser:
             self.parser = PluginArgumentParser(prog=self.name, add_help=False)
 
+        self._cached_regex = None
+
     @staticmethod
     def mention_type(getters, reg=None, user=False, allow_plain=False):
         def _f(ctx, raw):
@@ -244,14 +243,12 @@ class Command(object):
             raise TypeError('Cannot resolve mention: {}'.format(raw))
         return _f
 
-    @simple_cached_property
-    def compiled_regex(self):
-        """
-        A compiled version of this command's regex.
-        """
-        return re.compile(self.regex(), re.I)
+    def compiled_regex(self, group_abbrev):
+        if not self._cached_regex:
+            self._cached_regex = re.compile(self.regex(group_abbrev), re.I)
+        return self._cached_regex
 
-    def regex(self, grouped=True):
+    def regex(self, group_abbrev, grouped=True):
         """
         The regex string that defines/triggers this command.
         """
@@ -260,8 +257,8 @@ class Command(object):
         else:
             group = ''
             if self.group:
-                if self.group in self.plugin.bot.group_abbrev:
-                    rest = self.plugin.bot.group_abbrev[self.group]
+                if self.group in group_abbrev:
+                    rest = group_abbrev[self.group]
                     group = '{}(?:{}) '.format(rest, ''.join(c + u'?' for c in self.group[len(rest):]))
                 else:
                     group = self.group + ' '
@@ -303,4 +300,4 @@ class Command(object):
         kwargs = {}
         kwargs.update(self.context)
         kwargs.update(parsed_kwargs)
-        return self.plugin.dispatch('command', self, event, **kwargs)
+        return (event, kwargs)

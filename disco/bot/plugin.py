@@ -296,7 +296,8 @@ class Plugin(LoggingClass, PluginDeco):
         if not event.command.oob:
             self.greenlets.add(gevent.getcurrent())
         try:
-            return event.command.execute(event)
+            command_event, kwargs = event.command.execute(event)
+            return self.plugin.dispatch('command', event.command, command_event, **kwargs)
         except CommandError as e:
             event.msg.reply(e.msg)
             return False
@@ -377,7 +378,7 @@ class Plugin(LoggingClass, PluginDeco):
             Keyword arguments to pass onto the :class:`disco.bot.command.Command`
             object.
         """
-        self.commands.append(Command(self, func, *args, **kwargs))
+        self.commands.append(Command(func, *args, **kwargs))
 
     def register_schedule(self, func, interval, repeat=True, init=True):
         """

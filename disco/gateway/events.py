@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import six
+import copy
 
 from disco.types.user import User, Presence
 from disco.types.channel import Channel, PermissionOverwrite
@@ -48,7 +49,7 @@ class GatewayEvent(six.with_metaclass(GatewayEventMeta, Model)):
         """
         Create this GatewayEvent class from data and the client.
         """
-        cls.raw_data = obj
+        cls.raw_data = copy.deepcopy(obj)
 
         # If this event is wrapping a model, pull its fields
         if hasattr(cls, '_wraps_model'):

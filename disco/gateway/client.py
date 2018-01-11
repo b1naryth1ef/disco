@@ -3,6 +3,7 @@ import zlib
 import six
 import ssl
 
+from holster.emitter import Emitter
 from websocket import ABNF
 
 from disco.gateway.packets import OPCode, RECV, SEND
@@ -19,15 +20,29 @@ ZLIB_SUFFIX = b'\x00\x00\xff\xff'
 class GatewayClient(LoggingClass):
     GATEWAY_VERSION = 6
 
-    def __init__(self, client, max_reconnects=5, encoder='json', zlib_stream_enabled=True, ipc=None):
+    def __init__(
+            self,
+            token,
+            shard_id=0,
+            shard_count=1,
+            max_reconnects=5,
+            encoder='json',
+            zlib_stream_enabled=True,
+            ipc=None,
+            events=None,
+            packets=None,
+            client=None):
         super(GatewayClient, self).__init__()
-        self.client = client
+        self.token = token
+        self.shard_id = shard_id
+        self.shard_count = shard_count
         self.max_reconnects = max_reconnects
         self.encoder = ENCODERS[encoder]
         self.zlib_stream_enabled = zlib_stream_enabled
 
-        self.events = client.events
-        self.packets = client.packets
+        self.client = client
+        self.events = events or Emitter()
+        self.packets = packets or Emitter()
 
         # IPC for shards
         if ipc:
@@ -88,7 +103,7 @@ class GatewayClient(LoggingClass):
     def handle_dispatch(self, packet):
         obj = GatewayEvent.from_dispatch(self.client, packet)
         self.log.debug('GatewayClient.handle_dispatch %s', obj.__class__.__name__)
-        self.client.events.emit(obj.__class__.__name__, obj)
+        self.events.emit(obj.__class__.__name__, obj)
         if self.replaying:
             self.replayed_events += 1
 
@@ -121,10 +136,12 @@ class GatewayClient(LoggingClass):
 
     def connect_and_run(self, gateway_url=None):
         if not gateway_url:
-            if not self._cached_gateway_url:
+            if not self._cached_gateway_url and self.client:
                 self._cached_gateway_url = self.client.api.gateway_get()['url']
 
             gateway_url = self._cached_gateway_url
+        else:
+            self._cached_gateway_url = gateway_url
 
         gateway_url += '?v={}&encoding={}'.format(self.GATEWAY_VERSION, self.encoder.TYPE)
 
@@ -191,19 +208,19 @@ class GatewayClient(LoggingClass):
             self.log.info('WS Opened: attempting resume w/ SID: %s SEQ: %s', self.session_id, self.seq)
             self.replaying = True
             self.send(OPCode.RESUME, {
-                'token': self.client.config.token,
+                'token': self.token,
                 'session_id': self.session_id,
                 'seq': self.seq,
             })
         else:
             self.log.info('WS Opened: sending identify payload')
             self.send(OPCode.IDENTIFY, {
-                'token': self.client.config.token,
+                'token': self.token,
                 'compress': True,
                 'large_threshold': 250,
                 'shard': [
-                    int(self.client.config.shard_id),
-                    int(self.client.config.shard_count),
+                    int(self.shard_id),
+                    int(self.shard_count),
                 ],
                 'properties': {
                     '$os': 'linux',
@@ -247,6 +264,6 @@ class GatewayClient(LoggingClass):
         # Reconnect
         self.connect_and_run()
 
-    def run(self):
-        gevent.spawn(self.connect_and_run)
+    def run(self, gateway_url=None):
+        gevent.spawn(self.connect_and_run, gateway_url=gateway_url)
         self.ws_event.wait()

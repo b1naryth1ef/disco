@@ -258,7 +258,7 @@ class Bot(LoggingClass):
         Computes a single regex which matches all possible command combinations.
         """
         commands = list(self.commands)
-        re_str = '|'.join(command.regex(grouped=False) for command in commands)
+        re_str = '|'.join(command.regex(self.group_abbrev, grouped=False) for command in commands)
         if re_str:
             self.command_matches_re = re.compile(re_str, re.I)
         else:
@@ -326,7 +326,7 @@ class Bot(LoggingClass):
 
         options = []
         for command in self.commands:
-            match = command.compiled_regex.match(content)
+            match = command.compiled_regex(self.group_abbrev).match(content)
             if match:
                 options.append((command, match))
         return sorted(options, key=lambda obj: obj[0].group is None)
