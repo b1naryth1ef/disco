@@ -1,7 +1,12 @@
+import six
 from websocket import ABNF
-from erlpack import unpack, pack
 
 from disco.gateway.encoding.base import BaseEncoder
+
+if six.PY3:
+    from earl import unpack, pack
+else:
+    from erlpack import unpack, pack
 
 
 class ETFEncoder(BaseEncoder):
@@ -14,4 +19,6 @@ class ETFEncoder(BaseEncoder):
 
     @staticmethod
     def decode(obj):
+        if six.PY3:
+            return unpack(obj, encoding='utf-8', encode_binary_ext=True)
         return unpack(obj)

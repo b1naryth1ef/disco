@@ -4,8 +4,10 @@ disco*.egg-info/
 storage.db
 storage.json
 *.dca
+*.pyc
 .eggs/
 .cache/
+.benchmarks/
 __pycache__
 
 # Documentation stuff
@@ -13,3 +15,6 @@ docs/api/
 docs/_build
 _book/
 node_modules/
+
+# JetBrains IDE
+.idea/
