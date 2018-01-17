@@ -42,7 +42,6 @@ def disco_main(run=False):
 
     from disco.client import Client, ClientConfig
     from disco.bot import Bot, BotConfig
-    from disco.util.token import is_valid_token
     from disco.util.logging import setup_logging
 
     if os.path.exists(args.config):
@@ -59,10 +58,6 @@ def disco_main(run=False):
     for k, v in six.iteritems(vars(args)):
         if hasattr(config, k) and v is not None:
             setattr(config, k, v)
-
-    if not is_valid_token(config.token):
-        print('Invalid token passed')
-        return
 
     if args.shard_auto:
         from disco.gateway.sharder import AutoSharder
