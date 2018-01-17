@@ -2,4 +2,4 @@ gevent==1.2.2
 holster==2.0.0
 requests==2.18.4
 six==1.11.0
-websocket-client==0.44.0
+websocket-client==0.46.0
