@@ -65,8 +65,12 @@ class UDPVoiceClient(LoggingClass):
         struct.pack_into('>I', self._buffer, 4, timestamp or self.vc.timestamp)
         struct.pack_into('>i', self._buffer, 8, self.vc.ssrc)
 
-        # Now encrypt the payload with the nonce as a header
-        raw = self.vc.secret_box.encrypt(bytes(frame), bytes(self._buffer)).ciphertext
+        if self.vc.mode == 'xsalsa20_poly1305_suffix':
+            nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+            raw = self.vc.secret_box.encrypt(bytes(frame), nonce).ciphertext + nonce
+        else:
+            # Now encrypt the payload with the nonce as a header
+            raw = self.vc.secret_box.encrypt(bytes(frame), bytes(self._buffer)).ciphertext
 
         # Send the header (sans nonce padding) plus the payload
         self.send(self._buffer[:12] + raw)
@@ -118,6 +122,11 @@ class UDPVoiceClient(LoggingClass):
 
 
 class VoiceClient(LoggingClass):
+    SUPPORTED_MODES = {
+        'xsalsa20_poly1305_suffix',
+        'xsalsa20_poly1305',
+    }
+
     def __init__(self, channel, encoder=None):
         super(VoiceClient, self).__init__()
 
@@ -142,6 +151,7 @@ class VoiceClient(LoggingClass):
         self.endpoint = None
         self.ssrc = None
         self.port = None
+        self.mode = None
         self.secret_box = None
         self.udp = None
 
@@ -188,6 +198,14 @@ class VoiceClient(LoggingClass):
         self.ssrc = data['ssrc']
         self.port = data['port']
 
+        for mode in self.SUPPORTED_MODES:
+            if mode in data['modes']:
+                self.mode = mode
+                self.log.debug('[%s] Selected mode %s', self, mode)
+                break
+        else:
+            raise Exception('Failed to find a supported voice mode')
+
         self.heartbeat_task = gevent.spawn(self.heartbeat, data['heartbeat_interval'])
 
         self.log.debug('[%s] Attempting IP discovery over UDP to %s:%s', self, self.endpoint, self.port)
@@ -205,12 +223,13 @@ class VoiceClient(LoggingClass):
             'data': {
                 'port': port,
                 'address': ip,
-                'mode': 'xsalsa20_poly1305',
+                'mode': self.mode,
             },
         })
 
     def on_voice_sdp(self, sdp):
         self.log.info('[%s] Recieved session description, connection completed', self)
+
         # Create a secret box for encryption/decryption
         self.secret_box = nacl.secret.SecretBox(bytes(bytearray(sdp['secret_key'])))
 
