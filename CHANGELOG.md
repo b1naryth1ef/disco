@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## v0.0.12-rc.4
+
+### Additions
+
+- **MAJOR** Added voice gateway v3 support. This will result in increased stability for voice connections
+- Added support for ETF on Python 3.x via `earl-etf` (@GiovanniMCMXCIX)
+- Supported detecting dead/inactive/zombied Gateway websocket connections via tracking `HEARTBEAT_ACK` (@PixeLInc)
+- Added support for animated emoji (@Seklfreak)
+- Added support for `LISTENING` and `WATCHING` game statuses (@PixeLInc)
+- Added `wsaccel` package within the `performance` pack, should improve websocket performance
+- Bumped various requirement versions
+
+### Fixes
+
+- Fixed `shared_config` requiring the `shared` configuration key to be set (@SpencerSharkey)
+- Fixed 'Invalid token passed' errors from showing up (via removal of token validation)
+- Fixed `IndexError` being raised when `MessageIterator` was done iterating (@Majora320)
+
 ## v0.0.12-rc.3
 
 ### Additions
