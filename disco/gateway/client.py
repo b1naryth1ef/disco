@@ -40,6 +40,7 @@ class GatewayClient(LoggingClass):
         # Create emitter and bind to gateway payloads
         self.packets.on((RECV, OPCode.DISPATCH), self.handle_dispatch)
         self.packets.on((RECV, OPCode.HEARTBEAT), self.handle_heartbeat)
+        self.packets.on((RECV, OPCode.HEARTBEAT_ACK), self.handle_heartbeat_acknowledge)
         self.packets.on((RECV, OPCode.RECONNECT), self.handle_reconnect)
         self.packets.on((RECV, OPCode.INVALID_SESSION), self.handle_invalid_session)
         self.packets.on((RECV, OPCode.HELLO), self.handle_hello)
@@ -67,6 +68,7 @@ class GatewayClient(LoggingClass):
 
         # Heartbeat
         self._heartbeat_task = None
+        self._heartbeat_acknowledged = True
 
     def send(self, op, data):
         self.limiter.check()
@@ -82,7 +84,14 @@ class GatewayClient(LoggingClass):
 
     def heartbeat_task(self, interval):
         while True:
+            if not self._heartbeat_acknowledged:
+                self.log.warning('Received HEARTBEAT without HEARTBEAT_ACK, forcing a fresh reconnect')
+                self._heartbeat_acknowledged = True
+                self.ws.close(status=4000)
+                return
+
             self._send(OPCode.HEARTBEAT, self.seq)
+            self._heartbeat_acknowledged = False
             gevent.sleep(interval / 1000)
 
     def handle_dispatch(self, packet):
@@ -94,6 +103,10 @@ class GatewayClient(LoggingClass):
 
     def handle_heartbeat(self, _):
         self._send(OPCode.HEARTBEAT, self.seq)
+
+    def handle_heartbeat_acknowledge(self, _):
+        self.log.debug('Received HEARTBEAT_ACK')
+        self._heartbeat_acknowledged = True
 
     def handle_reconnect(self, _):
         self.log.warning('Received RECONNECT request, forcing a fresh reconnect')
