@@ -50,3 +50,7 @@ class MusicPlugin(Plugin):
     @Plugin.command('resume')
     def on_resume(self, event):
         self.get_player(event.guild.id).resume()
+
+    @Plugin.command('kill')
+    def on_kill(self, event):
+        self.get_player(event.guild.id).client.ws.sock.shutdown()

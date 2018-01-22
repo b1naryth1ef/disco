@@ -6,11 +6,10 @@ from holster.emitter import Emitter
 
 from disco.voice.client import VoiceState
 from disco.voice.queue import PlayableQueue
+from disco.util.logging import LoggingClass
 
-MAX_TIMESTAMP = 4294967295
 
-
-class Player(object):
+class Player(LoggingClass):
     Events = Enum(
         'START_PLAY',
         'STOP_PLAY',
@@ -20,6 +19,7 @@ class Player(object):
     )
 
     def __init__(self, client, queue=None):
+        super(Player, self).__init__()
         self.client = client
 
         # Queue contains playable items
@@ -92,12 +92,11 @@ class Player(object):
                 return
 
             if self.client.state != VoiceState.CONNECTED:
-                self.client.state_emitter.wait(VoiceState.CONNECTED)
+                self.client.state_emitter.once(VoiceState.CONNECTED, timeout=30)
 
+            # Send the voice frame and increment our timestamp
             self.client.send_frame(frame)
-            self.client.timestamp += item.samples_per_frame
-            if self.client.timestamp > MAX_TIMESTAMP:
-                self.client.timestamp = 0
+            self.client.increment_timestamp(item.samples_per_frame)
 
             frame = item.next_frame()
             if frame is None:
