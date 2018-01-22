@@ -58,6 +58,8 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
 GameType = Enum(
     DEFAULT=0,
     STREAMING=1,
+    LISTENING=2,
+    WATCHING=3,
 )
 
 Status = Enum(
