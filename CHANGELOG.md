@@ -1,53 +1,17 @@
 # CHANGELOG
 
-## v0.0.12-rc.4
+## v0.0.12
 
 ### Additions
 
 - **MAJOR** Added voice gateway v3 support. This will result in increased stability for voice connections
+- **BREAKING** Updated holster to v2.0.0 which changes the way emitters work (and removes the previous priorities). A migration guide will be provided post-RC cycle.
 - Added support for ETF on Python 3.x via `earl-etf` (@GiovanniMCMXCIX)
 - Supported detecting dead/inactive/zombied Gateway websocket connections via tracking `HEARTBEAT_ACK` (@PixeLInc)
 - Added support for animated emoji (@Seklfreak)
 - Added support for `LISTENING` and `WATCHING` game statuses (@PixeLInc)
 - Added `wsaccel` package within the `performance` pack, should improve websocket performance
-- Bumped various requirement versions
-
-### Fixes
-
-- Fixed `shared_config` requiring the `shared` configuration key to be set (@SpencerSharkey)
-- Fixed 'Invalid token passed' errors from showing up (via removal of token validation)
-- Fixed `IndexError` being raised when `MessageIterator` was done iterating (@Majora320)
-
-## v0.0.12-rc.3
-
-### Additions
-
-- **BREAKING** Updated holster to v2.0.0 which changes the way emitters work (and removes the previous priorities). A migration guide will be provided post-RC cycle.
 - Added the concept of a `shared_config` which propgates its options to all plugin configs (@enkoder)
-
-### Fixes
-
-- Fixed using the ETF encoder while also using zlib-stream
-- Fixed overwrite calculations in `Channel.get_permissions` (@cookkkie)
-
-### Etc
-
-- Cleaned up various documentation
-- Removed some outdated storage/etc examples
-
-## v0.0.12-rc.2
-
-### Fixes
-
-- A plethora of PEP8 and general syntax changes have been made to cleanup the code
-- Fixed the invocation of holster Emitters to match the latest versions constructor signature
-- Fixed a bug with `Emoji.custom`
-- Fixed a bug in the typing system that would not allow Field's to have a `default` of `None`
-
-## v0.0.12-rc.1
-
-### Additions
-
 - Added support for streaming zlib compression to our gateway socket. This is enabled by default and provides significant performance improvements on startup and overall bandwidth usage
 - Added support for `Guild.system_channel_id` and `GUILD_MEMBER_JOIN` system message
 - Added `Guild.create_category`, `Guild.create_text_channel` and `Guild.create_voice_channel`
@@ -55,6 +19,12 @@
 
 ### Fixes
 
+- Fixed 'Invalid token passed' errors from showing up (via removal of token validation)
+- Fixed `IndexError` being raised when `MessageIterator` was done iterating (@Majora320)
+- Fixed overwrite calculations in `Channel.get_permissions` (@cookkkie)
+- A plethora of PEP8 and general syntax changes have been made to cleanup the code
+- Fixed a bug with `Emoji.custom`
+- Fixed a bug in the typing system that would not allow Field's to have a `default` of `None`
 - Fixed the `__str__` method for Channel's displaying (useless) unset data for DMs
 - Fixed a bug with `MessageIterator` related to iterating before or after an ID of 0
 - Fixed incorrect field name (`icon_proxy_url` vs `proxy_icon_url`) in MessageEmbedAuthor model
@@ -68,7 +38,10 @@
 - **BREAKING** Refactor the way Role's are managed and updated. You should update your code to use `Role.update`
 - **BREAKING** Renamed `Model.update` to `Model.inplace_update`. You should not have to worry about this change unless you explicitly call that method
 - **DEPRECATION** Deprecated the use of `Guild.create_channel`. You should use the explicit channel type creation methods added in this release
+- Cleaned up various documentation
+- Removed some outdated storage/etc examples
 - Expanded `APIClient.guilds_roles_create` to handle more attributes
+- Bumped various requirement versions
 
 ## v0.0.11
 
