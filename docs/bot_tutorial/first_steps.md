@@ -10,7 +10,7 @@ Once you have a Discord bot account, you can then setup your workspace. For now 
 
 ```
 disco-tutorial/
-  config.yaml
+  config.json
   plugins/
     __init__.py
     tutorial.py
@@ -23,12 +23,15 @@ The \_\_init\_\_.py file is required for Python to find your plugin, but it can 
 
 Now let's setup the configuration file. To start off with we'll paste the following template in and modify our token key (`MY_BOT_TOKEN_HERE`) to be the token we obtained above. The plugins section tells disco what plugins to load, based on a module path (similar to how Python imports work). In this example we're asking disco to load the plugin contained in the tutorial file within the plugins directory (or "module"). Disco by default loads the first plugin it finds within the module, so you want to make sure each plugin class is contained within its own file.
 
-```yaml
-token: 'MY_BOT_TOKEN_HERE'
-
-bot:
-  plugins:
-		- plugins.tutorial
+```json
+{
+  "token": "MY_BOT_TOKEN_HERE",
+  "bot": {
+    "plugins": [
+      "plugins.tutorial"
+    ]
+  }
+}
 ```
 
 
@@ -48,7 +51,7 @@ Now that we have a plugin setup and our configuration is ready, we can run and t
 
 
 ```sh
-python -m disco.cli --config config.yaml
+python -m disco.cli --config config.json
 ```
 
 If all is successful, you can then test your bot by mentioning it with the command, like so:
