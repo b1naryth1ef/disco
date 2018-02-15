@@ -400,17 +400,24 @@ class Bot(LoggingClass):
             self.last_message_cache[event.message.channel_id] = (event.message, result)
 
     def on_message_update(self, event):
-        if self.config.commands_allow_edit:
-            obj = self.last_message_cache.get(event.message.channel_id)
-            if not obj:
-                return
+        if not self.config.commands_allow_edit:
+            return
 
-            msg, triggered = obj
-            if msg.id == event.message.id and not triggered:
-                msg.inplace_update(event.message)
-                triggered = self.handle_message(msg)
+        # Ignore messages that do not have content, these can happen when only
+        #  some message fields are updated.
+        if not event.message.content:
+            return
 
-                self.last_message_cache[msg.channel_id] = (msg, triggered)
+        obj = self.last_message_cache.get(event.message.channel_id)
+        if not obj:
+            return
+
+        msg, triggered = obj
+        if msg.id == event.message.id and not triggered:
+            msg.inplace_update(event.message)
+            triggered = self.handle_message(msg)
+
+            self.last_message_cache[msg.channel_id] = (msg, triggered)
 
     def add_plugin(self, inst, config=None, ctx=None):
         """
