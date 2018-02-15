@@ -146,12 +146,18 @@ class Bot(LoggingClass):
         if self.client.config.manhole_enable:
             self.client.manhole_locals['bot'] = self
 
+        # Setup HTTP server (Flask app) if enabled
+        self.http = None
         if self.config.http_enabled:
-            from flask import Flask
-            self.log.info('Starting HTTP server bound to %s:%s', self.config.http_host, self.config.http_port)
-            self.http = Flask('disco')
-            self.http_server = WSGIServer((self.config.http_host, self.config.http_port), self.http)
-            self.http_server_greenlet = gevent.spawn(self.http_server.serve_forever)
+            try:
+                from flask import Flask
+            except ImportError:
+                self.log.warning('Failed to enable HTTP server, Flask is not installed')
+            else:
+                self.log.info('Starting HTTP server bound to %s:%s', self.config.http_host, self.config.http_port)
+                self.http = Flask('disco')
+                self.http_server = WSGIServer((self.config.http_host, self.config.http_port), self.http)
+                self.http_server_greenlet = gevent.spawn(self.http_server.serve_forever)
 
         self.plugins = {}
         self.group_abbrev = {}
