@@ -1,0 +1,1459 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>disco.types.guild · Disco</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.2">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-hints/plugin-hints.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="disco_types_invite.html" />
+    
+    
+    <link rel="prev" href="disco_types_channel.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../installation.html">
+            
+                <a href="../installation.html">
+            
+                    
+                    Installation and Setup
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../bot_tutorial/intro.md">
+            
+                <span>
+            
+                    
+                    Bot Tutorial
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="../bot_tutorial/first_steps.html">
+            
+                <a href="../bot_tutorial/first_steps.html">
+            
+                    
+                    Creating and Running a Bot
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="../bot_tutorial/building_block_plugins.html">
+            
+                <a href="../bot_tutorial/building_block_plugins.html">
+            
+                    
+                    Plugins
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.3" data-path="../bot_tutorial/building_block_commands.html">
+            
+                <a href="../bot_tutorial/building_block_commands.html">
+            
+                    
+                    Commands
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.4" data-path="../bot_tutorial/building_block_listeners.html">
+            
+                <a href="../bot_tutorial/building_block_listeners.html">
+            
+                    
+                    Listeners
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="../bot_tutorial/message_embeds.html">
+            
+                <a href="../bot_tutorial/message_embeds.html">
+            
+                    
+                    Message Embeds
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.6" data-path="../bot_tutorial/advanced.html">
+            
+                <a href="../bot_tutorial/advanced.html">
+            
+                    
+                    Advanced
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" >
+            
+                <span>
+            
+                    
+                    API Docs
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="disco_client.html">
+            
+                <a href="disco_client.html">
+            
+                    
+                    disco.client
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="disco_state.html">
+            
+                <a href="disco_state.html">
+            
+                    
+                    disco.state
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="disco_cli.html">
+            
+                <a href="disco_cli.html">
+            
+                    
+                    disco.cli
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" >
+            
+                <span>
+            
+                    
+                    Bot
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.4.1" data-path="disco_bot_bot.html">
+            
+                <a href="disco_bot_bot.html">
+            
+                    
+                    disco.bot.bot
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4.2" data-path="disco_bot_plugin.html">
+            
+                <a href="disco_bot_plugin.html">
+            
+                    
+                    disco.bot.plugin
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4.3" data-path="disco_bot_command.html">
+            
+                <a href="disco_bot_command.html">
+            
+                    
+                    disco.bot.command
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4.4" data-path="disco_bot_storage.html">
+            
+                <a href="disco_bot_storage.html">
+            
+                    
+                    disco.bot.storage
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4.5" data-path="disco_bot_parser.html">
+            
+                <a href="disco_bot_parser.html">
+            
+                    
+                    disco.bot.parser
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" >
+            
+                <span>
+            
+                    
+                    API
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.5.1" data-path="disco_api_client.html">
+            
+                <a href="disco_api_client.html">
+            
+                    
+                    disco.api.client
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5.2" data-path="disco_api_http.html">
+            
+                <a href="disco_api_http.html">
+            
+                    
+                    disco.api.http
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5.3" data-path="disco_api_ratelimit.html">
+            
+                <a href="disco_api_ratelimit.html">
+            
+                    
+                    disco.api.ratelimit
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" >
+            
+                <span>
+            
+                    
+                    Gateway
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.6.1" data-path="disco_gateway_client.html">
+            
+                <a href="disco_gateway_client.html">
+            
+                    
+                    disco.gateway.client
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6.2" data-path="disco_gateway_events.html">
+            
+                <a href="disco_gateway_events.html">
+            
+                    
+                    disco.gateway.events
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6.3" data-path="disco_gateway_packets.html">
+            
+                <a href="disco_gateway_packets.html">
+            
+                    
+                    disco.gateway.packets
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6.4" data-path="disco_gateway_sharder.html">
+            
+                <a href="disco_gateway_sharder.html">
+            
+                    
+                    disco.gateway.sharder
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6.5" data-path="disco_gateway_ipc.html">
+            
+                <a href="disco_gateway_ipc.html">
+            
+                    
+                    disco.gateway.ipc
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" >
+            
+                <span>
+            
+                    
+                    Types
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.7.1" data-path="disco_types_base.html">
+            
+                <a href="disco_types_base.html">
+            
+                    
+                    disco.types.base
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.2" data-path="disco_types_channel.html">
+            
+                <a href="disco_types_channel.html">
+            
+                    
+                    disco.types.channel
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.4.7.3" data-path="disco_types_guild.html">
+            
+                <a href="disco_types_guild.html">
+            
+                    
+                    disco.types.guild
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.4" data-path="disco_types_invite.html">
+            
+                <a href="disco_types_invite.html">
+            
+                    
+                    disco.types.invite
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.5" data-path="disco_types_message.html">
+            
+                <a href="disco_types_message.html">
+            
+                    
+                    disco.types.message
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.6" data-path="disco_types_permissions.html">
+            
+                <a href="disco_types_permissions.html">
+            
+                    
+                    disco.types.permissions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.7" data-path="disco_types_user.html">
+            
+                <a href="disco_types_user.html">
+            
+                    
+                    disco.types.user
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.8" data-path="disco_types_voice.html">
+            
+                <a href="disco_types_voice.html">
+            
+                    
+                    disco.types.voice
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.9" data-path="disco_types_webhook.html">
+            
+                <a href="disco_types_webhook.html">
+            
+                    
+                    disco.types.webhook
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8" >
+            
+                <span>
+            
+                    
+                    Util
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.8.1" data-path="disco_util.html">
+            
+                <a href="disco_util.html">
+            
+                    
+                    disco.util
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.2" data-path="disco_util_backdoor.html">
+            
+                <a href="disco_util_backdoor.html">
+            
+                    
+                    disco.util.backdoor
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.3" data-path="disco_util_chains.html">
+            
+                <a href="disco_util_chains.html">
+            
+                    
+                    disco.util.chains
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.4" data-path="disco_util_config.html">
+            
+                <a href="disco_util_config.html">
+            
+                    
+                    disco.util.config
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.5" data-path="disco_util_functional.html">
+            
+                <a href="disco_util_functional.html">
+            
+                    
+                    disco.util.functional
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.6" data-path="disco_util_hashmap.html">
+            
+                <a href="disco_util_hashmap.html">
+            
+                    
+                    disco.util.hashmap
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.7" data-path="disco_util_limiter.html">
+            
+                <a href="disco_util_limiter.html">
+            
+                    
+                    disco.util.limiter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.8" data-path="disco_util_logging.html">
+            
+                <a href="disco_util_logging.html">
+            
+                    
+                    disco.util.logging
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.9" data-path="disco_util_sanitize.html">
+            
+                <a href="disco_util_sanitize.html">
+            
+                    
+                    disco.util.sanitize
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.10" data-path="disco_util_snowflake.html">
+            
+                <a href="disco_util_snowflake.html">
+            
+                    
+                    disco.util.snowflake
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.11" data-path="disco_util_token.html">
+            
+                <a href="disco_util_token.html">
+            
+                    
+                    disco.util.token
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.12" data-path="disco_util_websocket.html">
+            
+                <a href="disco_util_websocket.html">
+            
+                    
+                    disco.util.websocket
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9" >
+            
+                <span>
+            
+                    
+                    Voice
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.9.1" data-path="disco_voice_client.html">
+            
+                <a href="disco_voice_client.html">
+            
+                    
+                    disco.voice.client
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9.2" data-path="disco_voice_opus.html">
+            
+                <a href="disco_voice_opus.html">
+            
+                    
+                    disco.voice.opus
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9.3" data-path="disco_voice_packets.html">
+            
+                <a href="disco_voice_packets.html">
+            
+                    
+                    disco.voice.packets
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9.4" data-path="disco_voice_playable.html">
+            
+                <a href="disco_voice_playable.html">
+            
+                    
+                    disco.voice.playable
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9.5" data-path="disco_voice_player.html">
+            
+                <a href="disco_voice_player.html">
+            
+                    
+                    disco.voice.player
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >disco.types.guild</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="discotypesguild">disco.types.guild</h1>
+<h2 id="constants">Constants</h2>
+<pre class="language-"><code class="lang-python">VerificationLevel <span class="token operator">=</span> Enum<span class="token punctuation">(</span>
+  NONE <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span>
+  LOW <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">,</span>
+  MEDIUM <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">,</span>
+  HIGH <span class="token operator">=</span> <span class="token number">3</span><span class="token punctuation">,</span>
+  EXTREME <span class="token operator">=</span> <span class="token number">4</span><span class="token punctuation">)</span>
+</code></pre>
+<pre class="language-"><code class="lang-python">ExplicitContentFilterLevel <span class="token operator">=</span> Enum<span class="token punctuation">(</span>
+  NONE <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span>
+  WITHOUT_ROLES <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">,</span>
+  ALL <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">)</span>
+</code></pre>
+<pre class="language-"><code class="lang-python">DefaultMessageNotificationsLevel <span class="token operator">=</span> Enum<span class="token punctuation">(</span>
+  ALL_MESSAGES <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span>
+  ONLY_MENTIONS <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">)</span>
+</code></pre>
+<pre class="language-"><code class="lang-python">AuditLogActionTypes <span class="token operator">=</span> Enum<span class="token punctuation">(</span>
+  GUILD_UPDATE <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">,</span>
+  CHANNEL_CREATE <span class="token operator">=</span> <span class="token number">10</span><span class="token punctuation">,</span>
+  CHANNEL_UPDATE <span class="token operator">=</span> <span class="token number">11</span><span class="token punctuation">,</span>
+  CHANNEL_DELETE <span class="token operator">=</span> <span class="token number">12</span><span class="token punctuation">,</span>
+  CHANNEL_OVERWRITE_CREATE <span class="token operator">=</span> <span class="token number">13</span><span class="token punctuation">,</span>
+  CHANNEL_OVERWRITE_UPDATE <span class="token operator">=</span> <span class="token number">14</span><span class="token punctuation">,</span>
+  CHANNEL_OVERWRITE_DELETE <span class="token operator">=</span> <span class="token number">15</span><span class="token punctuation">,</span>
+  MEMBER_KICK <span class="token operator">=</span> <span class="token number">20</span><span class="token punctuation">,</span>
+  MEMBER_PRUNE <span class="token operator">=</span> <span class="token number">21</span><span class="token punctuation">,</span>
+  MEMBER_BAN_ADD <span class="token operator">=</span> <span class="token number">22</span><span class="token punctuation">,</span>
+  MEMBER_BAN_REMOVE <span class="token operator">=</span> <span class="token number">23</span><span class="token punctuation">,</span>
+  MEMBER_UPDATE <span class="token operator">=</span> <span class="token number">24</span><span class="token punctuation">,</span>
+  MEMBER_ROLE_UPDATE <span class="token operator">=</span> <span class="token number">25</span><span class="token punctuation">,</span>
+  ROLE_CREATE <span class="token operator">=</span> <span class="token number">30</span><span class="token punctuation">,</span>
+  ROLE_UPDATE <span class="token operator">=</span> <span class="token number">31</span><span class="token punctuation">,</span>
+  ROLE_DELETE <span class="token operator">=</span> <span class="token number">32</span><span class="token punctuation">,</span>
+  INVITE_CREATE <span class="token operator">=</span> <span class="token number">40</span><span class="token punctuation">,</span>
+  INVITE_UPDATE <span class="token operator">=</span> <span class="token number">41</span><span class="token punctuation">,</span>
+  INVITE_DELETE <span class="token operator">=</span> <span class="token number">42</span><span class="token punctuation">,</span>
+  WEBHOOK_CREATE <span class="token operator">=</span> <span class="token number">50</span><span class="token punctuation">,</span>
+  WEBHOOK_UPDATE <span class="token operator">=</span> <span class="token number">51</span><span class="token punctuation">,</span>
+  WEBHOOK_DELETE <span class="token operator">=</span> <span class="token number">52</span><span class="token punctuation">,</span>
+  EMOJI_CREATE <span class="token operator">=</span> <span class="token number">60</span><span class="token punctuation">,</span>
+  EMOJI_UPDATE <span class="token operator">=</span> <span class="token number">61</span><span class="token punctuation">,</span>
+  EMOJI_DELETE <span class="token operator">=</span> <span class="token number">62</span><span class="token punctuation">,</span>
+  MESSAGE_DELETE <span class="token operator">=</span> <span class="token number">72</span><span class="token punctuation">)</span>
+</code></pre>
+<p>{&apos;type&apos;: &apos;assign&apos;, &apos;targets&apos;: [&apos;GUILD_ACTIONS&apos;], &apos;value&apos;: {&apos;elts&apos;: [{&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;GUILD_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}], &apos;type&apos;: &apos;tuple&apos;}}</p>
+<p>{&apos;type&apos;: &apos;assign&apos;, &apos;targets&apos;: [&apos;CHANNEL_ACTIONS&apos;], &apos;value&apos;: {&apos;elts&apos;: [{&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;CHANNEL_CREATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;CHANNEL_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;CHANNEL_DELETE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;CHANNEL_OVERWRITE_CREATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;CHANNEL_OVERWRITE_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;CHANNEL_OVERWRITE_DELETE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}], &apos;type&apos;: &apos;tuple&apos;}}</p>
+<p>{&apos;type&apos;: &apos;assign&apos;, &apos;targets&apos;: [&apos;MEMBER_ACTIONS&apos;], &apos;value&apos;: {&apos;elts&apos;: [{&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;MEMBER_KICK&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;MEMBER_PRUNE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;MEMBER_BAN_ADD&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;MEMBER_BAN_REMOVE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;MEMBER_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;MEMBER_ROLE_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}], &apos;type&apos;: &apos;tuple&apos;}}</p>
+<p>{&apos;type&apos;: &apos;assign&apos;, &apos;targets&apos;: [&apos;ROLE_ACTIONS&apos;], &apos;value&apos;: {&apos;elts&apos;: [{&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;ROLE_CREATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;ROLE_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;ROLE_DELETE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}], &apos;type&apos;: &apos;tuple&apos;}}</p>
+<p>{&apos;type&apos;: &apos;assign&apos;, &apos;targets&apos;: [&apos;INVITE_ACTIONS&apos;], &apos;value&apos;: {&apos;elts&apos;: [{&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;INVITE_CREATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;INVITE_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;INVITE_DELETE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}], &apos;type&apos;: &apos;tuple&apos;}}</p>
+<p>{&apos;type&apos;: &apos;assign&apos;, &apos;targets&apos;: [&apos;WEBHOOK_ACTIONS&apos;], &apos;value&apos;: {&apos;elts&apos;: [{&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;WEBHOOK_CREATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;WEBHOOK_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;WEBHOOK_DELETE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}], &apos;type&apos;: &apos;tuple&apos;}}</p>
+<p>{&apos;type&apos;: &apos;assign&apos;, &apos;targets&apos;: [&apos;EMOJI_ACTIONS&apos;], &apos;value&apos;: {&apos;elts&apos;: [{&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;EMOJI_CREATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;EMOJI_UPDATE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}, {&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;EMOJI_DELETE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}], &apos;type&apos;: &apos;tuple&apos;}}</p>
+<p>{&apos;type&apos;: &apos;assign&apos;, &apos;targets&apos;: [&apos;MESSAGE_ACTIONS&apos;], &apos;value&apos;: {&apos;elts&apos;: [{&apos;type&apos;: &apos;attribute&apos;, &apos;name&apos;: &apos;MESSAGE_DELETE&apos;, &apos;value&apos;: &apos;AuditLogActionTypes&apos;}], &apos;type&apos;: &apos;tuple&apos;}}</p>
+<h2 id="classes">Classes</h2>
+<h3 id="guildemoji">GuildEmoji</h3>
+<p><em>Inherits From <code>Emoji</code></em></p>
+<p>An emoji object.</p>
+<h5 id="attributes">Attributes</h5>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td><code>snowflake</code></td>
+<td>The ID of this emoji.</td>
+</tr>
+<tr>
+<td>name</td>
+<td><code>str</code></td>
+<td>The name of this emoji.</td>
+</tr>
+<tr>
+<td>require_colons</td>
+<td><code>bool</code></td>
+<td>Whether this emoji requires colons to use.</td>
+</tr>
+<tr>
+<td>managed</td>
+<td><code>bool</code></td>
+<td>Whether this emoji is managed by an integration.</td>
+</tr>
+<tr>
+<td>roles</td>
+<td><code>list(snowflake)</code></td>
+<td>Roles this emoji is attached to.</td>
+</tr>
+<tr>
+<td>animated</td>
+<td><code>bool</code></td>
+<td>Whether this emoji is animated.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="functions">Functions</h4>
+<h4 id="strself"><strong>str</strong>(<code>self</code>)</h4>
+<h4 id="updateselfkwargs">update(<code>self,**kwargs</code>)</h4>
+<h4 id="deleteselfkwargs">delete(<code>self,**kwargs</code>)</h4>
+<h4 id="urlself">url(<code>self</code>)</h4>
+<h4 id="guildself">guild(<code>self</code>)</h4>
+<h3 id="role">Role</h3>
+<p><em>Inherits From <code>SlottedModel</code></em></p>
+<p>A role object.</p>
+<h5 id="attributes">Attributes</h5>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td><code>snowflake</code></td>
+<td>The role ID.</td>
+</tr>
+<tr>
+<td>name</td>
+<td><code>string</code></td>
+<td>The role name.</td>
+</tr>
+<tr>
+<td>hoist</td>
+<td><code>bool</code></td>
+<td>Whether this role is hoisted (displayed separately in the sidebar).</td>
+</tr>
+<tr>
+<td>managed</td>
+<td><code>bool</code></td>
+<td>Whether this role is managed by an integration.</td>
+</tr>
+<tr>
+<td>color</td>
+<td><code>int</code></td>
+<td>The RGB color of this role.</td>
+</tr>
+<tr>
+<td>permissions</td>
+<td><code>:class:`disco.types.permissions.PermissionsValue`</code></td>
+<td>The permissions this role grants.</td>
+</tr>
+<tr>
+<td>position</td>
+<td><code>int</code></td>
+<td>The position of this role in the hierarchy.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="functions">Functions</h4>
+<h4 id="strself"><strong>str</strong>(<code>self</code>)</h4>
+<h4 id="deleteselfkwargs">delete(<code>self,**kwargs</code>)</h4>
+<h4 id="updateselfargskwargs">update(<code>self,*args,**kwargs</code>)</h4>
+<h4 id="mentionself">mention(<code>self</code>)</h4>
+<h4 id="guildself">guild(<code>self</code>)</h4>
+<h3 id="guildban">GuildBan</h3>
+<p><em>Inherits From <code>SlottedModel</code></em></p>
+<h3 id="guildmember">GuildMember</h3>
+<p><em>Inherits From <code>SlottedModel</code></em></p>
+<p>A GuildMember object.</p>
+<h5 id="attributes">Attributes</h5>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>user</td>
+<td><code>:class:`disco.types.user.User`</code></td>
+<td>The user object of this member.</td>
+</tr>
+<tr>
+<td>guild_id</td>
+<td><code>snowflake</code></td>
+<td>The guild this member is part of.</td>
+</tr>
+<tr>
+<td>nick</td>
+<td><code>str</code></td>
+<td>The nickname of the member.</td>
+</tr>
+<tr>
+<td>mute</td>
+<td><code>bool</code></td>
+<td>Whether this member is server voice-muted.</td>
+</tr>
+<tr>
+<td>deaf</td>
+<td><code>bool</code></td>
+<td>Whether this member is server voice-deafened.</td>
+</tr>
+<tr>
+<td>joined_at</td>
+<td><code>datetime</code></td>
+<td>When this user joined the guild.</td>
+</tr>
+<tr>
+<td>roles</td>
+<td><code>list(snowflake)</code></td>
+<td>Roles this member is part of.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="functions">Functions</h4>
+<h4 id="strself"><strong>str</strong>(<code>self</code>)</h4>
+<h4 id="nameself">name(<code>self</code>)</h4>
+<p>The nickname of this user if set, otherwise their username</p>
+<h4 id="getvoicestateself">get_voice_state(<code>self</code>)</h4>
+<h5 id="returns">Returns</h5>
+<pre class="language-"><code>Returns the voice state for the member if they are currently connected
+to the guild&apos;s voice server.
+</code></pre><h4 id="kickselfkwargs">kick(<code>self,**kwargs</code>)</h4>
+<p>Kicks the member from the guild.</p>
+<h4 id="banself-deletemessagedayskwargs">ban(<code>self, delete_message_days,**kwargs)</code></h4>
+<p>Bans the member from the guild.</p>
+<h5 id="args">Args</h5>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>delete_message_days</td>
+<td><code>int</code></td>
+<td>The number of days to retroactively delete messages for.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="unbanselfkwargs">unban(<code>self,**kwargs</code>)</h4>
+<p>Unbans the member from the guild.</p>
+<h4 id="setnicknameself-nicknamekwargs">set_nickname(<code>self, nickname,**kwargs)</code></h4>
+<p>Sets the member&apos;s nickname (or clears it if None).</p>
+<h5 id="args">Args</h5>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nickname</td>
+<td><code>Optional[str]</code></td>
+<td>The nickname (or none to reset) to set.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="modifyselfkwargs">modify(<code>self,**kwargs</code>)</h4>
+<h4 id="addroleself-rolekwargs">add_role(<code>self, role,**kwargs)</code></h4>
+<h4 id="removeroleself-rolekwargs">remove_role(<code>self, role,**kwargs)</code></h4>
+<h4 id="ownerself">owner(<code>self</code>)</h4>
+<h4 id="mentionself">mention(<code>self</code>)</h4>
+<h4 id="idself">id(<code>self</code>)</h4>
+<p>Alias to the guild members user id.</p>
+<h4 id="guildself">guild(<code>self</code>)</h4>
+<h4 id="permissionsself">permissions(<code>self</code>)</h4>
+<h3 id="guild">Guild</h3>
+<p><em>Inherits From <code>SlottedModel</code>, <code>Permissible</code></em></p>
+<p>A guild object.</p>
+<h5 id="attributes">Attributes</h5>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td><code>snowflake</code></td>
+<td>The id of this guild.</td>
+</tr>
+<tr>
+<td>owner_id</td>
+<td><code>snowflake</code></td>
+<td>The id of the owner.</td>
+</tr>
+<tr>
+<td>afk_channel_id</td>
+<td><code>snowflake</code></td>
+<td>The id of the afk channel.</td>
+</tr>
+<tr>
+<td>embed_channel_id</td>
+<td><code>snowflake</code></td>
+<td>The id of the embed channel.</td>
+</tr>
+<tr>
+<td>system_channel_id</td>
+<td><code>snowflake</code></td>
+<td>The id of the system channel.</td>
+</tr>
+<tr>
+<td>name</td>
+<td><code>str</code></td>
+<td>Guild&apos;s name.</td>
+</tr>
+<tr>
+<td>icon</td>
+<td><code>str</code></td>
+<td>Guild&apos;s icon hash</td>
+</tr>
+<tr>
+<td>splash</td>
+<td><code>str</code></td>
+<td>Guild&apos;s splash image hash</td>
+</tr>
+<tr>
+<td>region</td>
+<td><code>str</code></td>
+<td>Voice region.</td>
+</tr>
+<tr>
+<td>afk_timeout</td>
+<td><code>int</code></td>
+<td>Delay after which users are automatically moved to the afk channel.</td>
+</tr>
+<tr>
+<td>embed_enabled</td>
+<td><code>bool</code></td>
+<td>Whether the guild&apos;s embed is enabled.</td>
+</tr>
+<tr>
+<td>verification_level</td>
+<td><code>int</code></td>
+<td>The verification level used by the guild.</td>
+</tr>
+<tr>
+<td>mfa_level</td>
+<td><code>int</code></td>
+<td>The MFA level used by the guild.</td>
+</tr>
+<tr>
+<td>features</td>
+<td><code>list(str)</code></td>
+<td>Extra features enabled for this guild.</td>
+</tr>
+<tr>
+<td>members</td>
+<td><code>dict(snowflake, :class:`GuildMember`)</code></td>
+<td>All of the guild&apos;s members.</td>
+</tr>
+<tr>
+<td>channels</td>
+<td><code>dict(snowflake, :class:`disco.types.channel.Channel`)</code></td>
+<td>All of the guild&apos;s channels.</td>
+</tr>
+<tr>
+<td>roles</td>
+<td><code>dict(snowflake, :class:`Role`)</code></td>
+<td>All of the guild&apos;s roles.</td>
+</tr>
+<tr>
+<td>emojis</td>
+<td><code>dict(snowflake, :class:`GuildEmoji`)</code></td>
+<td>All of the guild&apos;s emojis.</td>
+</tr>
+<tr>
+<td>voice_states</td>
+<td><code>dict(str, :class:`disco.types.voice.VoiceState`)</code></td>
+<td>All of the guild&apos;s voice states.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="functions">Functions</h4>
+<h4 id="initselfargskwargs"><strong>init</strong>(<code>self,*args,**kwargs</code>)</h4>
+<h4 id="ownerself">owner(<code>self</code>)</h4>
+<h4 id="getpermissionsself-member">get_permissions(<code>self, member)</code></h4>
+<p>Get the permissions a user has in this guild.</p>
+<h5 id="returns">Returns</h5>
+<pre class="language-"><code>Computed permission value for the user.
+</code></pre><h4 id="getvoicestateself-user">get_voice_state(<code>self, user)</code></h4>
+<p>Attempt to get a voice state for a given user (who should be a member of
+this guild).</p>
+<h5 id="returns">Returns</h5>
+<pre class="language-"><code>The voice state for the user in this guild.
+</code></pre><h4 id="getmemberself-user">get_member(<code>self, user)</code></h4>
+<p>Attempt to get a member from a given user.</p>
+<h5 id="returns">Returns</h5>
+<pre class="language-"><code>The guild member object for the given user.
+</code></pre><h4 id="createroleselfkwargs">create_role(<code>self,**kwargs</code>)</h4>
+<p>Create a new role.</p>
+<h5 id="returns">Returns</h5>
+<pre class="language-"><code>The newly created role.
+</code></pre><h4 id="deleteroleself-rolekwargs">delete_role(<code>self, role,**kwargs)</code></h4>
+<p>Delete a role.</p>
+<h4 id="updateroleself-rolekwargs">update_role(<code>self, role,**kwargs)</code></h4>
+<h4 id="syncself">sync(<code>self</code>)</h4>
+<h4 id="getbansself">get_bans(<code>self</code>)</h4>
+<h4 id="deletebanself-userkwargs">delete_ban(<code>self, user,**kwargs)</code></h4>
+<h4 id="createbanself-userargskwargs">create_ban(<code>self, user,*args,**kwargs)</code></h4>
+<h4 id="createchannelselfargskwargs">create_channel(<code>self,*args,**kwargs</code>)</h4>
+<h4 id="createcategoryself-name-permissionoverwrites-positionnone-reasonnone">create_category(<code>self, name, permission_overwrites, position=None, reason=None)</code></h4>
+<p>Creates a category within the guild.</p>
+<h4 id="createtextchannelself-name-permissionoverwrites-parentidnone-nsfwnone-positionnone-reasonnone">create_text_channel(<code>self, name, permission_overwrites, parent_id=None, nsfw=None, position=None, reason=None)</code></h4>
+<p>Creates a text channel within the guild.</p>
+<h4 id="createvoicechannelself-name-permissionoverwrites-parentidnone-bitratenone-userlimitnone-positionnone-reasonnone">create_voice_channel(<code>self, name, permission_overwrites, parent_id=None, bitrate=None, user_limit=None, position=None, reason=None)</code></h4>
+<p>Creates a voice channel within the guild.</p>
+<h4 id="leaveself">leave(<code>self</code>)</h4>
+<h4 id="getinvitesself">get_invites(<code>self</code>)</h4>
+<h4 id="getemojisself">get_emojis(<code>self</code>)</h4>
+<h4 id="geticonurlself-fmt-size1024">get_icon_url(<code>self, fmt, size=1024)</code></h4>
+<h4 id="getsplashurlself-fmt-size1024">get_splash_url(<code>self, fmt, size=1024)</code></h4>
+<h4 id="iconurlself">icon_url(<code>self</code>)</h4>
+<h4 id="splashurlself">splash_url(<code>self</code>)</h4>
+<h4 id="systemchannelself">system_channel(<code>self</code>)</h4>
+<h4 id="auditlogself">audit_log(<code>self</code>)</h4>
+<h4 id="auditlogiterselfkwargs">audit_log_iter(<code>self,**kwargs</code>)</h4>
+<h4 id="getauditlogentriesselfargskwargs">get_audit_log_entries(<code>self,*args,**kwargs</code>)</h4>
+<h3 id="auditlogobjectchange">AuditLogObjectChange</h3>
+<p><em>Inherits From <code>SlottedModel</code></em></p>
+<h3 id="auditlogentry">AuditLogEntry</h3>
+<p><em>Inherits From <code>SlottedModel</code></em></p>
+<h4 id="functions">Functions</h4>
+<h4 id="createcls-client-users-webhooks-datakwargs">create(<code>cls, client, users, webhooks, data,**kwargs)</code></h4>
+<h4 id="guildself">guild(<code>self</code>)</h4>
+<h4 id="userself">user(<code>self</code>)</h4>
+<h4 id="targetself">target(<code>self</code>)</h4>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="disco_types_channel.html" class="navigation navigation-prev " aria-label="Previous page: disco.types.channel">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="disco_types_invite.html" class="navigation navigation-next " aria-label="Next page: disco.types.invite">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"disco.types.guild","level":"1.4.7.3","depth":3,"next":{"title":"disco.types.invite","level":"1.4.7.4","depth":3,"path":"api/disco_types_invite.md","ref":"api/disco_types_invite.md","articles":[]},"previous":{"title":"disco.types.channel","level":"1.4.7.2","depth":3,"path":"api/disco_types_channel.md","ref":"api/disco_types_channel.md","articles":[]},"dir":"ltr"},"config":{"plugins":["prism","-highlight","hints"],"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"anchorjs":{"placement":"left","visible":"always"},"prism":{},"hints":{"danger":"fa fa-exclamation-circle","info":"fa fa-info-circle","tip":"fa fa-mortar-board","working":"fa fa-wrench"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"Disco","gitbook":"*"},"file":{"path":"api/disco_types_guild.md","mtime":"2018-02-15T05:53:10.099Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2018-02-15T05:53:11.657Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

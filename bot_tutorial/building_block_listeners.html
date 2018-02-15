@@ -1,0 +1,1063 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Listeners · Disco</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.2">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-hints/plugin-hints.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="message_embeds.html" />
+    
+    
+    <link rel="prev" href="building_block_commands.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../installation.html">
+            
+                <a href="../installation.html">
+            
+                    
+                    Installation and Setup
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="intro.md">
+            
+                <span>
+            
+                    
+                    Bot Tutorial
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="first_steps.html">
+            
+                <a href="first_steps.html">
+            
+                    
+                    Creating and Running a Bot
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="building_block_plugins.html">
+            
+                <a href="building_block_plugins.html">
+            
+                    
+                    Plugins
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.3" data-path="building_block_commands.html">
+            
+                <a href="building_block_commands.html">
+            
+                    
+                    Commands
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.3.4" data-path="building_block_listeners.html">
+            
+                <a href="building_block_listeners.html">
+            
+                    
+                    Listeners
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="message_embeds.html">
+            
+                <a href="message_embeds.html">
+            
+                    
+                    Message Embeds
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.6" data-path="advanced.html">
+            
+                <a href="advanced.html">
+            
+                    
+                    Advanced
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" >
+            
+                <span>
+            
+                    
+                    API Docs
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../api/disco_client.html">
+            
+                <a href="../api/disco_client.html">
+            
+                    
+                    disco.client
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../api/disco_state.html">
+            
+                <a href="../api/disco_state.html">
+            
+                    
+                    disco.state
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../api/disco_cli.html">
+            
+                <a href="../api/disco_cli.html">
+            
+                    
+                    disco.cli
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" >
+            
+                <span>
+            
+                    
+                    Bot
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.4.1" data-path="../api/disco_bot_bot.html">
+            
+                <a href="../api/disco_bot_bot.html">
+            
+                    
+                    disco.bot.bot
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4.2" data-path="../api/disco_bot_plugin.html">
+            
+                <a href="../api/disco_bot_plugin.html">
+            
+                    
+                    disco.bot.plugin
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4.3" data-path="../api/disco_bot_command.html">
+            
+                <a href="../api/disco_bot_command.html">
+            
+                    
+                    disco.bot.command
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4.4" data-path="../api/disco_bot_storage.html">
+            
+                <a href="../api/disco_bot_storage.html">
+            
+                    
+                    disco.bot.storage
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4.5" data-path="../api/disco_bot_parser.html">
+            
+                <a href="../api/disco_bot_parser.html">
+            
+                    
+                    disco.bot.parser
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" >
+            
+                <span>
+            
+                    
+                    API
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.5.1" data-path="../api/disco_api_client.html">
+            
+                <a href="../api/disco_api_client.html">
+            
+                    
+                    disco.api.client
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5.2" data-path="../api/disco_api_http.html">
+            
+                <a href="../api/disco_api_http.html">
+            
+                    
+                    disco.api.http
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5.3" data-path="../api/disco_api_ratelimit.html">
+            
+                <a href="../api/disco_api_ratelimit.html">
+            
+                    
+                    disco.api.ratelimit
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" >
+            
+                <span>
+            
+                    
+                    Gateway
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.6.1" data-path="../api/disco_gateway_client.html">
+            
+                <a href="../api/disco_gateway_client.html">
+            
+                    
+                    disco.gateway.client
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6.2" data-path="../api/disco_gateway_events.html">
+            
+                <a href="../api/disco_gateway_events.html">
+            
+                    
+                    disco.gateway.events
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6.3" data-path="../api/disco_gateway_packets.html">
+            
+                <a href="../api/disco_gateway_packets.html">
+            
+                    
+                    disco.gateway.packets
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6.4" data-path="../api/disco_gateway_sharder.html">
+            
+                <a href="../api/disco_gateway_sharder.html">
+            
+                    
+                    disco.gateway.sharder
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6.5" data-path="../api/disco_gateway_ipc.html">
+            
+                <a href="../api/disco_gateway_ipc.html">
+            
+                    
+                    disco.gateway.ipc
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" >
+            
+                <span>
+            
+                    
+                    Types
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.7.1" data-path="../api/disco_types_base.html">
+            
+                <a href="../api/disco_types_base.html">
+            
+                    
+                    disco.types.base
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.2" data-path="../api/disco_types_channel.html">
+            
+                <a href="../api/disco_types_channel.html">
+            
+                    
+                    disco.types.channel
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.3" data-path="../api/disco_types_guild.html">
+            
+                <a href="../api/disco_types_guild.html">
+            
+                    
+                    disco.types.guild
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.4" data-path="../api/disco_types_invite.html">
+            
+                <a href="../api/disco_types_invite.html">
+            
+                    
+                    disco.types.invite
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.5" data-path="../api/disco_types_message.html">
+            
+                <a href="../api/disco_types_message.html">
+            
+                    
+                    disco.types.message
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.6" data-path="../api/disco_types_permissions.html">
+            
+                <a href="../api/disco_types_permissions.html">
+            
+                    
+                    disco.types.permissions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.7" data-path="../api/disco_types_user.html">
+            
+                <a href="../api/disco_types_user.html">
+            
+                    
+                    disco.types.user
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.8" data-path="../api/disco_types_voice.html">
+            
+                <a href="../api/disco_types_voice.html">
+            
+                    
+                    disco.types.voice
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7.9" data-path="../api/disco_types_webhook.html">
+            
+                <a href="../api/disco_types_webhook.html">
+            
+                    
+                    disco.types.webhook
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8" >
+            
+                <span>
+            
+                    
+                    Util
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.8.1" data-path="../api/disco_util.html">
+            
+                <a href="../api/disco_util.html">
+            
+                    
+                    disco.util
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.2" data-path="../api/disco_util_backdoor.html">
+            
+                <a href="../api/disco_util_backdoor.html">
+            
+                    
+                    disco.util.backdoor
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.3" data-path="../api/disco_util_chains.html">
+            
+                <a href="../api/disco_util_chains.html">
+            
+                    
+                    disco.util.chains
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.4" data-path="../api/disco_util_config.html">
+            
+                <a href="../api/disco_util_config.html">
+            
+                    
+                    disco.util.config
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.5" data-path="../api/disco_util_functional.html">
+            
+                <a href="../api/disco_util_functional.html">
+            
+                    
+                    disco.util.functional
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.6" data-path="../api/disco_util_hashmap.html">
+            
+                <a href="../api/disco_util_hashmap.html">
+            
+                    
+                    disco.util.hashmap
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.7" data-path="../api/disco_util_limiter.html">
+            
+                <a href="../api/disco_util_limiter.html">
+            
+                    
+                    disco.util.limiter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.8" data-path="../api/disco_util_logging.html">
+            
+                <a href="../api/disco_util_logging.html">
+            
+                    
+                    disco.util.logging
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.9" data-path="../api/disco_util_sanitize.html">
+            
+                <a href="../api/disco_util_sanitize.html">
+            
+                    
+                    disco.util.sanitize
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.10" data-path="../api/disco_util_snowflake.html">
+            
+                <a href="../api/disco_util_snowflake.html">
+            
+                    
+                    disco.util.snowflake
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.11" data-path="../api/disco_util_token.html">
+            
+                <a href="../api/disco_util_token.html">
+            
+                    
+                    disco.util.token
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8.12" data-path="../api/disco_util_websocket.html">
+            
+                <a href="../api/disco_util_websocket.html">
+            
+                    
+                    disco.util.websocket
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9" >
+            
+                <span>
+            
+                    
+                    Voice
+            
+                </span>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.9.1" data-path="../api/disco_voice_client.html">
+            
+                <a href="../api/disco_voice_client.html">
+            
+                    
+                    disco.voice.client
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9.2" data-path="../api/disco_voice_opus.html">
+            
+                <a href="../api/disco_voice_opus.html">
+            
+                    
+                    disco.voice.opus
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9.3" data-path="../api/disco_voice_packets.html">
+            
+                <a href="../api/disco_voice_packets.html">
+            
+                    
+                    disco.voice.packets
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9.4" data-path="../api/disco_voice_playable.html">
+            
+                <a href="../api/disco_voice_playable.html">
+            
+                    
+                    disco.voice.playable
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9.5" data-path="../api/disco_voice_player.html">
+            
+                <a href="../api/disco_voice_player.html">
+            
+                    
+                    disco.voice.player
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Listeners</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="listeners">Listeners</h1>
+<p>Listeners are a way to execute custom actions when a certain Discord event happens. For example, on message creation, when a member joins or leaves a guild, or when someone changes their username or nickname.</p>
+<h2 id="listeners-in-disco">Listeners in disco</h2>
+<p>Listeners are easy to use and implement in Disco. First of all, we&apos;ll create a <a href="https://b1naryth1ef.github.io/disco/bot_tutorial/building_block_plugins.html" target="_blank">Plugin</a> like so:</p>
+<pre class="language-"><code class="lang-py"><span class="token keyword">class</span> <span class="token class-name">MyPlugin</span><span class="token punctuation">(</span>Plugin<span class="token punctuation">)</span><span class="token punctuation">:</span>
+</code></pre>
+<p>Now, inside this plugin, we&apos;ll create our first listener. A listener is built up following this syntax:</p>
+<pre class="language-"><code class="lang-py">@Plugin<span class="token punctuation">.</span>listen<span class="token punctuation">(</span><span class="token string">&apos;EventName&apos;</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">on_event_name</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># Do something with the event</span>
+</code></pre>
+<p>Change the <code>&apos;EventName&apos;</code> in the <code>.listen()</code> method to the event name you want to listen to, and give the <code>on_event_name</code> method a more descriptive name.</p>
+<p>This listener will listen for a new message and will reply with the exact same message every time. </p>
+<pre class="language-"><code class="lang-py">@Plugin<span class="token punctuation">.</span>listen<span class="token punctuation">(</span><span class="token string">&apos;MesageCreate&apos;</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">on_message_create</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    event<span class="token punctuation">.</span>reply<span class="token punctuation">(</span>event<span class="token punctuation">.</span>message<span class="token punctuation">.</span>content<span class="token punctuation">)</span>
+</code></pre>
+<p>Let&apos;s create another listener, this time one that listens for a member that&apos;s added to the guild, when this happens, it will send a welcome message in a welcome channel:</p>
+<pre class="language-"><code class="lang-py">WELCOME_CHANNEL <span class="token operator">=</span> <span class="token number">381890676654080001</span>
+
+@Plugin<span class="token punctuation">.</span>listen<span class="token punctuation">(</span><span class="token string">&apos;GuildMemberAdd&apos;</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">on_member_add</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    self<span class="token punctuation">.</span>bot<span class="token punctuation">.</span>client<span class="token punctuation">.</span>state<span class="token punctuation">.</span>channels<span class="token punctuation">.</span>get<span class="token punctuation">(</span>WELCOME_CHANNEL<span class="token punctuation">)</span><span class="token punctuation">.</span>send_message<span class="token punctuation">(</span>
+        <span class="token string">&apos;Welcome to the server {}&apos;</span><span class="token punctuation">.</span>format<span class="token punctuation">(</span>event<span class="token punctuation">.</span>member<span class="token punctuation">.</span>user<span class="token punctuation">.</span>mention<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">)</span>
+</code></pre>
+<p>A list of all Discord events supported by disco can be found <a href="https://b1naryth1ef.github.io/disco/api/disco_gateway_events.html" target="_blank">here</a> including event attributes and functions you can use on the event property.</p>
+<p>These are all the listeners we created in this tutorial:</p>
+<pre class="language-"><code class="lang-py"><span class="token keyword">class</span> <span class="token class-name">MyPlugin</span><span class="token punctuation">(</span>Plugin<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    @Plugin<span class="token punctuation">.</span>listen<span class="token punctuation">(</span><span class="token string">&apos;MesageCreate&apos;</span><span class="token punctuation">)</span>
+    <span class="token keyword">def</span> <span class="token function">on_message_create</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        event<span class="token punctuation">.</span>reply<span class="token punctuation">(</span>event<span class="token punctuation">.</span>message<span class="token punctuation">.</span>content<span class="token punctuation">)</span>
+
+    WELCOME_CHANNEL <span class="token operator">=</span> <span class="token number">381890676654080001</span>
+
+    @Plugin<span class="token punctuation">.</span>listen<span class="token punctuation">(</span><span class="token string">&apos;GuildMemberAdd&apos;</span><span class="token punctuation">)</span>
+    <span class="token keyword">def</span> <span class="token function">on_member_add</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>bot<span class="token punctuation">.</span>client<span class="token punctuation">.</span>state<span class="token punctuation">.</span>channels<span class="token punctuation">.</span>get<span class="token punctuation">(</span>WELCOME_CHANNEL<span class="token punctuation">)</span><span class="token punctuation">.</span>send_message<span class="token punctuation">(</span>
+            <span class="token string">&apos;Welcome to the server {}&apos;</span><span class="token punctuation">.</span>format<span class="token punctuation">(</span>event<span class="token punctuation">.</span>member<span class="token punctuation">.</span>user<span class="token punctuation">.</span>mention<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">)</span>
+</code></pre>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="building_block_commands.html" class="navigation navigation-prev " aria-label="Previous page: Commands">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="message_embeds.html" class="navigation navigation-next " aria-label="Next page: Message Embeds">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Listeners","level":"1.3.4","depth":2,"next":{"title":"Message Embeds","level":"1.3.5","depth":2,"path":"bot_tutorial/message_embeds.md","ref":"bot_tutorial/message_embeds.md","articles":[]},"previous":{"title":"Commands","level":"1.3.3","depth":2,"path":"bot_tutorial/building_block_commands.md","ref":"bot_tutorial/building_block_commands.md","articles":[]},"dir":"ltr"},"config":{"plugins":["prism","-highlight","hints"],"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"anchorjs":{"placement":"left","visible":"always"},"prism":{},"hints":{"danger":"fa fa-exclamation-circle","info":"fa fa-info-circle","tip":"fa fa-mortar-board","working":"fa fa-wrench"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"Disco","gitbook":"*"},"file":{"path":"bot_tutorial/building_block_listeners.md","mtime":"2018-02-15T05:52:56.547Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2018-02-15T05:53:11.657Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
