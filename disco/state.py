@@ -3,6 +3,7 @@ import weakref
 
 from collections import deque, namedtuple
 from gevent.event import Event
+from holster.emitter import Priority
 
 from disco.types.base import UNSET
 from disco.util.config import Config
@@ -132,7 +133,7 @@ class State(object):
 
         for event in self.EVENTS:
             func = 'on_' + underscore(event)
-            self.listeners.append(self.client.events.on(event, getattr(self, func)))
+            self.listeners.append(self.client.events.on(event, getattr(self, func)), priority=Priority.BEFORE)
 
     def fill_messages(self, channel):
         for message in reversed(next(channel.messages_iter(bulk=True))):
