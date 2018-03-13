@@ -9,7 +9,7 @@ except ImportError:
 
 from disco.util.logging import LoggingClass
 
-MAX_TIMESTAMP = 4294967295
+MAX_UINT32 = 4294967295
 MAX_SEQUENCE = 65535
 
 
@@ -30,6 +30,7 @@ class UDPVoiceClient(LoggingClass):
         self.sequence = 0
         self.timestamp = 0
 
+        self._nonce = 0
         self._run_task = None
         self._secret_box = None
 
@@ -40,7 +41,7 @@ class UDPVoiceClient(LoggingClass):
 
     def increment_timestamp(self, by):
         self.timestamp += by
-        if self.timestamp > MAX_TIMESTAMP:
+        if self.timestamp > MAX_UINT32:
             self.timestamp = 0
 
     def setup_encryption(self, encryption_key):
@@ -55,7 +56,15 @@ class UDPVoiceClient(LoggingClass):
         struct.pack_into('>I', self._buffer, 4, timestamp or self.timestamp)
         struct.pack_into('>i', self._buffer, 8, self.vc.ssrc)
 
-        if self.vc.mode == 'xsalsa20_poly1305_suffix':
+        if self.vc.mode == 'xsalsa20_poly1305_lite':
+            self._nonce += 1
+            if self._nonce > MAX_UINT32:
+                self._nonce = 0
+
+            nonce = bytearray(24)
+            struct.pack_into('>I', nonce, 0, self._nonce)
+            raw = self._secret_box.encrypt(bytes(frame), nonce).ciphertext + nonce[:4]
+        elif self.vc.mode == 'xsalsa20_poly1305_suffix':
             nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
             raw = self._secret_box.encrypt(bytes(frame), nonce).ciphertext + nonce
         else:

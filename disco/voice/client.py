@@ -36,6 +36,7 @@ class VoiceClient(LoggingClass):
     VOICE_GATEWAY_VERSION = 3
 
     SUPPORTED_MODES = {
+        'xsalsa20_poly1305_lite',
         'xsalsa20_poly1305_suffix',
         'xsalsa20_poly1305',
     }
