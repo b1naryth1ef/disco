@@ -191,7 +191,7 @@ class APIClient(LoggingClass):
     def channels_messages_modify(self, channel, message, content=None, embed=None, sanitize=False):
         payload = {}
 
-        if content:
+        if content is not None:
             if sanitize:
                 content = S(content)
             payload['content'] = content
