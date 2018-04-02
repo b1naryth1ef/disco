@@ -49,7 +49,7 @@ embed.color = '10038562' #This can be any color, but I chose a nice dark red tin
 Once your embed is finshed, you can send it using the `channel.send_message()` message or the `event.msg.reply()` function.
 With `channel.send_message()`:
 ```py
-self.bot.state.channels.get(<ChannelID>).send_message('[optional text]', embed=embed)
+self.state.channels.get(<ChannelID>).send_message('[optional text]', embed=embed)
 ```
 with the `event.msg.reply()` function:
 ```py
