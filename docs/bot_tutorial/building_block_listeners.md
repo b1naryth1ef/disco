@@ -1,51 +1,48 @@
 # Listeners
-Listeners are a way to execute custom actions when a certain Discord event happens. For example, on message creation, when a member joins or leaves a guild, or when someone changes their username or nickname.
 
-## Listeners in disco
-Listeners are easy to use and implement in Disco. First of all, we'll create a [Plugin](https://b1naryth1ef.github.io/disco/bot_tutorial/building_block_plugins.html) like so:
-```py
-class MyPlugin(Plugin):
-```
-Now, inside this plugin, we'll create our first listener. A listener is built up following this syntax:
-```py
-@Plugin.listen('EventName')
-def on_event_name(self, event):
-    # Do something with the event
-```
-Change the `'EventName'` in the `.listen()` method to the event name you want to listen to, and give the `on_event_name` method a more descriptive name.
+Listeners provide an API to listen to and execute code upon the occurance of specified Discord events.
 
-This listener will listen for a new message and will reply with the exact same message every time. 
+## Listener Basics
+
+To start off with, lets create a listener attached to our plugin that fires whenever a message is created.
+
 ```py
-@Plugin.listen('MesageCreate')
+@Plugin.listen('MessageCreate')
 def on_message_create(self, event):
-    event.reply(event.message.content)
+    self.log.debug('Got message: %s', event.message)
 ```
-Let's create another listener, this time one that listens for a member that's added to the guild, when this happens, it will send a welcome message in a welcome channel:
-```py
-WELCOME_CHANNEL = 381890676654080001
 
+Ok, but what if we want to make a listener which welcomes new users to our server? Well thats also easy:
+
+```py
 @Plugin.listen('GuildMemberAdd')
-def on_member_add(self, event):
-    self.bot.client.state.channels.get(WELCOME_CHANNEL).send_message(
-        'Welcome to the server {}'.format(event.member.user.mention())
+def on_guild_member_add(self, event):
+    self.state.channels.get(MY_WELCOME_CHANNEL_ID).send_message(
+        'Hey there {}, welcome to the server!'.format(event.member.mention)
     )
 ```
 
-A list of all Discord events supported by disco can be found [here](https://b1naryth1ef.github.io/disco/api/disco_gateway_events.html) including event attributes and functions you can use on the event property.
+## Listener Events
 
-These are all the listeners we created in this tutorial:
+To see all the events you can subscribe too, checkout the [gateway events list](https://b1naryth1ef.github.io/disco/api/disco_gateway_events.html).
+
+## Listener Priority
+
+Each listener thats registered comes with a priority. This priority describes how the builtin event emitter will distribute events to your listener. To set a priority you can simply pass the priority kwarg:
 
 ```py
-class MyPlugin(Plugin):
-    @Plugin.listen('MesageCreate')
-    def on_message_create(self, event):
-        event.reply(event.message.content)
-    
-    WELCOME_CHANNEL = 381890676654080001
+from holster.emitter import Priority
 
-    @Plugin.listen('GuildMemberAdd')
-    def on_member_add(self, event):
-        self.bot.client.state.channels.get(WELCOME_CHANNEL).send_message(
-            'Welcome to the server {}'.format(event.member.user.mention())
-        )
+@Plugin.listen('GuildMemberAdd', priority=Priority.BEFORE)
+def on_guild_member_add(self, event):
+    # This would be very bad, don't do this...
+    time.sleep(10)
 ```
+
+#### Priorities
+
+| Name | Description |
+|------|-------------|
+| BEFORE | Recieves all events sequentially alongside the emitter. This is the most dangerous priority level, as any executed code will block other events in the emitter from flowing. Blocking within a BEFORE handler can be lethal. |
+| SEQUENTIAL | Recieves all events sequentially, but within a seperate greenlet. This priority level can be used for plugins that require sequential events but may block or take a long time to execute their event handler. |
+| NONE | This priority provides no guarentees about the ordering of events. Similar to SEQUENTIAL all event handlers are called within a seperate greenlet. |
