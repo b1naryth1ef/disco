@@ -459,7 +459,10 @@ class MessageCreate(GatewayEvent):
     -----
     message : :class:`disco.types.message.Message`
         The message being created.
+    guild_id : snowflake
+        The ID of the guild this message comes from.
     """
+    guild_id = Field(snowflake)
 
 
 @wraps_model(Message)
@@ -471,7 +474,10 @@ class MessageUpdate(MessageCreate):
     -----
     message : :class:`disco.types.message.Message`
         The message being updated.
+    guild_id : snowflake
+        The ID of the guild this message exists in.
     """
+    guild_id = Field(snowflake)
 
 
 class MessageDelete(GatewayEvent):
@@ -484,9 +490,12 @@ class MessageDelete(GatewayEvent):
         The ID of message being deleted.
     channel_id : snowflake
         The ID of the channel the message was deleted in.
+    guild_id : snowflake
+        The ID of the guild this message existed in.
     """
     id = Field(snowflake)
     channel_id = Field(snowflake)
+    guild_id = Field(snowflake)
 
     @property
     def channel(self):
@@ -503,11 +512,14 @@ class MessageDeleteBulk(GatewayEvent):
 
     Attributes
     -----
+    guild_id : snowflake
+        The guild the messages are being deleted in.
     channel_id : snowflake
         The channel the messages are being deleted in.
     ids : list[snowflake]
         List of messages being deleted in the channel.
     """
+    guild_id = Field(snowflake)
     channel_id = Field(snowflake)
     ids = ListField(snowflake)
 
@@ -548,6 +560,8 @@ class TypingStart(GatewayEvent):
 
     Attributes
     -----
+    guild_id : snowflake
+        The ID of the guild where the user is typing.
     channel_id : snowflake
         The ID of the channel where the user is typing.
     user_id : snowflake
@@ -555,6 +569,7 @@ class TypingStart(GatewayEvent):
     timestamp : datetime
         When the user started typing.
     """
+    guild_id = Field(snowflake)
     channel_id = Field(snowflake)
     user_id = Field(snowflake)
     timestamp = Field(datetime)
@@ -611,6 +626,8 @@ class MessageReactionAdd(GatewayEvent):
 
     Attributes
     ----------
+    guild_id : snowflake
+        The guild ID the message is in.
     channel_id : snowflake
         The channel ID the message is in.
     messsage_id : snowflake
@@ -620,6 +637,7 @@ class MessageReactionAdd(GatewayEvent):
     emoji : :class:`disco.types.message.MessageReactionEmoji`
         The emoji which was added.
     """
+    guild_id = Field(snowflake)
     channel_id = Field(snowflake)
     message_id = Field(snowflake)
     user_id = Field(snowflake)
@@ -648,6 +666,8 @@ class MessageReactionRemove(GatewayEvent):
 
     Attributes
     ----------
+    guild_id : snowflake
+        The guild ID the message is in.
     channel_id : snowflake
         The channel ID the message is in.
     messsage_id : snowflake
@@ -657,6 +677,7 @@ class MessageReactionRemove(GatewayEvent):
     emoji : :class:`disco.types.message.MessageReactionEmoji`
         The emoji which was removed.
     """
+    guild_id = Field(snowflake)
     channel_id = Field(snowflake)
     message_id = Field(snowflake)
     user_id = Field(snowflake)
@@ -677,11 +698,14 @@ class MessageReactionRemoveAll(GatewayEvent):
 
     Attributes
     ----------
+    guild_id : snowflake
+        The guild ID the message is in.
     channel_id : snowflake
         The channel ID the message is in.
     message_id : snowflake
         The ID of the message for which the reactions where removed from.
     """
+    guild_id = Field(snowflake)
     channel_id = Field(snowflake)
     message_id = Field(snowflake)
 
