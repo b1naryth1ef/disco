@@ -1,6 +1,6 @@
 import pytest
 
-from disco.types.base import Model, Field, cached_property
+from disco.types.base import Model, Field, cached_property, text
 
 
 @pytest.fixture
@@ -39,3 +39,14 @@ def test_defaults():
     model = TestModel()
     assert model.a is None
     assert model.b == 0
+
+
+def test_text_casting():
+    class TestModel(Model):
+        a = Field(text)
+
+    model = TestModel({'a': 1})
+    assert model.a == '1'
+
+    model = TestModel({'a': {}})
+    assert model.a == '{}'

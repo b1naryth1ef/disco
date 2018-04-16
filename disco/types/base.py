@@ -224,9 +224,7 @@ def text(obj):
     if six.PY2:
         if isinstance(obj, str):
             return obj.decode('utf-8')
-        return obj
-    else:
-        return str(obj)
+    return six.text_type(obj)
 
 
 def with_equality(field):
