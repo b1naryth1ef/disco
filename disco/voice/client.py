@@ -67,6 +67,7 @@ class VoiceClient(LoggingClass):
         self.token = None
         self.endpoint = None
         self.ssrc = None
+        self.ip = None
         self.port = None
         self.mode = None
         self.udp = None
@@ -123,6 +124,7 @@ class VoiceClient(LoggingClass):
         self.log.info('[%s] Recived Voice READY payload, attempting to negotiate voice connection w/ remote', self)
         self.set_state(VoiceState.CONNECTING)
         self.ssrc = data['ssrc']
+        self.ip = data['ip']
         self.port = data['port']
 
         for mode in self.SUPPORTED_MODES:
@@ -133,9 +135,9 @@ class VoiceClient(LoggingClass):
         else:
             raise Exception('Failed to find a supported voice mode')
 
-        self.log.debug('[%s] Attempting IP discovery over UDP to %s:%s', self, self.endpoint, self.port)
+        self.log.debug('[%s] Attempting IP discovery over UDP to %s:%s', self, self.ip, self.port)
         self.udp = UDPVoiceClient(self)
-        ip, port = self.udp.connect(self.endpoint, self.port)
+        ip, port = self.udp.connect(self.ip, self.port)
 
         if not ip:
             self.log.error('Failed to discover our IP, perhaps a NAT or firewall is fucking us')
