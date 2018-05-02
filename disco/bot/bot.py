@@ -186,8 +186,8 @@ class Bot(LoggingClass):
             self.add_plugin_module(plugin_mod)
 
         # Convert level mapping
-        for k, v in six.iteritems(self.config.levels):
-            self.config.levels[k] = CommandLevels.get(v)
+        for k, v in list(six.iteritems(self.config.levels)):
+            self.config.levels[int(k) if k.isdigit() else k] = CommandLevels.get(v)
 
     @classmethod
     def from_cli(cls, *plugins):
