@@ -630,7 +630,7 @@ class MessageReactionAdd(GatewayEvent):
         The guild ID the message is in.
     channel_id : snowflake
         The channel ID the message is in.
-    messsage_id : snowflake
+    message_id : snowflake
         The ID of the message for which the reaction was added too.
     user_id : snowflake
         The ID of the user who added the reaction.
@@ -670,7 +670,7 @@ class MessageReactionRemove(GatewayEvent):
         The guild ID the message is in.
     channel_id : snowflake
         The channel ID the message is in.
-    messsage_id : snowflake
+    message_id : snowflake
         The ID of the message for which the reaction was removed from.
     user_id : snowflake
         The ID of the user who originally added the reaction.
