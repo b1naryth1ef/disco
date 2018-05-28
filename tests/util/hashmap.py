@@ -44,3 +44,14 @@ def test_hashmap_items(hashmap):
     assert len(list(hashmap.items())) == 100000
     assert list(hashmap.items())[0][0] == 0
     assert list(hashmap.items())[0][1] == hashmap[0]
+
+
+def test_hashmap_select_one():
+    class Test(object):
+        x = 1
+        y = 2
+    hashmap = HashMap()
+    hashmap['x'] = Test()
+
+    assert hashmap.select_one(x=1) == hashmap['x']
+    assert hashmap.select_one(x=2) == None
