@@ -3,6 +3,8 @@ from __future__ import print_function
 import gevent
 import time
 
+from collections import namedtuple
+
 from holster.enum import Enum
 from holster.emitter import Emitter
 
@@ -11,7 +13,13 @@ from disco.util.websocket import Websocket
 from disco.util.logging import LoggingClass
 from disco.gateway.packets import OPCode
 from disco.voice.packets import VoiceOPCode
-from disco.voice.udp import UDPVoiceClient
+from disco.voice.udp import AudioCodecs, PayloadTypes, UDPVoiceClient
+
+SpeakingCodes = Enum(
+    NONE=0,
+    VOICE=1 << 0,
+    SOUNDSHARE=1 << 1,
+)
 
 VoiceState = Enum(
     DISCONNECTED=0,
@@ -25,6 +33,13 @@ VoiceState = Enum(
     VOICE_CONNECTED=8,
 )
 
+VoiceSpeaking = namedtuple('VoiceSpeaking', [
+    'client',
+    'user_id',
+    'speaking',
+    'soundshare',
+])
+
 
 class VoiceException(Exception):
     def __init__(self, msg, client):
@@ -33,7 +48,7 @@ class VoiceException(Exception):
 
 
 class VoiceClient(LoggingClass):
-    VOICE_GATEWAY_VERSION = 3
+    VOICE_GATEWAY_VERSION = 4
 
     SUPPORTED_MODES = {
         'xsalsa20_poly1305_lite',
@@ -58,6 +73,10 @@ class VoiceClient(LoggingClass):
         self.packets.on(VoiceOPCode.READY, self.on_voice_ready)
         self.packets.on(VoiceOPCode.RESUMED, self.on_voice_resumed)
         self.packets.on(VoiceOPCode.SESSION_DESCRIPTION, self.on_voice_sdp)
+        self.packets.on(VoiceOPCode.SPEAKING, self.on_voice_speaking)
+        self.packets.on(VoiceOPCode.CLIENT_CONNECT, self.on_voice_client_connect)
+        self.packets.on(VoiceOPCode.CLIENT_DISCONNECT, self.on_voice_client_disconnect)
+        self.packets.on(VoiceOPCode.CODECS, self.on_voice_codecs)
 
         # State + state change emitter
         self.state = VoiceState.DISCONNECTED
@@ -71,6 +90,9 @@ class VoiceClient(LoggingClass):
         self.port = None
         self.mode = None
         self.udp = None
+        self.audio_codec = None
+        self.video_codec = None
+        self.transport_id = None
 
         # Websocket connection
         self.ws = None
@@ -79,6 +101,9 @@ class VoiceClient(LoggingClass):
         self._reconnects = 0
         self._update_listener = None
         self._heartbeat_task = None
+
+        # SSRCs
+        self.audio_ssrcs = {}
 
     def __repr__(self):
         return u'<VoiceClient {}>'.format(self.channel)
@@ -90,7 +115,7 @@ class VoiceClient(LoggingClass):
         self.state_emitter.emit(state, prev_state)
 
     def _connect_and_run(self):
-        self.ws = Websocket('wss://' + self.endpoint + '/v={}'.format(self.VOICE_GATEWAY_VERSION))
+        self.ws = Websocket('wss://' + self.endpoint + '/?v={}'.format(self.VOICE_GATEWAY_VERSION))
         self.ws.emitter.on('on_open', self.on_open)
         self.ws.emitter.on('on_error', self.on_error)
         self.ws.emitter.on('on_close', self.on_close)
@@ -102,10 +127,17 @@ class VoiceClient(LoggingClass):
             self.send(VoiceOPCode.HEARTBEAT, time.time())
             gevent.sleep(interval / 1000)
 
-    def set_speaking(self, value):
+    def set_speaking(self, voice=False, soundshare=False, delay=0):
+        value = SpeakingCodes.NONE.value
+        if voice:
+            value |= SpeakingCodes.VOICE.value
+        if soundshare:
+            value |= SpeakingCodes.SOUNDSHARE.value
+
         self.send(VoiceOPCode.SPEAKING, {
             'speaking': value,
-            'delay': 0,
+            'delay': delay,
+            'ssrc': self.ssrc,
         })
 
     def send(self, op, data):
@@ -115,9 +147,27 @@ class VoiceClient(LoggingClass):
             'd': data,
         }), self.encoder.OPCODE)
 
+    def on_voice_client_connect(self, data):
+        self.audio_ssrcs[data['audio_ssrc']] = data['user_id']
+        # ignore data['voice_ssrc'] for now
+
+    def on_voice_client_disconnect(self, data):
+        for ssrc in self.audio_ssrcs.keys():
+            if self.audio_ssrcs[ssrc] == data['user_id']:
+                del self.audio_ssrcs[ssrc]
+                break
+
+    def on_voice_codecs(self, data):
+        self.audio_codec = data['audio_codec']
+        self.video_codec = data['video_codec']
+        self.transport_id = data['media_session_id']
+
+        # Set the UDP's RTP Audio Header's Payload Type
+        self.udp.set_audio_codec(data['audio_codec'])
+
     def on_voice_hello(self, data):
         self.log.info('[%s] Recieved Voice HELLO payload, starting heartbeater', self)
-        self._heartbeat_task = gevent.spawn(self._heartbeat, data['heartbeat_interval'] * 0.75)
+        self._heartbeat_task = gevent.spawn(self._heartbeat, data['heartbeat_interval'])
         self.set_state(VoiceState.AUTHENTICATED)
 
     def on_voice_ready(self, data):
@@ -144,6 +194,17 @@ class VoiceClient(LoggingClass):
             self.disconnect()
             return
 
+        codecs = []
+
+        # Sending discord our available codecs and rtp payload type for it
+        for idx, codec in enumerate(AudioCodecs):
+            codecs.append({
+                'name': codec,
+                'type': 'audio',
+                'priority': (idx + 1) * 1000,
+                'payload_type': PayloadTypes.get(codec).value,
+            })
+
         self.log.debug('[%s] IP discovery completed (ip = %s, port = %s), sending SELECT_PROTOCOL', self, ip, port)
         self.send(VoiceOPCode.SELECT_PROTOCOL, {
             'protocol': 'udp',
@@ -152,6 +213,12 @@ class VoiceClient(LoggingClass):
                 'address': ip,
                 'mode': self.mode,
             },
+            'codecs': codecs,
+        })
+        self.send(VoiceOPCode.CLIENT_CONNECT, {
+            'audio_ssrc': self.ssrc,
+            'video_ssrc': 0,
+            'rtx_ssrc': 0,
         })
 
     def on_voice_resumed(self, data):
@@ -161,13 +228,16 @@ class VoiceClient(LoggingClass):
     def on_voice_sdp(self, sdp):
         self.log.info('[%s] Recieved session description, connection completed', self)
 
+        self.mode = sdp['mode']
+        self.audio_codec = sdp['audio_codec']
+        self.video_codec = sdp['video_codec']
+        self.transport_id = sdp['media_session_id']
+
+        # Set the UDP's RTP Audio Header's Payload Type
+        self.udp.set_audio_codec(sdp['audio_codec'])
+
         # Create a secret box for encryption/decryption
         self.udp.setup_encryption(bytes(bytearray(sdp['secret_key'])))
-
-        # Toggle speaking state so clients learn of our SSRC
-        self.set_speaking(True)
-        self.set_speaking(False)
-        gevent.sleep(0.25)
 
         self.set_state(VoiceState.CONNECTED)
 
@@ -186,6 +256,18 @@ class VoiceClient(LoggingClass):
         self.endpoint = data.endpoint.split(':', 1)[0]
 
         self._connect_and_run()
+
+    def on_voice_speaking(self, data):
+        self.audio_ssrcs[data['ssrc']] = data['user_id']
+
+        payload = VoiceSpeaking(
+            client=self,
+            user_id=data['user_id'],
+            speaking=bool(data['speaking'] & SpeakingCodes.VOICE.value),
+            soundshare=bool(data['speaking'] & SpeakingCodes.SOUNDSHARE.value),
+        )
+
+        self.client.gw.events.emit('VoiceSpeaking', payload)
 
     def on_message(self, msg):
         try:

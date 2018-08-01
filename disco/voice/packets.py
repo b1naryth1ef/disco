@@ -11,5 +11,7 @@ VoiceOPCode = Enum(
     RESUME=7,
     HELLO=8,
     RESUMED=9,
+    CLIENT_CONNECT=12,
     CLIENT_DISCONNECT=13,
+    CODECS=14,
 )
