@@ -493,6 +493,10 @@ class APIClient(LoggingClass):
         webhooks = Webhook.create_hash(self.client, 'id', data['webhooks'])
         return AuditLogEntry.create_map(self.client, r.json()['audit_log_entries'], users, webhooks, guild_id=guild)
 
+    def users_get(self, user):
+        r = self.http(Routes.USERS_GET, dict(user=user))
+        return User.create(self.client, r.json())
+
     def users_me_get(self):
         return User.create(self.client, self.http(Routes.USERS_ME_GET).json())
 
