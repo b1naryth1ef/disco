@@ -379,7 +379,7 @@ class Plugin(LoggingClass, PluginDeco):
         """
         self.commands.append(Command(self, func, *args, **kwargs))
 
-    def register_schedule(self, func, interval, repeat=True, init=True):
+    def register_schedule(self, func, interval, repeat=True, init=True, kwargs=None):
         """
         Registers a function to be called repeatedly, waiting for an interval
         duration.
@@ -395,14 +395,19 @@ class Plugin(LoggingClass, PluginDeco):
         init : bool
             Whether to run this schedule once immediatly, or wait for the first
             scheduled iteration.
+        kwargs: dict
+            kwargs which will be passed to executed `func`
         """
+        if kwargs is None:
+            kwargs = {}
+
         def repeat_func():
             if init:
-                func()
+                func(**kwargs)
 
             while True:
                 gevent.sleep(interval)
-                func()
+                func(**kwargs)
                 if not repeat:
                     break
 
