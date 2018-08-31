@@ -110,6 +110,8 @@ class Channel(SlottedModel, Permissible):
         The channel's position.
     bitrate : int
         The channel's bitrate.
+    user_limit : int
+        The channel's user limit.
     recipients: list(:class:`disco.types.user.User`)
         Members of this channel (if this is a DM channel).
     type : :const:`ChannelType`
@@ -124,6 +126,7 @@ class Channel(SlottedModel, Permissible):
     last_message_id = Field(snowflake)
     position = Field(int)
     bitrate = Field(int)
+    user_limit = Field(int)
     recipients = AutoDictField(User, 'id')
     nsfw = Field(bool)
     type = Field(enum(ChannelType))
