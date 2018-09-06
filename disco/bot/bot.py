@@ -7,7 +7,7 @@ import importlib
 
 from six.moves import reload_module
 from holster.threadlocal import ThreadLocal
-from gevent.wsgi import WSGIServer
+from gevent.pywsgi import WSGIServer
 
 from disco.types.guild import GuildMember
 from disco.bot.plugin import Plugin
