@@ -1,6 +1,7 @@
 import re
 import six
 import copy
+from disco.util.sanitize import S
 
 # Regex which splits out argument parts
 PARTS_RE = re.compile('(\<|\[|\{)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\]|\})')
@@ -202,7 +203,7 @@ class ArgumentSet(object):
                         raw[idx] = self.convert(ctx, arg.types, r)
                     except Exception:
                         raise ArgumentError(u'cannot convert `{}` to `{}`'.format(
-                            r, ', '.join(arg.types),
+                            S(r), ', '.join(arg.types),
                         ))
 
             if arg.count == 1:
