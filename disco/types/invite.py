@@ -43,5 +43,9 @@ class Invite(SlottedModel):
     def create_for_channel(cls, channel, *args, **kwargs):
         return channel.client.api.channels_invites_create(channel.id, *args, **kwargs)
 
+    @property
+    def link(self):
+        return 'https://discord.gg/{}'.format(self.code)
+
     def delete(self, *args, **kwargs):
         self.client.api.invites_delete(self.code, *args, **kwargs)
