@@ -14,7 +14,6 @@ matrix:
 
 install:
   - pip install -U pip setuptools
-  - pip install -U pytest flake8-tuple flake8-quotes flake8-comprehensions flake8-commas flake8-builtins
 
 script:
   - python setup.py test

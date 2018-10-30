@@ -80,7 +80,8 @@ class Field(object):
                 self.default = self.deserializer.default
             elif (inspect.isclass(self.deserializer) and
                     issubclass(self.deserializer, Model) and
-                    self.default is UNSET and create):
+                    self.default is UNSET and
+                    create):
                 self.default = self.deserializer
 
     @property
