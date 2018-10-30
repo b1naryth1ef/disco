@@ -4,7 +4,7 @@ import copy
 from disco.util.sanitize import S
 
 # Regex which splits out argument parts
-PARTS_RE = re.compile('(\<|\[|\{)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\]|\})')
+PARTS_RE = re.compile(r'(\<|\[|\{)((?:\w+|\:|\||\.\.\.| (?:[0-9]+))+)(?:\>|\]|\})')
 
 BOOL_OPTS = {
     'yes': True,
