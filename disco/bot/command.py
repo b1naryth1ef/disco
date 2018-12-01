@@ -284,7 +284,7 @@ class Command(object):
 
         if self.args:
             if len(event.args) < self.args.required_length:
-                raise CommandError(u'Command {} requires {} arguments (`{}`) passed {}'.format(
+                raise CommandError(u'Command {} requires {} argument(s) (`{}`) passed {}'.format(
                     event.name,
                     self.args.required_length,
                     self.raw_args,
