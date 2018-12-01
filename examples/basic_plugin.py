@@ -73,3 +73,9 @@ class BasicPlugin(Plugin):
         if args.help:
             return event.msg.reply(event.parser.format_help())
         event.msg.reply(args.asdf)
+        
+    # You can use a listener to react to events, like someone joining your guild
+    @Plugin.listen('GuildMemberAdd')
+    def send_welcome_dm(self, event):
+        # Send the user a direct message with a welcome greeting after they join.
+        event.member.user.open_dm().send_message('Hi there! Welcome to our friendly community.')
