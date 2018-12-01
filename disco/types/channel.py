@@ -359,9 +359,11 @@ class Channel(SlottedModel, Permissible):
         """
         from disco.voice.client import VoiceClient
         assert self.is_voice, 'Channel must support voice to connect'
-        vc = VoiceClient(self)
-        vc.connect(*args, **kwargs)
-        return vc
+
+        server_id = self.guild_id or self.id
+        vc = self.client.state.voice_clients.get(server_id) or VoiceClient(self.client, server_id, is_dm=self.is_dm)
+
+        return vc.connect(self.id, *args, **kwargs)
 
     def create_overwrite(self, *args, **kwargs):
         """

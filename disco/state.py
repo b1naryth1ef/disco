@@ -9,6 +9,7 @@ from disco.types.base import UNSET
 from disco.util.config import Config
 from disco.util.string import underscore
 from disco.util.hashmap import HashMap, DefaultHashMap
+from disco.voice.client import VoiceState
 
 
 class StackMessage(namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])):
@@ -82,6 +83,8 @@ class State(object):
         Weak mapping of all known/loaded Channels
     users : dict(snowflake, `User`)
         Weak mapping of all known/loaded Users
+    voice_clients : dict(str, 'VoiceClient')
+        Weak mapping of all known voice clients
     voice_states : dict(str, `VoiceState`)
         Weak mapping of all known/active Voice States
     messages : Optional[dict(snowflake, deque)]
@@ -90,8 +93,8 @@ class State(object):
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',
         'GuildMemberUpdate', 'GuildMembersChunk', 'GuildRoleCreate', 'GuildRoleUpdate', 'GuildRoleDelete',
-        'GuildEmojisUpdate', 'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceStateUpdate', 'MessageCreate',
-        'PresenceUpdate',
+        'GuildEmojisUpdate', 'ChannelCreate', 'ChannelUpdate', 'ChannelDelete', 'VoiceServerUpdate', 'VoiceStateUpdate',
+        'MessageCreate', 'PresenceUpdate',
     ]
 
     def __init__(self, client, config):
@@ -106,6 +109,7 @@ class State(object):
         self.guilds = HashMap()
         self.channels = HashMap(weakref.WeakValueDictionary())
         self.users = HashMap(weakref.WeakValueDictionary())
+        self.voice_clients = HashMap(weakref.WeakValueDictionary())
         self.voice_states = HashMap(weakref.WeakValueDictionary())
 
         # If message tracking is enabled, listen to those events
@@ -211,6 +215,9 @@ class State(object):
             # Just delete the guild, channel references will fall
             del self.guilds[event.id]
 
+        if event.id in self.voice_clients:
+            self.voice_clients[event.id].disconnect()
+
     def on_channel_create(self, event):
         if event.channel.is_guild and event.channel.guild_id in self.guilds:
             self.guilds[event.channel.guild_id].channels[event.channel.id] = event.channel
@@ -232,6 +239,14 @@ class State(object):
             del event.channel.guild.channels[event.channel.id]
         elif event.channel.is_dm and event.channel.id in self.dms:
             del self.dms[event.channel.id]
+
+    def on_voice_server_update(self, event):
+        if event.guild_id not in self.voice_clients:
+            return
+
+        voice_client = self.voice_clients.get(event.guild_id)
+        voice_client.set_endpoint(event.endpoint)
+        voice_client.set_token(event.token)
 
     def on_voice_state_update(self, event):
         # Existing connection, we are either moving channels or disconnecting
@@ -256,6 +271,21 @@ class State(object):
             if expired_voice_state:
                 del self.voice_states[expired_voice_state.session_id]
             self.voice_states[event.state.session_id] = event.state
+
+        if event.state.user_id != self.me.id:
+            return
+
+        server_id = event.state.guild_id or event.state.channel_id
+        if server_id in self.voice_clients:
+            voice_client = self.voice_clients[server_id]
+
+            voice_client.channel_id = event.state.channel_id
+            if not event.state.channel_id:
+                voice_client.disconnect()
+                return
+
+            if voice_client.token:
+                voice_client.set_state(VoiceState.CONNECTED)
 
     def on_guild_member_add(self, event):
         if event.member.user.id not in self.users:
