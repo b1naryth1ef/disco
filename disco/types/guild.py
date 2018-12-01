@@ -357,6 +357,7 @@ class Guild(SlottedModel, Permissible):
         if self.owner_id == member.id:
             return PermissionValue(Permissions.ADMINISTRATOR)
 
+        # Our value starts with the guilds default (@everyone) role permissions
         value = PermissionValue(self.roles.get(self.id).permissions)
 
         # Iterate over all roles the user has (plus the @everyone role)
