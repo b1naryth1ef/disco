@@ -13,7 +13,7 @@ matrix:
     sudo: true
 
 install:
-  - pip install -U pip setuptools
+  - pip install -U pip setuptools flake8
 
 script:
   - python setup.py test
