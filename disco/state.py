@@ -248,7 +248,13 @@ class State(object):
         # New connection
         elif event.state.channel_id:
             if event.state.guild_id in self.guilds:
+                expired_voice_state = self.guilds[event.state.guild_id].voice_states.select_one(user_id=event.user_id)
+                if expired_voice_state:
+                    del self.guilds[event.state.guild_id].voice_states[expired_voice_state.session_id]
                 self.guilds[event.state.guild_id].voice_states[event.state.session_id] = event.state
+            expired_voice_state = self.voice_states.select_one(user_id=event.user_id)
+            if expired_voice_state:
+                del self.voice_states[expired_voice_state.session_id]
             self.voice_states[event.state.session_id] = event.state
 
     def on_guild_member_add(self, event):
