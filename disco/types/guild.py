@@ -3,7 +3,6 @@ import warnings
 
 from holster.enum import Enum
 
-from disco.gateway.packets import OPCode
 from disco.api.http import APIException
 from disco.util.paginator import Paginator
 from disco.util.snowflake import to_snowflake
@@ -326,8 +325,6 @@ class Guild(SlottedModel, Permissible):
     voice_states = AutoDictField(VoiceState, 'session_id')
     member_count = Field(int)
 
-    synced = Field(bool, default=False)
-
     def __init__(self, *args, **kwargs):
         super(Guild, self).__init__(*args, **kwargs)
 
@@ -424,16 +421,15 @@ class Guild(SlottedModel, Permissible):
 
         return self.client.api.guilds_roles_modify(self.id, to_snowflake(role), **kwargs)
 
-    def sync(self):
-        if self.synced:
-            return
+    def request_guild_members(self, query=None, limit=0):
+        self.client.gw.request_guild_members(self.id, query, limit)
 
-        self.synced = True
-        self.client.gw.send(OPCode.REQUEST_GUILD_MEMBERS, {
-            'guild_id': self.id,
-            'query': '',
-            'limit': 0,
-        })
+    def sync(self):
+        warnings.warn(
+            'Guild.sync has been deprecated in place of Guild.request_guild_members',
+            DeprecationWarning)
+
+        self.request_guild_members()
 
     def get_bans(self):
         return self.client.api.guilds_bans_list(self.id)

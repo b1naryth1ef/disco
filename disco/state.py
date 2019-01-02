@@ -51,7 +51,9 @@ class StateConfig(Config):
     sync_guild_members : bool
         If true, guilds will be automatically synced when they are initially loaded
         or joined. Generally this setting is OK for smaller bots, however bots in over
-        50 guilds will notice this operation can take a while to complete.
+        50 guilds will notice this operation can take a while to complete and may want
+        to batch requests using the underlying `GatewayClient.request_guild_members`
+        interface.
     """
     track_messages = True
     track_messages_size = 100
@@ -200,7 +202,7 @@ class State(object):
             self.voice_states[voice_state.session_id] = voice_state
 
         if self.config.sync_guild_members:
-            event.guild.sync()
+            event.guild.request_guild_members()
 
     def on_guild_update(self, event):
         self.guilds[event.guild.id].inplace_update(event.guild, ignored=[
