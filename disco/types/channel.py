@@ -46,9 +46,9 @@ class PermissionOverwrite(ChannelSubType):
         The overwrite ID
     type : :const:`disco.types.channel.PermissionsOverwriteType`
         The overwrite type
-    allowed : :class:`PermissionValue`
+    allow : :class:`disco.types.permissions.PermissionValue`
         All allowed permissions
-    denied : :class:`PermissionValue`
+    deny : :class:`disco.types.permissions.PermissionValue`
         All denied permissions
     """
     id = Field(snowflake)
