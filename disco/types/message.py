@@ -221,6 +221,8 @@ class MessageEmbed(SlottedModel):
         The color of the embed.
     footer : `MessageEmbedFooter`
         The footer of the embed.
+    image : `MessageEmbedImage`
+        The image of the embed.
     thumbnail : `MessageEmbedThumbnail`
         The thumbnail of the embed.
     video : `MessageEmbedVideo`
