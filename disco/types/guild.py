@@ -276,9 +276,11 @@ class Guild(SlottedModel, Permissible):
     name : str
         Guild's name.
     icon : str
-        Guild's icon hash
+        Guild's icon image hash
     splash : str
         Guild's splash image hash
+    banner : str
+        Guild's banner image hash
     region : str
         Voice region.
     afk_timeout : int
@@ -310,6 +312,7 @@ class Guild(SlottedModel, Permissible):
     name = Field(text)
     icon = Field(text)
     splash = Field(text)
+    banner = Field(text)
     region = Field(text)
     afk_timeout = Field(int)
     embed_enabled = Field(bool)
@@ -510,6 +513,12 @@ class Guild(SlottedModel, Permissible):
 
         return 'https://cdn.discordapp.com/splashes/{}/{}.{}?size={}'.format(self.id, self.splash, fmt, size)
 
+    def get_banner_url(self, fmt='webp', size=1024):
+        if not self.banner:
+            return ''
+
+        return 'https://cdn.discordapp.com/banners/{}/{}.{}?size={}'.format(self.id, self.banner, fmt, size)
+
     @property
     def icon_url(self):
         return self.get_icon_url()
@@ -517,6 +526,10 @@ class Guild(SlottedModel, Permissible):
     @property
     def splash_url(self):
         return self.get_splash_url()
+
+    @property
+    def banner_url(self):
+        return self.get_banner_url()
 
     @property
     def system_channel(self):
