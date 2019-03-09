@@ -168,16 +168,11 @@ class Channel(SlottedModel, Permissible):
             base -= everyone.deny
             base += everyone.allow
 
-        denies = 0
-        allows = 0
         for role_id in member.roles:
             overwrite = self.overwrites.get(role_id)
             if overwrite:
-                denies |= overwrite.deny
-                allows |= overwrite.allow
-
-        base -= denies
-        base += allows
+                base -= overwrite.deny
+                base += overwrite.allow
 
         ow_member = self.overwrites.get(member.user.id)
         if ow_member:

@@ -66,7 +66,7 @@ class PermissionValue(object):
         if isinstance(other, PermissionValue):
             self.value &= ~other.value
         elif isinstance(other, int):
-            self.value &= other
+            self.value &= ~other
         elif isinstance(other, EnumAttr):
             setattr(self, other.name, False)
         else:
