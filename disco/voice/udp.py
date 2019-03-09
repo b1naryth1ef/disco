@@ -265,7 +265,7 @@ class UDPVoiceClient(LoggingClass):
 
                         offset = 4
                         for i in range(fields_amount):
-                            first_byte, = struct.unpack_from('>B', data[offset])
+                            first_byte, = struct.unpack_from('>B', data[:offset])
                             offset += 1
 
                             rtp_extension_identifer = first_byte & 0xF
