@@ -9,6 +9,7 @@ storage.json
 .cache/
 .benchmarks/
 __pycache__
+.venv
 
 # Documentation stuff
 docs/api/
