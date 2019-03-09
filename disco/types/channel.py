@@ -20,6 +20,7 @@ ChannelType = Enum(
     GUILD_VOICE=2,
     GROUP_DM=3,
     GUILD_CATEGORY=4,
+    GUILD_NEWS=5,
 )
 
 PermissionOverwriteType = Enum(
@@ -190,7 +191,20 @@ class Channel(SlottedModel, Permissible):
         """
         Whether this channel belongs to a guild.
         """
-        return self.type in (ChannelType.GUILD_TEXT, ChannelType.GUILD_VOICE, ChannelType.GUILD_CATEGORY)
+        return self.type in (
+            ChannelType.GUILD_TEXT,
+            ChannelType.GUILD_VOICE,
+            ChannelType.GUILD_CATEGORY,
+            ChannelType.GUILD_NEWS,
+        )
+
+    @property
+    def is_news(self):
+        """
+        Whether this channel contains news for the guild (used for verified guilds
+        to produce activity feed news).
+        """
+        return self.type == ChannelType.GUILD_NEWS
 
     @property
     def is_dm(self):
