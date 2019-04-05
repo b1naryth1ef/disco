@@ -346,7 +346,7 @@ class Message(SlottedModel):
         IDs for roles mentioned within this message.
     embeds : list[`MessageEmbed`]
         Embeds for this message.
-    attachments : list[`MessageAttachment`]
+    attachments : dict[`MessageAttachment`]
         Attachments for this message.
     reactions : list[`MessageReaction`]
         Reactions for this message.

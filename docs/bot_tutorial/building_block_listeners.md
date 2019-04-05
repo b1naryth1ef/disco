@@ -1,6 +1,6 @@
 # Listeners
 
-Listeners provide an API to listen to and execute code upon the occurance of specified Discord events.
+Listeners provide an API to listen to and execute code upon the occurrence of specified Discord events.
 
 ## Listener Basics
 
@@ -28,7 +28,7 @@ To see all the events you can subscribe too, checkout the [gateway events list](
 
 ## Listener Priority
 
-Each listener thats registered comes with a priority. This priority describes how the builtin event emitter will distribute events to your listener. To set a priority you can simply pass the priority kwarg:
+Each listener that's registered comes with a priority. This priority describes how the builtin event emitter will distribute events to your listener. To set a priority you can simply pass the priority kwarg:
 
 ```py
 from holster.emitter import Priority
@@ -43,6 +43,6 @@ def on_guild_member_add(self, event):
 
 | Name | Description |
 |------|-------------|
-| BEFORE | Recieves all events sequentially alongside the emitter. This is the most dangerous priority level, as any executed code will block other events in the emitter from flowing. Blocking within a BEFORE handler can be lethal. |
-| SEQUENTIAL | Recieves all events sequentially, but within a seperate greenlet. This priority level can be used for plugins that require sequential events but may block or take a long time to execute their event handler. |
-| NONE | This priority provides no guarentees about the ordering of events. Similar to SEQUENTIAL all event handlers are called within a seperate greenlet. |
+| BEFORE | Receives all events sequentially alongside the emitter. This is the most dangerous priority level, as any executed code will block other events in the emitter from flowing. Blocking within a BEFORE handler can be lethal. |
+| SEQUENTIAL | Receives all events sequentially, but within a separate greenlet. This priority level can be used for plugins that require sequential events but may block or take a long time to execute their event handler. |
+| NONE | This priority provides no guarantees about the ordering of events. Similar to SEQUENTIAL all event handlers are called within a separate greenlet. |

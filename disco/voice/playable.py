@@ -12,7 +12,7 @@ from disco.voice.opus import OpusEncoder
 
 
 try:
-    from cStringIO import cStringIO as BufferedIO
+    from io import StringIO as BufferedIO
 except ImportError:
     if six.PY2:
         from StringIO import StringIO as BufferedIO

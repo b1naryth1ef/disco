@@ -406,7 +406,7 @@ class VoiceClient(LoggingClass):
             channel_id = self.server_id
 
         if not channel_id:
-            raise VoiceException('[%s] cannot connect to an empty channel id', self)
+            raise VoiceException('[{}] cannot connect to an empty channel id'.format(self))
 
         if self.channel_id == channel_id:
             if self.state == VoiceState.CONNECTED:

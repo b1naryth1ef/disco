@@ -9,10 +9,10 @@ def take(seq, count):
 
     Args
     ----
-    seq : sequnce or generator
-        The sequnce to take elements from.
+    seq : sequence or generator
+        The sequence to take elements from.
     count : int
-        The number of elments to take.
+        The number of elements to take.
     """
     for _ in range(count):
         i = next(seq, NO_MORE_SENTINEL)
