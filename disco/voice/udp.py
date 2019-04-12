@@ -9,23 +9,30 @@ try:
 except ImportError:
     print('WARNING: nacl is not installed, voice support is disabled')
 
-from holster.enum import Enum
-
 from disco.util.logging import LoggingClass
 
 AudioCodecs = ('opus',)
 
-RTPPayloadTypes = Enum(OPUS=0x78)
 
-RTCPPayloadTypes = Enum(
-    SENDER_REPORT=200,
-    RECEIVER_REPORT=201,
-    SOURCE_DESCRIPTION=202,
-    BYE=203,
-    APP=204,
-    RTPFB=205,
-    PSFB=206,
-)
+class RTPPayloadTypes(object):
+    OPUS = 0x78
+
+    ALL = {OPUS}
+
+
+class RTCPPayloadTypes(object):
+    SENDER_REPORT = 200
+    RECEIVER_REPORT = 201
+    SOURCE_DESCRIPTION = 202
+    BYE = 203
+    APP = 204
+    RTPFB = 205
+    PSFB = 206
+
+    ALL = {
+        SENDER_REPORT, RECEIVER_REPORT, SOURCE_DESCRIPTION, BYE, APP, RTPFB, PSFB,
+    }
+
 
 MAX_UINT32 = 4294967295
 MAX_SEQUENCE = 65535
@@ -101,9 +108,9 @@ class UDPVoiceClient(LoggingClass):
         if codec not in AudioCodecs:
             raise Exception('Unsupported audio codec received, {}'.format(codec))
 
-        ptype = RTPPayloadTypes.get(codec)
-        self._rtp_audio_header[1] = ptype.value
-        self.log.debug('[%s] Set UDP\'s Audio Codec to %s, RTP payload type %s', self.vc, ptype.name, ptype.value)
+        ptype = getattr(RTPPayloadTypes, codec.upper())
+        self._rtp_audio_header[1] = ptype
+        self.log.debug('[%s] Set UDP\'s Audio Codec to %s, RTP payload type %s', self.vc, codec, ptype)
 
     def increment_timestamp(self, by):
         self.timestamp += by
@@ -173,8 +180,7 @@ class UDPVoiceClient(LoggingClass):
 
             first, second = struct.unpack_from('>BB', data)
 
-            payload_type = RTCPPayloadTypes.get(second)
-            if payload_type:
+            if second in RTCPPayloadTypes.ALL:
                 length, ssrc = struct.unpack_from('>HI', data, 2)
 
                 rtcp = RTCPHeader(
@@ -197,7 +203,7 @@ class UDPVoiceClient(LoggingClass):
                 payload = RTCPData(
                     client=self.vc,
                     user_id=user_id,
-                    payload_type=payload_type.name,
+                    payload_type=second,
                     header=rtcp,
                     data=data[8:],
                 )
@@ -223,10 +229,8 @@ class UDPVoiceClient(LoggingClass):
                     self.log.debug('[%s] [VoiceData] Received an invalid RTP packet version, %s', self.vc, rtp.version)
                     continue
 
-                payload_type = RTPPayloadTypes.get(rtp.payload_type)
-
                 # Unsupported payload type received
-                if not payload_type:
+                if rtp.payload_type not in RTPPayloadTypes.ALL:
                     self.log.debug('[%s] [VoiceData] Received unsupported payload type, %s', self.vc, rtp.payload_type)
                     continue
 
@@ -296,7 +300,7 @@ class UDPVoiceClient(LoggingClass):
                 payload = VoiceData(
                     client=self.vc,
                     user_id=self.vc.audio_ssrcs.get(rtp.ssrc, None),
-                    payload_type=payload_type.name,
+                    payload_type=second,
                     rtp=rtp,
                     nonce=nonce,
                     data=data,

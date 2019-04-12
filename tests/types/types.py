@@ -3,7 +3,6 @@ from __future__ import print_function
 import six
 
 from unittest import TestCase
-from holster.enum import Enum
 from disco.types.base import Model, Field, enum, snowflake, ConversionError
 
 
@@ -64,11 +63,10 @@ class TestModel(TestCase):
         self.assertEqual(obj, {'a': {'d': 'wow'}, 'b': {'z': 'wtf'}, 'g': 'lmao'})
 
     def test_model_field_enum(self):
-        en = Enum(
-            A=1,
-            B=2,
-            C=3
-        )
+        class en(object):
+            A = 1
+            B = 2
+            C = 3
 
         class _M(Model):
             field = Field(enum(en))

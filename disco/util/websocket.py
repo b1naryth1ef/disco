@@ -3,8 +3,7 @@ from __future__ import absolute_import
 import websocket
 import six
 
-from holster.emitter import Emitter
-
+from disco.util.emitter import Emitter
 from disco.util.logging import LoggingClass
 
 

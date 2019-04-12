@@ -2,7 +2,6 @@ import re
 import six
 
 from six.moves import map
-from holster.enum import Enum
 
 from disco.util.snowflake import to_snowflake
 from disco.util.functional import one_or_many, chunks
@@ -14,19 +13,18 @@ from disco.types.permissions import Permissions, Permissible, PermissionValue
 NSFW_RE = re.compile('^nsfw(-|$)')
 
 
-ChannelType = Enum(
-    GUILD_TEXT=0,
-    DM=1,
-    GUILD_VOICE=2,
-    GROUP_DM=3,
-    GUILD_CATEGORY=4,
-    GUILD_NEWS=5,
-)
+class ChannelType(object):
+    GUILD_TEXT = 0
+    DM = 1
+    GUILD_VOICE = 2
+    GROUP_DM = 3
+    GUILD_CATEGORY = 4
+    GUILD_NEWS = 5
 
-PermissionOverwriteType = Enum(
-    ROLE='role',
-    MEMBER='member',
-)
+
+class PermissionOverwriteType(object):
+    ROLE = 'role'
+    MEMBER = 'member'
 
 
 class ChannelSubType(SlottedModel):
@@ -528,7 +526,9 @@ class MessageIterator(object):
     chunk_size : int
         The number of messages to request per API call.
     """
-    Direction = Enum('UP', 'DOWN')
+    class Direction(object):
+        UP = 1
+        DOWN = 2
 
     def __init__(self, client, channel, direction=Direction.UP, bulk=False, before=None, after=None, chunk_size=100):
         self.client = client

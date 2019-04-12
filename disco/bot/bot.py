@@ -6,7 +6,6 @@ import inspect
 import importlib
 
 from six.moves import reload_module
-from holster.threadlocal import ThreadLocal
 from gevent.pywsgi import WSGIServer
 
 from disco.types.guild import GuildMember
@@ -16,6 +15,7 @@ from disco.bot.storage import Storage
 from disco.util.config import Config
 from disco.util.logging import LoggingClass
 from disco.util.serializer import Serializer
+from disco.util.threadlocal import ThreadLocal
 
 
 class BotConfig(Config):

@@ -5,35 +5,34 @@ import time
 
 from collections import namedtuple
 
-from holster.enum import Enum
-from holster.emitter import Emitter
-
 from disco.gateway.encoding.json import JSONEncoder
 from disco.util.websocket import Websocket
 from disco.util.logging import LoggingClass
+from disco.util.emitter import Emitter
 from disco.gateway.packets import OPCode
 from disco.types.base import cached_property
 from disco.voice.packets import VoiceOPCode
 from disco.voice.udp import AudioCodecs, RTPPayloadTypes, UDPVoiceClient
 
-SpeakingFlags = Enum(
-    NONE=0,
-    VOICE=1 << 0,
-    SOUNDSHARE=1 << 1,
-    PRIORITY=1 << 2,
-)
 
-VoiceState = Enum(
-    DISCONNECTED=0,
-    RECONNECTING=1,
-    AWAITING_ENDPOINT=2,
-    AUTHENTICATING=3,
-    AUTHENTICATED=4,
-    CONNECTING=5,
-    CONNECTED=6,
-    VOICE_CONNECTING=7,
-    VOICE_CONNECTED=8,
-)
+class SpeakingFlags(object):
+    NONE = 0
+    VOICE = 1 << 0
+    SOUNDSHARE = 1 << 1
+    PRIORITY = 1 << 2
+
+
+class VoiceState(object):
+    DISCONNECTED = 0
+    RECONNECTING = 1
+    AWAITING_ENDPOINT = 2
+    AUTHENTICATING = 3
+    AUTHENTICATED = 4
+    CONNECTING = 5
+    CONNECTED = 6
+    VOICE_CONNECTING = 7
+    VOICE_CONNECTED = 8
+
 
 VoiceSpeaking = namedtuple('VoiceSpeaking', [
     'client',

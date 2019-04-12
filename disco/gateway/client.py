@@ -78,7 +78,7 @@ class GatewayClient(LoggingClass):
         self.log.debug('GatewayClient.send %s', op)
         self.packets.emit((SEND, op), data)
         self.ws.send(self.encoder.encode({
-            'op': op.value,
+            'op': op,
             'd': data,
         }), self.encoder.OPCODE)
 
@@ -188,7 +188,7 @@ class GatewayClient(LoggingClass):
             self.seq = data['s']
 
         # Emit packet
-        self.packets.emit((RECV, OPCode[data['op']]), data)
+        self.packets.emit((RECV, data['op']), data)
 
     def on_error(self, error):
         if isinstance(error, KeyboardInterrupt):

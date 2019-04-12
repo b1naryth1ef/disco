@@ -7,8 +7,8 @@ import warnings
 import functools
 
 from gevent.event import AsyncResult
-from holster.emitter import Priority
 
+from disco.util.emitter import Priority
 from disco.util.logging import LoggingClass
 from disco.bot.command import Command, CommandError
 

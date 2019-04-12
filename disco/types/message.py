@@ -4,8 +4,6 @@ import warnings
 import functools
 import unicodedata
 
-from holster.enum import Enum
-
 from disco.types.base import (
     SlottedModel, Field, ListField, AutoDictField, snowflake, text,
     datetime, enum, cached_property,
@@ -15,16 +13,15 @@ from disco.util.snowflake import to_snowflake
 from disco.types.user import User
 
 
-MessageType = Enum(
-    DEFAULT=0,
-    RECIPIENT_ADD=1,
-    RECIPIENT_REMOVE=2,
-    CALL=3,
-    CHANNEL_NAME_CHANGE=4,
-    CHANNEL_ICON_CHANGE=5,
-    PINS_ADD=6,
-    GUILD_MEMBER_JOIN=7,
-)
+class MessageType(object):
+    DEFAULT = 0
+    RECIPIENT_ADD = 1
+    RECIPIENT_REMOVE = 2
+    CALL = 3
+    CHANNEL_NAME_CHANGE = 4
+    CHANNEL_ICON_CHANGE = 5
+    PINS_ADD = 6
+    GUILD_MEMBER_JOIN = 7
 
 
 class Emoji(SlottedModel):

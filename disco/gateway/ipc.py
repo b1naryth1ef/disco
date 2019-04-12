@@ -3,8 +3,6 @@ import gevent
 import string
 import weakref
 
-from holster.enum import Enum
-
 from disco.util.logging import LoggingClass
 from disco.util.serializer import dump_function, load_function
 
@@ -13,12 +11,11 @@ def get_random_str(size):
     return ''.join([random.choice(string.printable) for _ in range(size)])
 
 
-IPCMessageType = Enum(
-    'CALL_FUNC',
-    'GET_ATTR',
-    'EXECUTE',
-    'RESPONSE',
-)
+class IPCMessageType(object):
+    CALL_FUNC = 1
+    GET_ATTR = 2
+    EXECUTE = 3
+    RESPONSE = 4
 
 
 class GIPCProxy(LoggingClass):
@@ -37,7 +34,7 @@ class GIPCProxy(LoggingClass):
         return base
 
     def send(self, typ, data):
-        self.pipe.put((typ.value, data))
+        self.pipe.put((typ, data))
 
     def handle(self, mtype, data):
         if mtype == IPCMessageType.CALL_FUNC:
@@ -75,17 +72,17 @@ class GIPCProxy(LoggingClass):
         nonce = get_random_str(32)
         raw = dump_function(func)
         self.results[nonce] = result = gevent.event.AsyncResult()
-        self.pipe.put((IPCMessageType.EXECUTE.value, (nonce, raw)))
+        self.pipe.put((IPCMessageType.EXECUTE, (nonce, raw)))
         return result
 
     def get(self, path):
         nonce = get_random_str(32)
         self.results[nonce] = result = gevent.event.AsyncResult()
-        self.pipe.put((IPCMessageType.GET_ATTR.value, (nonce, path)))
+        self.pipe.put((IPCMessageType.GET_ATTR, (nonce, path)))
         return result
 
     def call(self, path, *args, **kwargs):
         nonce = get_random_str(32)
         self.results[nonce] = result = gevent.event.AsyncResult()
-        self.pipe.put((IPCMessageType.CALL_FUNC.value, (nonce, path, args, kwargs)))
+        self.pipe.put((IPCMessageType.CALL_FUNC, (nonce, path, args, kwargs)))
         return result

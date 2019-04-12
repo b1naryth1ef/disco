@@ -1,8 +1,6 @@
 import six
 import warnings
 
-from holster.enum import Enum
-
 from disco.api.http import APIException
 from disco.util.paginator import Paginator
 from disco.util.snowflake import to_snowflake
@@ -17,24 +15,23 @@ from disco.types.message import Emoji
 from disco.types.permissions import PermissionValue, Permissions, Permissible
 
 
-VerificationLevel = Enum(
-    NONE=0,
-    LOW=1,
-    MEDIUM=2,
-    HIGH=3,
-    EXTREME=4,
-)
+class VerificationLevel(object):
+    NONE = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    EXTREME = 4
 
-ExplicitContentFilterLevel = Enum(
-    NONE=0,
-    WITHOUT_ROLES=1,
-    ALL=2,
-)
 
-DefaultMessageNotificationsLevel = Enum(
-    ALL_MESSAGES=0,
-    ONLY_MENTIONS=1,
-)
+class ExplicitContentFilterLevel(object):
+    NONE = 0
+    WITHOUT_ROLES = 1
+    ALL = 2
+
+
+class DefaultMessageNotificationsLevel(object):
+    ALL_MESSAGES = 0
+    ONLY_MENTIONS = 1
 
 
 class GuildEmoji(Emoji):
@@ -551,34 +548,33 @@ class Guild(SlottedModel, Permissible):
         return self.client.api.guilds_auditlogs_list(self.id, *args, **kwargs)
 
 
-AuditLogActionTypes = Enum(
-    GUILD_UPDATE=1,
-    CHANNEL_CREATE=10,
-    CHANNEL_UPDATE=11,
-    CHANNEL_DELETE=12,
-    CHANNEL_OVERWRITE_CREATE=13,
-    CHANNEL_OVERWRITE_UPDATE=14,
-    CHANNEL_OVERWRITE_DELETE=15,
-    MEMBER_KICK=20,
-    MEMBER_PRUNE=21,
-    MEMBER_BAN_ADD=22,
-    MEMBER_BAN_REMOVE=23,
-    MEMBER_UPDATE=24,
-    MEMBER_ROLE_UPDATE=25,
-    ROLE_CREATE=30,
-    ROLE_UPDATE=31,
-    ROLE_DELETE=32,
-    INVITE_CREATE=40,
-    INVITE_UPDATE=41,
-    INVITE_DELETE=42,
-    WEBHOOK_CREATE=50,
-    WEBHOOK_UPDATE=51,
-    WEBHOOK_DELETE=52,
-    EMOJI_CREATE=60,
-    EMOJI_UPDATE=61,
-    EMOJI_DELETE=62,
-    MESSAGE_DELETE=72,
-)
+class AuditLogActionTypes(object):
+    GUILD_UPDATE = 1
+    CHANNEL_CREATE = 10
+    CHANNEL_UPDATE = 11
+    CHANNEL_DELETE = 12
+    CHANNEL_OVERWRITE_CREATE = 13
+    CHANNEL_OVERWRITE_UPDATE = 14
+    CHANNEL_OVERWRITE_DELETE = 15
+    MEMBER_KICK = 20
+    MEMBER_PRUNE = 21
+    MEMBER_BAN_ADD = 22
+    MEMBER_BAN_REMOVE = 23
+    MEMBER_UPDATE = 24
+    MEMBER_ROLE_UPDATE = 25
+    ROLE_CREATE = 30
+    ROLE_UPDATE = 31
+    ROLE_DELETE = 32
+    INVITE_CREATE = 40
+    INVITE_UPDATE = 41
+    INVITE_DELETE = 42
+    WEBHOOK_CREATE = 50
+    WEBHOOK_UPDATE = 51
+    WEBHOOK_DELETE = 52
+    EMOJI_CREATE = 60
+    EMOJI_UPDATE = 61
+    EMOJI_DELETE = 62
+    MESSAGE_DELETE = 72
 
 
 GUILD_ACTIONS = (

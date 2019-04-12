@@ -1,8 +1,6 @@
 import re
 import argparse
 
-from holster.enum import Enum
-
 from six import integer_types
 
 from disco.bot.parser import ArgumentSet, ArgumentError
@@ -16,13 +14,13 @@ USER_MENTION_RE = re.compile('<@!?([0-9]+)>')
 ROLE_MENTION_RE = re.compile('<@&([0-9]+)>')
 CHANNEL_MENTION_RE = re.compile('<#([0-9]+)>')
 
-CommandLevels = Enum(
-    DEFAULT=0,
-    TRUSTED=10,
-    MOD=50,
-    ADMIN=100,
-    OWNER=500,
-)
+
+class CommandLevels(object):
+    DEFAULT = 0
+    TRUSTED = 10
+    MOD = 50
+    ADMIN = 100
+    OWNER = 500
 
 
 class PluginArgumentParser(argparse.ArgumentParser):

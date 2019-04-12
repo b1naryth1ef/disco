@@ -3,7 +3,6 @@ import gevent
 import inspect
 import functools
 
-from holster.enum import BaseEnumMeta, EnumAttr
 from datetime import datetime as real_datetime
 
 from disco.util.chains import Chainable
@@ -109,10 +108,10 @@ class Field(object):
     def type_to_deserializer(typ):
         if isinstance(typ, Field) or inspect.isclass(typ) and issubclass(typ, Model):
             return typ
-        elif isinstance(typ, BaseEnumMeta):
-            def _f(raw, client, **kwargs):
-                return typ.get(raw)
-            return _f
+        # elif isinstance(typ, BaseEnumMeta):
+        #    def _f(raw, client, **kwargs):
+        #        return typ.get(raw)
+        #    return _f
         elif typ is None:
             def _f(*args, **kwargs):
                 return None
@@ -123,9 +122,7 @@ class Field(object):
 
     @staticmethod
     def serialize(value, inst=None):
-        if isinstance(value, EnumAttr):
-            return value.value
-        elif isinstance(value, Model):
+        if isinstance(value, Model):
             return value.to_dict(ignore=(inst.ignore_dump if inst else []))
         else:
             if inst and inst.cast:
@@ -194,11 +191,29 @@ def snowflake(data):
     return int(data) if data else None
 
 
+def _enum_attrs(enum):
+    for k, v in six.iteritems(enum.__dict__):
+        if not isinstance(k, six.string_types):
+            continue
+
+        if k.startswith('_') or not k.isupper():
+            continue
+
+        yield k, v
+
+
 def enum(typ):
     def _f(data):
-        if isinstance(data, str):
-            data = data.lower()
-        return typ.get(data) if data is not None else None
+        if data is None:
+            return None
+
+        for k, v in _enum_attrs(typ):
+            if isinstance(data, six.string_types) and k == data.upper():
+                return v
+            elif k == data or v == data:
+                return v
+
+        return None
     return _f
 
 

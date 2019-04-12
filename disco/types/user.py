@@ -1,14 +1,14 @@
-from holster.enum import Enum
+from disco.types.base import SlottedModel, Field, snowflake, text, with_equality, with_hash, enum
 
-from disco.types.base import SlottedModel, Field, snowflake, text, with_equality, with_hash
 
-DefaultAvatars = Enum(
-    BLURPLE=0,
-    GREY=1,
-    GREEN=2,
-    ORANGE=3,
-    RED=4,
-)
+class DefaultAvatars(object):
+    BLURPLE = 0
+    GREY = 1
+    GREEN = 2
+    ORANGE = 3
+    RED = 4
+
+    ALL = [BLURPLE, GREY, GREEN, ORANGE, RED]
 
 
 class User(SlottedModel, with_equality('id'), with_hash('id')):
@@ -24,7 +24,7 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
 
     def get_avatar_url(self, fmt=None, size=1024):
         if not self.avatar:
-            return 'https://cdn.discordapp.com/embed/avatars/{}.png'.format(self.default_avatar.value)
+            return 'https://cdn.discordapp.com/embed/avatars/{}.png'.format(self.default_avatar)
         if fmt is not None:
             return 'https://cdn.discordapp.com/avatars/{}/{}.{}?size={}'.format(self.id, self.avatar, fmt, size)
         if self.avatar.startswith('a_'):
@@ -34,7 +34,7 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
 
     @property
     def default_avatar(self):
-        return DefaultAvatars[int(self.discriminator) % len(DefaultAvatars.attrs)]
+        return DefaultAvatars.ALL[int(self.discriminator) % len(DefaultAvatars.ALL)]
 
     @property
     def avatar_url(self):
@@ -54,24 +54,23 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
         return u'<User {} ({})>'.format(self.id, self)
 
 
-GameType = Enum(
-    DEFAULT=0,
-    STREAMING=1,
-    LISTENING=2,
-    WATCHING=3,
-)
+class GameType(object):
+    DEFAULT = 0
+    STREAMING = 1
+    LISTENING = 2
+    WATCHING = 3
 
-Status = Enum(
-    'ONLINE',
-    'IDLE',
-    'DND',
-    'INVISIBLE',
-    'OFFLINE',
-)
+
+class Status(object):
+    ONLINE = 'ONLINE'
+    IDLE = 'IDLE'
+    DND = 'DND'
+    INVISIBLE = 'INVISIBLE'
+    OFFLINE = 'OFFLINE'
 
 
 class Game(SlottedModel):
-    type = Field(GameType)
+    type = Field(enum(GameType))
     name = Field(text)
     url = Field(text)
 
@@ -79,4 +78,4 @@ class Game(SlottedModel):
 class Presence(SlottedModel):
     user = Field(User, alias='user', ignore_dump=['presence'])
     game = Field(Game)
-    status = Field(Status)
+    status = Field(enum(Status))

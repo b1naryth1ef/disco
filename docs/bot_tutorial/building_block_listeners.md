@@ -31,7 +31,7 @@ To see all the events you can subscribe too, checkout the [gateway events list](
 Each listener that's registered comes with a priority. This priority describes how the builtin event emitter will distribute events to your listener. To set a priority you can simply pass the priority kwarg:
 
 ```py
-from holster.emitter import Priority
+from disco.util.emitter import Priority
 
 @Plugin.listen('GuildMemberAdd', priority=Priority.BEFORE)
 def on_guild_member_add(self, event):

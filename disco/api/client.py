@@ -6,7 +6,6 @@ from contextlib import contextmanager
 from gevent.local import local
 from six.moves.urllib.parse import quote
 
-from holster.enum import EnumAttr
 from disco.api.http import Routes, HTTPClient, to_bytes
 from disco.util.logging import LoggingClass
 from disco.util.sanitize import S
@@ -308,7 +307,7 @@ class APIClient(LoggingClass):
 
         payload = {
             'name': name,
-            'type': channel_type.value if isinstance(channel_type, EnumAttr) else channel_type,
+            'type': channel_type,
             'permission_overwrites': [i.to_dict() for i in permission_overwrites],
             'parent_id': parent_id,
         }

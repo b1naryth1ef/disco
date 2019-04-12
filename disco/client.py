@@ -1,14 +1,13 @@
 import time
 import gevent
 
-from holster.emitter import Emitter
-
 from disco.state import State, StateConfig
 from disco.api.client import APIClient
 from disco.gateway.client import GatewayClient
 from disco.gateway.packets import OPCode
 from disco.types.user import Status, Game
 from disco.util.config import Config
+from disco.util.emitter import Emitter
 from disco.util.logging import LoggingClass
 from disco.util.backdoor import DiscoBackdoorServer
 

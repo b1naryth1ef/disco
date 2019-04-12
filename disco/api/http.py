@@ -4,21 +4,18 @@ import gevent
 import six
 import sys
 
-from holster.enum import Enum
-
 from disco import VERSION as disco_version
 from requests import __version__ as requests_version
 from disco.util.logging import LoggingClass
 from disco.api.ratelimit import RateLimiter
 
-# Enum of all HTTP methods used
-HTTPMethod = Enum(
-    GET='GET',
-    POST='POST',
-    PUT='PUT',
-    PATCH='PATCH',
-    DELETE='DELETE',
-)
+
+class HTTPMethod(object):
+    GET = 'GET'
+    POST = 'POST'
+    PUT = 'PUT'
+    PATCH = 'PATCH'
+    DELETE = 'DELETE'
 
 
 def to_bytes(obj):
@@ -257,7 +254,7 @@ class HTTPClient(LoggingClass):
         # Build the bucket URL
         args = {k: to_bytes(v) for k, v in six.iteritems(args)}
         filtered = {k: (v if k in ('guild', 'channel') else '') for k, v in six.iteritems(args)}
-        bucket = (route[0].value, route[1].format(**filtered))
+        bucket = (route[0], route[1].format(**filtered))
 
         response = APIResponse()
 
@@ -268,8 +265,8 @@ class HTTPClient(LoggingClass):
 
         # Make the actual request
         url = self.BASE_URL + route[1].format(**args)
-        self.log.info('%s %s (%s)', route[0].value, url, kwargs.get('params'))
-        r = self.session.request(route[0].value, url, **kwargs)
+        self.log.info('%s %s (%s)', route[0], url, kwargs.get('params'))
+        r = self.session.request(route[0], url, **kwargs)
 
         if self.after_request:
             response.response = r

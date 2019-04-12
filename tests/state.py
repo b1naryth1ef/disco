@@ -1,6 +1,6 @@
 from disco.state import State, StateConfig
-from holster.emitter import Emitter
 from disco.gateway.events import VoiceStateUpdate
+from disco.util.emitter import Emitter
 
 
 class MockClient(object):

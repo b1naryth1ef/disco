@@ -1,9 +1,7 @@
 from websocket import ABNF
 
-from holster.interface import Interface
 
-
-class BaseEncoder(Interface):
+class BaseEncoder(object):
     TYPE = None
     OPCODE = ABNF.OPCODE_TEXT
 
