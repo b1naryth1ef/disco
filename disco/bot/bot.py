@@ -16,6 +16,7 @@ from disco.util.config import Config
 from disco.util.logging import LoggingClass
 from disco.util.serializer import Serializer
 from disco.util.threadlocal import ThreadLocal
+from disco.util.enum import get_enum_value_by_name
 
 
 class BotConfig(Config):
@@ -185,9 +186,13 @@ class Bot(LoggingClass):
         for plugin_mod in self.config.plugins:
             self.add_plugin_module(plugin_mod)
 
-        # Convert level mapping
-        for k, v in list(six.iteritems(self.config.levels)):
-            self.config.levels[int(k) if k.isdigit() else k] = CommandLevels.get(v)
+        # Convert our configured mapping of entities to levels into something
+        #  we can actually use. This ensures IDs are converted properly, and maps
+        #  any level names (e.g. `role_id: admin`) map to their numerical values.
+        for entity_id, level in six.iteritems(self.config.levels):
+            entity_id = int(entity_id) if str(entity_id).isdigit() else entity_id
+            level = int(level) if str(level).isdigit() else get_enum_value_by_name(CommandLevels, level)
+            self.config.levels[entity_id] = level
 
     @classmethod
     def from_cli(cls, *plugins):

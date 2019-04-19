@@ -7,6 +7,7 @@ from datetime import datetime as real_datetime
 
 from disco.util.chains import Chainable
 from disco.util.hashmap import HashMap
+from disco.util.enum import get_enum_members
 
 DATETIME_FORMATS = [
     '%Y-%m-%dT%H:%M:%S.%f',
@@ -191,23 +192,12 @@ def snowflake(data):
     return int(data) if data else None
 
 
-def _enum_attrs(enum):
-    for k, v in six.iteritems(enum.__dict__):
-        if not isinstance(k, six.string_types):
-            continue
-
-        if k.startswith('_') or not k.isupper():
-            continue
-
-        yield k, v
-
-
 def enum(typ):
     def _f(data):
         if data is None:
             return None
 
-        for k, v in _enum_attrs(typ):
+        for k, v in get_enum_members(typ):
             if isinstance(data, six.string_types) and k == data.upper():
                 return v
             elif k == data or v == data:
@@ -396,7 +386,7 @@ class Model(six.with_metaclass(ModelMeta, Chainable)):
             if ignore and name in ignore:
                 continue
 
-            if getattr(self, name) == UNSET:
+            if getattr(self, name) is UNSET:
                 continue
             obj[name] = field.serialize(getattr(self, name), field)
         return obj
