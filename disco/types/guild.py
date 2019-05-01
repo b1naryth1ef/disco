@@ -219,6 +219,12 @@ class GuildMember(SlottedModel):
         else:
             self.client.api.guilds_members_modify(self.guild.id, self.user.id, nick=nickname or '', **kwargs)
 
+    def disconnect(self):
+        """
+        Disconnects the member from voice (if they are connected).
+        """
+        self.modify(channel_id=None)
+
     def modify(self, **kwargs):
         self.client.api.guilds_members_modify(self.guild.id, self.user.id, **kwargs)
 
