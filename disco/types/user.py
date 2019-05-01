@@ -1,4 +1,9 @@
-from disco.types.base import SlottedModel, Field, snowflake, text, with_equality, with_hash, enum
+from datetime import datetime
+
+from disco.types.base import (
+    SlottedModel, Field, snowflake, text, with_equality, with_hash, enum, ListField,
+    cached_property,
+)
 
 
 class DefaultAvatars(object):
@@ -69,10 +74,50 @@ class Status(object):
     OFFLINE = 'OFFLINE'
 
 
+class Party(SlottedModel):
+    id = Field(text)
+    size = ListField(int)
+
+
+class Assets(SlottedModel):
+    large_image = Field(text)
+    large_text = Field(text)
+    small_image = Field(text)
+    small_text = Field(text)
+
+
+class Secrets(SlottedModel):
+    join = Field(text)
+    spectate = Field(text)
+    match = Field(text)
+
+
+class Timestamps(SlottedModel):
+    start = Field(int)
+    end = Field(int)
+
+    @cached_property
+    def start_time(self):
+        return datetime.utcfromtimestamp(self.start / 1000)
+
+    @cached_property
+    def end_time(self):
+        return datetime.utcfromtimestamp(self.end / 1000)
+
+
 class Game(SlottedModel):
     type = Field(enum(GameType))
     name = Field(text)
     url = Field(text)
+    timestamps = Field(Timestamps)
+    application_id = Field(text)
+    details = Field(text)
+    state = Field(text)
+    party = Field(Party)
+    assets = Field(Assets)
+    secrets = Field(Secrets)
+    instance = Field(bool)
+    flags = Field(int)
 
 
 class Presence(SlottedModel):
