@@ -377,7 +377,7 @@ class APIClient(LoggingClass):
         self.http(
             Routes.GUILDS_MEMBERS_MODIFY,
             dict(guild=guild, member=member),
-            json=optional(**kwargs),
+            json=kwargs,
             headers=_reason_header(reason))
 
     def guilds_members_roles_add(self, guild, member, role, reason=None):
