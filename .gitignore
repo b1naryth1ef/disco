@@ -20,5 +20,8 @@ node_modules/
 # JetBrains IDE
 .idea/
 
+# Visual Studio IDE
+/.vs
+
 # macOS
 .DS_Store

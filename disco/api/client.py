@@ -229,6 +229,9 @@ class APIClient(LoggingClass):
 
         self.http(route, obj)
 
+    def channels_messages_reactions_delete_all(self, channel, message):
+        self.http(Routes.CHANNEL_MESSAGES_REACTIONS_DELETE_ALL, dict(channel=channel, message=message))
+
     def channels_permissions_modify(self, channel, permission, allow, deny, typ, reason=None):
         self.http(Routes.CHANNELS_PERMISSIONS_MODIFY, dict(channel=channel, permission=permission), json={
             'allow': allow,

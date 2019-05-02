@@ -509,6 +509,15 @@ class Message(SlottedModel):
             emoji,
             user)
 
+    def delete_all_reactions(self):
+        """
+        Deletes all the reactions from a message.
+        """
+        self.client.api.channels_messages_reactions_delete_all(
+            self.channel_id,
+            self.id,
+        )
+
     def is_mentioned(self, entity):
         """
         Returns
