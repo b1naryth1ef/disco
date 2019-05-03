@@ -171,7 +171,7 @@ class Command(object):
             oob=False,
             context=None,
             parser=False,
-            **kwargs):
+            metadata=None):
         self.triggers += aliases or []
 
         def resolve_role(ctx, rid):
@@ -209,7 +209,7 @@ class Command(object):
         self.is_regex = is_regex
         self.oob = oob
         self.context = context or {}
-        self.metadata = kwargs
+        self.metadata = metadata or {}
 
         if parser:
             self.parser = PluginArgumentParser(prog=self.name, add_help=False)
