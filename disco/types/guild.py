@@ -75,7 +75,7 @@ class GuildEmoji(Emoji):
 
     @property
     def url(self):
-        return 'https://discordapp.com/api/emojis/{}.{}'.format(self.id, 'gif' if self.animated else 'png')
+        return 'https://cdn.discordapp.com/emojis/{}.{}'.format(self.id, 'gif' if self.animated else 'png')
 
     @cached_property
     def guild(self):
