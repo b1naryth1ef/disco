@@ -131,6 +131,7 @@ class Channel(SlottedModel, Permissible):
     type = Field(enum(ChannelType))
     overwrites = AutoDictField(PermissionOverwrite, 'id', alias='permission_overwrites')
     parent_id = Field(snowflake)
+    rate_limit_per_user = Field(int)
 
     def __init__(self, *args, **kwargs):
         super(Channel, self).__init__(*args, **kwargs)
@@ -473,6 +474,16 @@ class Channel(SlottedModel, Permissible):
         return self.client.api.channels_modify(
             self.id,
             parent_id=to_snowflake(parent) if parent else parent,
+            reason=reason)
+
+    def set_slowmode(self, interval, reason=None):
+        """
+        Sets the channels slowmode (rate_limit_per_user).
+        """
+        assert (self.type == ChannelType.GUILD_TEXT)
+        return self.client.api.channels_modify(
+            self.id,
+            rate_limit_per_user=interval,
             reason=reason)
 
     def create_text_channel(self, *args, **kwargs):
