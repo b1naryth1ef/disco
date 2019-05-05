@@ -65,6 +65,7 @@ class Routes(object):
     # Guilds
     GUILDS = '/guilds/{guild}'
     GUILDS_GET = (HTTPMethod.GET, GUILDS)
+    GUILDS_CREATE = (HTTPMethod.POST, '/guilds')
     GUILDS_MODIFY = (HTTPMethod.PATCH, GUILDS)
     GUILDS_DELETE = (HTTPMethod.DELETE, GUILDS)
     GUILDS_CHANNELS_LIST = (HTTPMethod.GET, GUILDS + '/channels')
@@ -77,7 +78,9 @@ class Routes(object):
     GUILDS_MEMBERS_ROLES_REMOVE = (HTTPMethod.DELETE, GUILDS + '/members/{member}/roles/{role}')
     GUILDS_MEMBERS_ME_NICK = (HTTPMethod.PATCH, GUILDS + '/members/@me/nick')
     GUILDS_MEMBERS_KICK = (HTTPMethod.DELETE, GUILDS + '/members/{member}')
+    GUILDS_MEMBERS_ADD = (HTTPMethod.PUT, GUILDS + '/members/{member}')
     GUILDS_BANS_LIST = (HTTPMethod.GET, GUILDS + '/bans')
+    GUILDS_BANS_GET = (HTTPMethod.GET, GUILDS + '/bans/{user}')
     GUILDS_BANS_CREATE = (HTTPMethod.PUT, GUILDS + '/bans/{user}')
     GUILDS_BANS_DELETE = (HTTPMethod.DELETE, GUILDS + '/bans/{user}')
     GUILDS_ROLES_LIST = (HTTPMethod.GET, GUILDS + '/roles')
@@ -88,6 +91,7 @@ class Routes(object):
     GUILDS_PRUNE_COUNT = (HTTPMethod.GET, GUILDS + '/prune')
     GUILDS_PRUNE_BEGIN = (HTTPMethod.POST, GUILDS + '/prune')
     GUILDS_VOICE_REGIONS_LIST = (HTTPMethod.GET, GUILDS + '/regions')
+    GUILDS_VANITY_URL_GET = (HTTPMethod.GET, GUILDS + '/vanity-url')
     GUILDS_INVITES_LIST = (HTTPMethod.GET, GUILDS + '/invites')
     GUILDS_INTEGRATIONS_LIST = (HTTPMethod.GET, GUILDS + '/integrations')
     GUILDS_INTEGRATIONS_CREATE = (HTTPMethod.POST, GUILDS + '/integrations')
@@ -99,6 +103,7 @@ class Routes(object):
     GUILDS_WEBHOOKS_LIST = (HTTPMethod.GET, GUILDS + '/webhooks')
     GUILDS_EMOJIS_LIST = (HTTPMethod.GET, GUILDS + '/emojis')
     GUILDS_EMOJIS_CREATE = (HTTPMethod.POST, GUILDS + '/emojis')
+    GUILDS_EMOJIS_GET = (HTTPMethod.GET, GUILDS + '/emojis/{emoji}')
     GUILDS_EMOJIS_MODIFY = (HTTPMethod.PATCH, GUILDS + '/emojis/{emoji}')
     GUILDS_EMOJIS_DELETE = (HTTPMethod.DELETE, GUILDS + '/emojis/{emoji}')
     GUILDS_AUDITLOGS_LIST = (HTTPMethod.GET, GUILDS + '/audit-logs')

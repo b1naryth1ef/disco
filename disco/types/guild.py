@@ -434,6 +434,9 @@ class Guild(SlottedModel, Permissible):
     def get_bans(self):
         return self.client.api.guilds_bans_list(self.id)
 
+    def get_ban(self, user):
+        return self.client.api.guilds_bans_get(self.id, user)
+
     def delete_ban(self, user, **kwargs):
         self.client.api.guilds_bans_delete(self.id, to_snowflake(user), **kwargs)
 
@@ -495,8 +498,14 @@ class Guild(SlottedModel, Permissible):
     def get_invites(self):
         return self.client.api.guilds_invites_list(self.id)
 
+    def get_vanity_url(self):
+        return self.client.api.guilds_vanity_url_get(self.id)
+
     def get_emojis(self):
         return self.client.api.guilds_emojis_list(self.id)
+
+    def get_emoji(self, emoji):
+        return self.client.api.guilds_emojis_get(self.id, emoji)
 
     def get_icon_url(self, fmt='webp', size=1024):
         if not self.icon:

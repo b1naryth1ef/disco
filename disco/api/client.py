@@ -230,7 +230,7 @@ class APIClient(LoggingClass):
         self.http(route, obj)
 
     def channels_messages_reactions_delete_all(self, channel, message):
-        self.http(Routes.CHANNEL_MESSAGES_REACTIONS_DELETE_ALL, dict(channel=channel, message=message))
+        self.http(Routes.CHANNELS_MESSAGES_REACTIONS_DELETE_ALL, dict(channel=channel, message=message))
 
     def channels_permissions_modify(self, channel, permission, allow, deny, typ, reason=None):
         self.http(Routes.CHANNELS_PERMISSIONS_MODIFY, dict(channel=channel, permission=permission), json={
@@ -288,7 +288,34 @@ class APIClient(LoggingClass):
         return Guild.create(self.client, r.json())
 
     def guilds_delete(self, guild):
-        r = self.http(Routes.GUILDS_DELETE, dict(guild=guild))
+        self.http(Routes.GUILDS_DELETE, dict(guild=guild))
+
+    def guilds_create(
+            self,
+            name,
+            region=None,
+            icon=None,
+            verification_level=None,
+            default_message_notifications=None,
+            explicit_content_filter=None,
+            roles=None,
+            channels=None):
+
+        payload = {
+            'name': name,
+            'roles': (roles or []),
+            'channels': (channels or []),
+        }
+
+        payload.update(optional(
+            region=region,
+            icon=icon,
+            verification_level=verification_level,
+            default_message_notifications=default_message_notifications,
+            explicit_content_filter=explicit_content_filter,
+        ))
+
+        r = self.http(Routes.GUILDS_CREATE, json=payload)
         return Guild.create(self.client, r.json())
 
     def guilds_channels_list(self, guild):
@@ -368,12 +395,30 @@ class APIClient(LoggingClass):
     def guilds_members_me_nick(self, guild, nick):
         self.http(Routes.GUILDS_MEMBERS_ME_NICK, dict(guild=guild), json={'nick': nick})
 
+    def guilds_members_add(self, guild, member, access_token, nick=None, roles=None, mute=None, deaf=None):
+        payload = {
+            'access_token': access_token
+        }
+
+        payload.update(optional(
+            nick=nick,
+            roles=roles,
+            mute=mute,
+            deaf=deaf,
+        ))
+
+        self.http(Routes.GUILDS_MEMBERS_ADD, dict(guild=guild, member=member), json=payload)
+
     def guilds_members_kick(self, guild, member, reason=None):
         self.http(Routes.GUILDS_MEMBERS_KICK, dict(guild=guild, member=member), headers=_reason_header(reason))
 
     def guilds_bans_list(self, guild):
         r = self.http(Routes.GUILDS_BANS_LIST, dict(guild=guild))
         return GuildBan.create_hash(self.client, 'user.id', r.json())
+
+    def guilds_bans_get(self, guild, user):
+        r = self.http(Routes.GUILDS_BANS_GET, dict(guild=guild, user=user))
+        return GuildBan.create(self.client, r.json())
 
     def guilds_bans_create(self, guild, user, delete_message_days=0, reason=None):
         self.http(Routes.GUILDS_BANS_CREATE, dict(guild=guild, user=user), params={
@@ -451,9 +496,17 @@ class APIClient(LoggingClass):
         r = self.http(Routes.GUILDS_INVITES_LIST, dict(guild=guild))
         return Invite.create_map(self.client, r.json())
 
+    def guilds_vanity_url_get(self, guild):
+        r = self.http(Routes.GUILDS_VANITY_URL_GET, dict(guild=guild))
+        return Invite.create(self.client, r.json())
+
     def guilds_webhooks_list(self, guild):
         r = self.http(Routes.GUILDS_WEBHOOKS_LIST, dict(guild=guild))
         return Webhook.create_map(self.client, r.json())
+
+    def guilds_emojis_get(self, guild, emoji):
+        r = self.http(Routes.GUILDS_EMOJIS_GET, dict(guild=guild, emoji=emoji))
+        return GuildEmoji.create(self.client, r.json())
 
     def guilds_emojis_list(self, guild):
         r = self.http(Routes.GUILDS_EMOJIS_LIST, dict(guild=guild))
