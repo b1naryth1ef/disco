@@ -361,18 +361,6 @@ class Channel(SlottedModel, Permissible):
         """
         self.client.api.channels_typing(self.id)
 
-    def connect(self, *args, **kwargs):
-        """
-        Connect to this channel over voice.
-        """
-        from disco.voice.client import VoiceClient
-        assert self.is_voice, 'Channel must support voice to connect'
-
-        server_id = self.guild_id or self.id
-        vc = self.client.state.voice_clients.get(server_id) or VoiceClient(self.client, server_id, is_dm=self.is_dm)
-
-        return vc.connect(self.id, *args, **kwargs)
-
     def create_overwrite(self, *args, **kwargs):
         """
         Creates a `PermissionOverwrite` for this channel. See

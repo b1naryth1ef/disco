@@ -34,8 +34,3 @@ from disco.util.logging import *
 from disco.util.serializer import *
 from disco.util.snowflake import *
 from disco.util.websocket import *
-from disco.voice.client import *
-from disco.voice.opus import *
-from disco.voice.packets import *
-from disco.voice.playable import *
-from disco.voice.player import *

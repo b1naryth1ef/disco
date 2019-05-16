@@ -10,7 +10,7 @@ with open('README.md') as f:
     readme = f.read()
 
 extras_require = {
-    'voice': ['pynacl==1.2.1'],
+    'voice': ['telecom-py==0.0.4'],
     'http': ['flask==0.12.2'],
     'yaml': ['pyyaml==3.12'],
     'music': ['youtube_dl>=2018.1.21'],

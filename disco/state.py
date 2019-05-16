@@ -9,7 +9,6 @@ from disco.util.config import Config
 from disco.util.string import underscore
 from disco.util.hashmap import HashMap, DefaultHashMap
 from disco.util.emitter import Priority
-from disco.voice.client import VoiceState
 
 
 class StackMessage(namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])):
@@ -273,21 +272,6 @@ class State(object):
             if expired_voice_state:
                 del self.voice_states[expired_voice_state.session_id]
             self.voice_states[event.state.session_id] = event.state
-
-        if event.state.user_id != self.me.id:
-            return
-
-        server_id = event.state.guild_id or event.state.channel_id
-        if server_id in self.voice_clients:
-            voice_client = self.voice_clients[server_id]
-
-            voice_client.channel_id = event.state.channel_id
-            if not event.state.channel_id:
-                voice_client.disconnect()
-                return
-
-            if voice_client.token:
-                voice_client.set_state(VoiceState.CONNECTED)
 
     def on_guild_member_add(self, event):
         if event.member.user.id not in self.users:
