@@ -53,7 +53,7 @@ class BotConfig(Config):
     commands_level_getter : function
         If set, a function which when given a GuildMember or User, returns the
         relevant :class:`disco.bot.commands.CommandLevels`.
-    commands_group_abbrev : function
+    commands_group_abbrev : bool
         If true, command groups may be abbreviated to the least common variation.
         E.g. the grouping 'test' may be abbreviated down to 't', unless 'tag' exists,
         in which case it may be abbreviated down to 'te'.
