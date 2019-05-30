@@ -153,6 +153,8 @@ class GuildMember(SlottedModel):
         When this user joined the guild.
     roles : list(snowflake)
         Roles this member is part of.
+    premium_since : datetime
+        When this user set their nitro boost to this server.
     """
     user = Field(User)
     guild_id = Field(snowflake)
@@ -161,6 +163,7 @@ class GuildMember(SlottedModel):
     deaf = Field(bool)
     joined_at = Field(datetime)
     roles = ListField(snowflake)
+    premium_since = Field(datetime)
 
     def __str__(self):
         return self.user.__str__()
@@ -306,6 +309,10 @@ class Guild(SlottedModel, Permissible):
         All of the guild's emojis.
     voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
         All of the guild's voice states.
+    premium_tier : int
+        Guild's premium tier.
+    premium_subscription_count: int
+        The amount of users using their nitro boost on this guild.
     """
     id = Field(snowflake)
     owner_id = Field(snowflake)
@@ -330,6 +337,8 @@ class Guild(SlottedModel, Permissible):
     emojis = AutoDictField(GuildEmoji, 'id')
     voice_states = AutoDictField(VoiceState, 'session_id')
     member_count = Field(int)
+    premium_tier = Field(int)
+    premium_subscription_count = Field(int)
 
     def __init__(self, *args, **kwargs):
         super(Guild, self).__init__(*args, **kwargs)
@@ -513,11 +522,15 @@ class Guild(SlottedModel, Permissible):
     def get_emoji(self, emoji):
         return self.client.api.guilds_emojis_get(self.id, emoji)
 
-    def get_icon_url(self, fmt='webp', size=1024):
+    def get_icon_url(self, fmt=None, size=1024):
         if not self.icon:
             return ''
-
-        return 'https://cdn.discordapp.com/icons/{}/{}.{}?size={}'.format(self.id, self.icon, fmt, size)
+        if fmt is not None:
+            return 'https://cdn.discordapp.com/icons/{}/{}.{}?size={}'.format(self.id, self.icon, fmt, size)
+        if self.icon.startswith('a_'):
+            return 'https://cdn.discordapp.com/avatars/{}/{}.gif?size={}'.format(self.id, self.icon, size)
+        else:
+            return 'https://cdn.discordapp.com/avatars/{}/{}.webp?size={}'.format(self.id, self.icon, size)
 
     def get_splash_url(self, fmt='webp', size=1024):
         if not self.splash:
