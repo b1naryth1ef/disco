@@ -339,6 +339,10 @@ class Guild(SlottedModel, Permissible):
     member_count = Field(int)
     premium_tier = Field(int)
     premium_subscription_count = Field(int)
+    vanity_url_code = Field(text)
+    max_presences = Field(int)
+    max_members = Field(int)
+    description = Field(text)
 
     def __init__(self, *args, **kwargs):
         super(Guild, self).__init__(*args, **kwargs)
