@@ -40,6 +40,9 @@ class PermissionValue(object):
     __slots__ = ['value']
 
     def __init__(self, value=0):
+        if isinstance(value, PermissionValue):
+            value = value.value
+
         self.value = value
 
     def can(self, *perms):
