@@ -32,16 +32,14 @@ class Permissions(object):
     @classmethod
     def keys(cls):
         for k, v in six.iteritems(cls.__dict__):
-            yield k
+            if k.isupper():
+                yield k
 
 
 class PermissionValue(object):
     __slots__ = ['value']
 
     def __init__(self, value=0):
-        if isinstance(value, PermissionValue):
-            value = value.value
-
         self.value = value
 
     def can(self, *perms):
@@ -79,19 +77,22 @@ class PermissionValue(object):
         return self.sub(other)
 
     def __getattribute__(self, name):
-        if name in list(Permissions.keys()):
-            return (self.value & Permissions[name].value) == Permissions[name].value
-        else:
+        try:
+            perm_value = getattr(Permissions, name.upper())
+            return (self.value & perm_value) == perm_value
+        except AttributeError:
             return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
-        if name not in list(Permissions.keys()):
+        try:
+            perm_value = getattr(Permissions, name.upper())
+        except AttributeError:
             return super(PermissionValue, self).__setattr__(name, value)
 
         if value:
-            self.value |= Permissions[name].value
+            self.value |= perm_value
         else:
-            self.value &= ~Permissions[name].value
+            self.value &= ~perm_value
 
     def __int__(self):
         return self.value
