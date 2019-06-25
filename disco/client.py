@@ -131,7 +131,7 @@ class Client(LoggingClass):
         payload = {
             'afk': afk,
             'since': since,
-            'status': status.value.lower(),
+            'status': status.lower(),
             'game': None,
         }
 

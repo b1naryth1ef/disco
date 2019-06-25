@@ -528,9 +528,9 @@ class Guild(SlottedModel, Permissible):
         if fmt is not None:
             return 'https://cdn.discordapp.com/icons/{}/{}.{}?size={}'.format(self.id, self.icon, fmt, size)
         if self.icon.startswith('a_'):
-            return 'https://cdn.discordapp.com/avatars/{}/{}.gif?size={}'.format(self.id, self.icon, size)
+            return 'https://cdn.discordapp.com/icons/{}/{}.gif?size={}'.format(self.id, self.icon, size)
         else:
-            return 'https://cdn.discordapp.com/avatars/{}/{}.webp?size={}'.format(self.id, self.icon, size)
+            return 'https://cdn.discordapp.com/icons/{}/{}.webp?size={}'.format(self.id, self.icon, size)
 
     def get_splash_url(self, fmt='webp', size=1024):
         if not self.splash:
