@@ -83,7 +83,7 @@ class PermissionOverwrite(ChannelSubType):
                                                     self.id,
                                                     self.allow.value or 0,
                                                     self.deny.value or 0,
-                                                    self.type.name,
+                                                    self.type,
                                                     **kwargs)
         return self
 
