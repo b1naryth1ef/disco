@@ -189,7 +189,8 @@ class Bot(LoggingClass):
         # Convert our configured mapping of entities to levels into something
         #  we can actually use. This ensures IDs are converted properly, and maps
         #  any level names (e.g. `role_id: admin`) map to their numerical values.
-        for entity_id, level in six.iteritems(self.config.levels):
+        for entity_id, level in list(six.iteritems(self.config.levels)):
+            del self.config.levels[entity_id]
             entity_id = int(entity_id) if str(entity_id).isdigit() else entity_id
             level = int(level) if str(level).isdigit() else get_enum_value_by_name(CommandLevels, level)
             self.config.levels[entity_id] = level
