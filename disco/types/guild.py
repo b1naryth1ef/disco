@@ -526,15 +526,18 @@ class Guild(SlottedModel, Permissible):
     def get_emoji(self, emoji):
         return self.client.api.guilds_emojis_get(self.id, emoji)
 
-    def get_icon_url(self, fmt=None, size=1024):
+    def get_icon_url(self, still_format='webp', animated_format='gif', size=1024):
         if not self.icon:
             return ''
-        if fmt is not None:
-            return 'https://cdn.discordapp.com/icons/{}/{}.{}?size={}'.format(self.id, self.icon, fmt, size)
+
         if self.icon.startswith('a_'):
-            return 'https://cdn.discordapp.com/icons/{}/{}.gif?size={}'.format(self.id, self.icon, size)
+            return 'https://cdn.discordapp.com/icons/{}/{}.{}?size={}'.format(
+                self.id, self.icon, animated_format, size
+            )
         else:
-            return 'https://cdn.discordapp.com/icons/{}/{}.webp?size={}'.format(self.id, self.icon, size)
+            return 'https://cdn.discordapp.com/icons/{}/{}.{}?size={}'.format(
+                self.id, self.icon, still_format, size
+            )
 
     def get_splash_url(self, fmt='webp', size=1024):
         if not self.splash:
