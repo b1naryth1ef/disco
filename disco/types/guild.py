@@ -340,7 +340,7 @@ class Guild(SlottedModel, Permissible):
     premium_tier = Field(int)
     premium_subscription_count = Field(int, default=0)
     vanity_url_code = Field(text)
-    max_presences = Field(int)
+    max_presences = Field(int, default=5000)
     max_members = Field(int)
     description = Field(text)
 

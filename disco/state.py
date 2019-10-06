@@ -153,6 +153,9 @@ class State(object):
             self.dms[dm.id] = dm
             self.channels[dm.id] = dm
 
+    def on_user_update(self, event):
+        self.me.inplace_update(event.user)
+
     def on_message_create(self, event):
         if self.config.track_messages:
             self.messages[event.message.channel_id].append(

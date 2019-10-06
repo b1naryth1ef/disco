@@ -714,3 +714,15 @@ class MessageReactionRemoveAll(GatewayEvent):
     @property
     def guild(self):
         return self.channel.guild
+
+
+@wraps_model(User)
+class UserUpdate(GatewayEvent):
+    """
+    Sent when the client user is updated.
+
+    Attributes
+    -----
+    user : :class:`disco.types.user.User`
+        The updated user object.
+    """
