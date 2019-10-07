@@ -3,6 +3,7 @@ import zlib
 import six
 import ssl
 
+import platform
 from websocket import ABNF
 
 from disco.gateway.packets import OPCode, RECV, SEND
@@ -219,7 +220,7 @@ class GatewayClient(LoggingClass):
                     int(self.client.config.shard_count),
                 ],
                 'properties': {
-                    '$os': 'linux',
+                    '$os': platform.system(),
                     '$browser': 'disco',
                     '$device': 'disco',
                     '$referrer': '',
