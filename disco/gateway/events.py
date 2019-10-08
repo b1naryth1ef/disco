@@ -7,7 +7,7 @@ from disco.types.channel import Channel, PermissionOverwrite
 from disco.types.message import Message, MessageReactionEmoji
 from disco.types.voice import VoiceState
 from disco.types.guild import Guild, GuildMember, Role, GuildEmoji
-from disco.types.base import Model, ModelMeta, Field, ListField, AutoDictField, snowflake, datetime
+from disco.types.base import Model, ModelMeta, Field, ListField, AutoDictField, UNSET, snowflake, datetime
 from disco.util.string import underscore
 
 # Mapping of discords event name to our event classes
@@ -163,7 +163,7 @@ class GuildCreate(GatewayEvent):
         The guild being created (e.g. joined)
     unavailable : bool
         If false, this guild is coming online from a previously unavailable state,
-        and if None, this is a normal guild join event.
+        and if UNSET, this is a normal guild join event.
     """
     unavailable = Field(bool)
     presences = ListField(Presence)
@@ -173,7 +173,7 @@ class GuildCreate(GatewayEvent):
         """
         Shortcut property which is true when we actually joined the guild.
         """
-        return self.unavailable is None
+        return self.unavailable is UNSET
 
 
 @wraps_model(Guild)
@@ -197,7 +197,7 @@ class GuildDelete(GatewayEvent):
     id : snowflake
         The ID of the guild being deleted.
     unavailable : bool
-        If true, this guild is becoming unavailable, if None this is a normal
+        If true, this guild is becoming unavailable, if UNSET this is a normal
         guild leave event.
     """
     id = Field(snowflake)
@@ -208,7 +208,7 @@ class GuildDelete(GatewayEvent):
         """
         Shortcut property which is true when we actually have left the guild.
         """
-        return self.unavailable is None
+        return self.unavailable is UNSET
 
 
 @wraps_model(Channel)

@@ -11,9 +11,10 @@ from disco.util.logging import LoggingClass
 from disco.util.sanitize import S
 from disco.types.user import User
 from disco.types.message import Message
-from disco.types.guild import Guild, GuildMember, GuildBan, Role, GuildEmoji, AuditLogEntry
+from disco.types.guild import Guild, GuildMember, GuildBan, PruneCount, Role, GuildEmoji, AuditLogEntry
 from disco.types.channel import Channel
 from disco.types.invite import Invite
+from disco.types.voice import VoiceRegion
 from disco.types.webhook import Webhook
 
 
@@ -432,6 +433,17 @@ class APIClient(LoggingClass):
             dict(guild=guild, user=user),
             headers=_reason_header(reason))
 
+    def guilds_prune_count_get(self, guild, days=None):
+        r = self.http(Routes.GUILDS_PRUNE_COUNT, dict(guild=guild), params=optional(days=days))
+        return PruneCount.create(self.client, r.json())
+
+    def guilds_prune_create(self, guild, days=None, compute_prune_count=None):
+        r = self.http(Routes.GUILDS_PRUNE_CREATE, dict(guild=guild), params=optional(
+            days=days,
+            compute_prune_count=compute_prune_count,
+        ))
+        return PruneCount.create(self.client, r.json())
+
     def guilds_roles_list(self, guild):
         r = self.http(Routes.GUILDS_ROLES_LIST, dict(guild=guild))
         return Role.create_map(self.client, r.json(), guild_id=guild)
@@ -491,6 +503,10 @@ class APIClient(LoggingClass):
 
     def guilds_roles_delete(self, guild, role, reason=None):
         self.http(Routes.GUILDS_ROLES_DELETE, dict(guild=guild, role=role), headers=_reason_header(reason))
+
+    def guilds_voice_regions_list(self, guild):
+        r = self.http(Routes.GUILDS_VOICE_REGIONS_LIST, dict(guild=guild))
+        return VoiceRegion.create_hash(self.client, 'id', r.json())
 
     def guilds_invites_list(self, guild):
         r = self.http(Routes.GUILDS_INVITES_LIST, dict(guild=guild))
@@ -575,6 +591,10 @@ class APIClient(LoggingClass):
     def invites_delete(self, invite, reason=None):
         r = self.http(Routes.INVITES_DELETE, dict(invite=invite), headers=_reason_header(reason))
         return Invite.create(self.client, r.json())
+
+    def voice_regions_list(self):
+        r = self.http(Routes.VOICE_REGIONS_LIST)
+        return VoiceRegion.create_hash(self.client, 'id', r.json())
 
     def webhooks_get(self, webhook):
         r = self.http(Routes.WEBHOOKS_GET, dict(webhook=webhook))

@@ -79,6 +79,10 @@ class GuildEmoji(Emoji):
         return self.client.state.guilds.get(self.guild_id)
 
 
+class PruneCount(SlottedModel):
+    pruned = Field(int, default=None)
+
+
 class Role(SlottedModel):
     """
     A role object.
@@ -417,6 +421,12 @@ class Guild(SlottedModel, Permissible):
 
         return self.members.get(user)
 
+    def get_prune_count(self, days=None):
+        return self.client.api.guilds_prune_count_get(self.id, days=days)
+
+    def prune(self, days=None, compute_prune_count=None):
+        return self.client.api.guilds_prune_create(self.id, days=days, compute_prune_count=compute_prune_count)
+
     def create_role(self, **kwargs):
         """
         Create a new role.
@@ -517,14 +527,14 @@ class Guild(SlottedModel, Permissible):
     def get_invites(self):
         return self.client.api.guilds_invites_list(self.id)
 
-    def get_vanity_url(self):
-        return self.client.api.guilds_vanity_url_get(self.id)
-
     def get_emojis(self):
         return self.client.api.guilds_emojis_list(self.id)
 
     def get_emoji(self, emoji):
         return self.client.api.guilds_emojis_get(self.id, emoji)
+
+    def get_voice_regions(self):
+        return self.client.api.guilds_voice_regions_list(self.id)
 
     def get_icon_url(self, still_format='webp', animated_format='gif', size=1024):
         if not self.icon:
@@ -538,6 +548,12 @@ class Guild(SlottedModel, Permissible):
             return 'https://cdn.discordapp.com/icons/{}/{}.{}?size={}'.format(
                 self.id, self.icon, still_format, size
             )
+
+    def get_vanity_url(self):
+        if not self.vanity_url_code:
+            return ''
+
+        return 'https://discord.gg/' + self.vanity_url_code
 
     def get_splash_url(self, fmt='webp', size=1024):
         if not self.splash:
@@ -554,6 +570,10 @@ class Guild(SlottedModel, Permissible):
     @property
     def icon_url(self):
         return self.get_icon_url()
+
+    @property
+    def vanity_url(self):
+        return self.get_vanity_url()
 
     @property
     def splash_url(self):

@@ -89,7 +89,7 @@ class Routes(object):
     GUILDS_ROLES_MODIFY = (HTTPMethod.PATCH, GUILDS + '/roles/{role}')
     GUILDS_ROLES_DELETE = (HTTPMethod.DELETE, GUILDS + '/roles/{role}')
     GUILDS_PRUNE_COUNT = (HTTPMethod.GET, GUILDS + '/prune')
-    GUILDS_PRUNE_BEGIN = (HTTPMethod.POST, GUILDS + '/prune')
+    GUILDS_PRUNE_CREATE = (HTTPMethod.POST, GUILDS + '/prune')
     GUILDS_VOICE_REGIONS_LIST = (HTTPMethod.GET, GUILDS + '/regions')
     GUILDS_VANITY_URL_GET = (HTTPMethod.GET, GUILDS + '/vanity-url')
     GUILDS_INVITES_LIST = (HTTPMethod.GET, GUILDS + '/invites')
@@ -123,6 +123,10 @@ class Routes(object):
     INVITES = '/invites'
     INVITES_GET = (HTTPMethod.GET, INVITES + '/{invite}')
     INVITES_DELETE = (HTTPMethod.DELETE, INVITES + '/{invite}')
+
+    # Voice
+    VOICE = '/voice'
+    VOICE_REGIONS_LIST = (HTTPMethod.GET, VOICE + '/regions')
 
     # Webhooks
     WEBHOOKS = '/webhooks/{webhook}'
@@ -202,18 +206,18 @@ class HTTPClient(LoggingClass):
             sys.version_info.micro)
 
         self.limiter = RateLimiter()
-        self.headers = {
+        self.after_request = after_request
+
+        self.session = requests.Session()
+        self.session.headers.update({
             'User-Agent': 'DiscordBot (https://github.com/b1naryth1ef/disco {}) Python/{} requests/{}'.format(
                 disco_version,
                 py_version,
                 requests_version),
-        }
+        })
 
         if token:
-            self.headers['Authorization'] = 'Bot ' + token
-
-        self.after_request = after_request
-        self.session = requests.Session()
+            self.session.headers['Authorization'] = 'Bot ' + token
 
     def __call__(self, route, args=None, **kwargs):
         return self.call(route, args, **kwargs)
@@ -250,12 +254,6 @@ class HTTPClient(LoggingClass):
         """
         args = args or {}
         retry = kwargs.pop('retry_number', 0)
-
-        # Merge or set headers
-        if 'headers' in kwargs:
-            kwargs['headers'].update(self.headers)
-        else:
-            kwargs['headers'] = self.headers
 
         # Build the bucket URL
         args = {k: to_bytes(v) for k, v in six.iteritems(args)}

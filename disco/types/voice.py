@@ -1,4 +1,4 @@
-from disco.types.base import SlottedModel, Field, snowflake, cached_property
+from disco.types.base import SlottedModel, text, Field, snowflake, cached_property
 
 
 class VoiceState(SlottedModel):
@@ -23,3 +23,18 @@ class VoiceState(SlottedModel):
     @cached_property
     def user(self):
         return self.client.state.users.get(self.user_id)
+
+
+class VoiceRegion(SlottedModel):
+    id = Field(text)
+    name = Field(text)
+    vip = Field(bool)
+    optimal = Field(bool)
+    deprecated = Field(bool)
+    custom = Field(bool)
+
+    def __str__(self):
+        return self.id
+
+    def __repr__(self):
+        return u'<VoiceRegion {}>'.format(self.name)
