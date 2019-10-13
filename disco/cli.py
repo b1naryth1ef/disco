@@ -16,8 +16,8 @@ monkey.patch_all()
 parser = argparse.ArgumentParser()
 
 # Command line specific arguments
-parser.add_argument('--run-bot', help='run a disco bot on this client', action='store_true', default=False)
-parser.add_argument('--plugin', help='load plugins into the bot', nargs='*', default=[])
+parser.add_argument('--run-bot', help='Run a disco bot on this client', action='store_true', default=False)
+parser.add_argument('--plugin', help='Load plugins into the bot', nargs='*', default=[])
 parser.add_argument('--config', help='Configuration file', default=None)
 parser.add_argument('--shard-auto', help='Automatically run all shards', action='store_true', default=False)
 
@@ -29,7 +29,7 @@ parser.add_argument('--max-reconnects', help='Maximum reconnect attempts', defau
 parser.add_argument('--log-level', help='log level', default=None)
 parser.add_argument('--manhole', action='store_true', help='Enable the manhole', default=None)
 parser.add_argument('--manhole-bind', help='host:port for the manhole to bind too', default=None)
-parser.add_argument('--encoder', help='encoder for gateway data', default=None)
+parser.add_argument('--encoder', help='Encoder for gateway data', default=None)
 
 
 # Mapping of argument names to configuration overrides
@@ -53,7 +53,7 @@ def disco_main(run=False):
     Returns
     -------
     :class:`Client`
-        A new Client from the provided command line arguments
+        A new Client from the provided command line arguments.
     """
     from disco.client import Client, ClientConfig
     from disco.bot import Bot, BotConfig

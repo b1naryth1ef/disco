@@ -43,13 +43,13 @@ class PermissionOverwrite(ChannelSubType):
     Attributes
     ----------
     id : snowflake
-        The overwrite ID
+        The overwrite ID.
     type : :const:`disco.types.channel.PermissionsOverwriteType`
-        The overwrite type
+        The overwrite type.
     allow : :class:`disco.types.permissions.PermissionValue`
-        All allowed permissions
+        All allowed permissions.
     deny : :class:`disco.types.permissions.PermissionValue`
-        All denied permissions
+        All denied permissions.
     """
     id = Field(snowflake)
     type = Field(enum(PermissionOverwriteType))
@@ -112,7 +112,7 @@ class Channel(SlottedModel, Permissible):
         The channel's bitrate.
     user_limit : int
         The channel's user limit.
-    recipients: list(:class:`disco.types.user.User`)
+    recipients : list(:class:`disco.types.user.User`)
         Members of this channel (if this is a DM channel).
     type : :const:`ChannelType`
         The type of this channel.
@@ -265,7 +265,7 @@ class Channel(SlottedModel, Permissible):
         Returns
         -------
         `Message`
-            The fetched message
+            The fetched message.
         """
         return self.client.api.channels_messages_get(self.id, to_snowflake(message))
 
@@ -304,8 +304,8 @@ class Channel(SlottedModel, Permissible):
         """
         Pins the given message to the channel.
 
-        Params
-        ------
+        Parameters
+        ----------
         message : `Message`|snowflake
             The message or message ID to pin.
         """
@@ -315,8 +315,8 @@ class Channel(SlottedModel, Permissible):
         """
         Unpins the given message from the channel.
 
-        Params
-        ------
+        Parameters
+        ----------
         message : `Message`|snowflake
             The message or message ID to pin.
         """
@@ -373,8 +373,8 @@ class Channel(SlottedModel, Permissible):
         """
         Deletes a single message from this channel.
 
-        Args
-        ----
+        Parameters
+        ----------
         message : snowflake|`Message`
             The message to delete.
         """
@@ -386,8 +386,8 @@ class Channel(SlottedModel, Permissible):
         Deletes a set of messages using the correct API route based on the number
         of messages passed.
 
-        Args
-        ----
+        Parameters
+        ----------
         messages : list(snowflake|`Message`)
             List of messages (or message ids) to delete. All messages must originate
             from this channel.

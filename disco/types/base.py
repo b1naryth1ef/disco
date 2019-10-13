@@ -220,7 +220,7 @@ def datetime(data):
         except (ValueError, TypeError):
             continue
 
-    raise ValueError('Failed to conver `{}` to datetime'.format(data))
+    raise ValueError('Failed to convert `{}` to datetime'.format(data))
 
 
 def text(obj):

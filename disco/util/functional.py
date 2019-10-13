@@ -7,8 +7,8 @@ def take(seq, count):
     """
     Take count many elements from a sequence or generator.
 
-    Args
-    ----
+    Parameters
+    ----------
     seq : sequence or generator
         The sequence to take elements from.
     count : int
@@ -25,8 +25,8 @@ def chunks(obj, size):
     """
     Splits a list into sized chunks.
 
-    Args
-    ----
+    Parameters
+    ----------
     obj : list
         List to split up.
     size : int

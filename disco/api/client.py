@@ -48,8 +48,8 @@ class APIClient(LoggingClass):
     is the only path to the API used within models/other interfaces, and it's
     the recommended path for all third-party users/implementations.
 
-    Args
-    ----
+    Parameters
+    ----------
     token : str
         The Discord authentication token (without prefixes) to be used for all
         HTTP requests.

@@ -29,12 +29,12 @@ class ClientConfig(Config):
         Whether to enable subscription events (e.g. presence and typing).
     max_reconnects : int
         The maximum number of connection retries to make before giving up (0 = never give up).
-    log_level: str
+    log_level : str
         The logging level to use.
     manhole_enable : bool
         Whether to enable the manhole (e.g. console backdoor server) utility.
     manhole_bind : tuple(str, int)
-        A (host, port) combination which the manhole server will bind to (if its
+        A (host, port) combination which the manhole server will bind to (if it's
         enabled using :attr:`manhole_enable`).
     encoder : str
         The type of encoding to use for encoding/decoding data from websockets,
@@ -114,12 +114,12 @@ class Client(LoggingClass):
         """
         Updates the current clients presence.
 
-        Params
-        ------
+        Parameters
+        ----------
         status : `user.Status`
             The clients current status.
         game : `user.Game`
-            If passed, the game object to set for the users presence.
+            If passed, the game object to set for the user's presence.
         afk : bool
             Whether the client is currently afk.
         since : float

@@ -46,7 +46,7 @@ embed.set_footer(text='Disco Message Embeds tutorial')
 embed.color = '10038562' #This can be any color, but I chose a nice dark red tint
 ```
 
-Once your embed is finshed, you can send it using the `channel.send_message()` message or the `event.msg.reply()` function.
+Once your embed is finished, you can send it using the `channel.send_message()` message or the `event.msg.reply()` function.
 With `channel.send_message()`:
 ```py
 self.state.channels.get(<ChannelID>).send_message('[optional text]', embed=embed)

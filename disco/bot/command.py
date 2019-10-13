@@ -35,7 +35,7 @@ class CommandEvent(object):
     message information).
 
     Attributes
-    ---------
+    ----------
     command : :class:`Command`
         The command this event was created for (aka the triggered command).
     msg : :class:`disco.types.message.Message`
@@ -43,9 +43,9 @@ class CommandEvent(object):
     match : :class:`re.MatchObject`
         The regex match object for the command.
     name : str
-        The command name (or alias) which was triggered by the command
+        The command name (or alias) which was triggered by the command.
     args : list(str)
-        Arguments passed to the command
+        Arguments passed to the command.
     """
 
     def __init__(self, command, msg, match):
@@ -276,7 +276,7 @@ class Command(object):
         Returns
         -------
         bool
-            Whether this command was successful
+            Whether this command was successful.
         """
         parsed_kwargs = {}
 

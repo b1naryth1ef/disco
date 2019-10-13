@@ -27,7 +27,7 @@ class BotConfig(Config):
     Attributes
     ----------
     levels : dict(snowflake, str)
-        Mapping of user IDs/role IDs to :class:`disco.bot.commands.CommandLevesls`
+        Mapping of user IDs/role IDs to :class:`disco.bot.commands.CommandLevels`
         which is used for the default commands_level_getter.
     plugins : list[string]
         List of plugin modules to load.
@@ -41,15 +41,15 @@ class BotConfig(Config):
         A dictionary describing what mention types can be considered a mention
         of the bot when using :attr:`commands_require_mention`. This dictionary
         can contain the following keys: `here`, `everyone`, `role`, `user`. When
-        a keys value is set to true, the mention type will be considered for
+        a key's value is set to true, the mention type will be considered for
         command parsing.
     commands_prefix : str
         A string prefix that is required for a message to be considered for
         command parsing.
     commands_allow_edit : bool
-        If true, the bot will reparse an edited message if it was the last sent
+        If true, the bot will re-parse an edited message if it was the last sent
         message in a channel, and did not previously trigger a command. This is
-        helpful for allowing edits to typod commands.
+        helpful for allowing edits to typed commands.
     commands_level_getter : function
         If set, a function which when given a GuildMember or User, returns the
         relevant :class:`disco.bot.commands.CommandLevels`.
@@ -70,9 +70,9 @@ class BotConfig(Config):
         Whether to enable the built-in Flask server which allows plugins to handle
         and route HTTP requests.
     http_host : str
-        The host string for the HTTP Flask server (if enabled)
+        The host string for the HTTP Flask server (if enabled).
     http_port : int
-        The port for the HTTP Flask server (if enabled)
+        The port for the HTTP Flask server (if enabled).
     """
     levels = {}
     plugins = []
@@ -109,7 +109,7 @@ class BotConfig(Config):
 class Bot(LoggingClass):
     """
     Disco's implementation of a simple but extendable Discord bot. Bots consist
-    of a set of plugins, and a Disco client.
+    of a set of plugins, and a Disco Client.
 
     Parameters
     ----------
@@ -126,7 +126,7 @@ class Bot(LoggingClass):
     config : `BotConfig`
         The bot configuration instance for this bot.
     plugins : dict(str, :class:`disco.bot.plugin.Plugin`)
-        Any plugins this bot has loaded
+        Any plugins this bot has loaded.
     """
     def __init__(self, client, config=None):
         self.client = client
@@ -205,8 +205,7 @@ class Bot(LoggingClass):
         Parameters
         ---------
         plugins : Optional[list(:class:`disco.bot.plugin.Plugin`)]
-            Any plugins to load after creating the new bot instance
-
+            Any plugins to load after creating the new bot instance.
         """
         from disco.cli import disco_main
         inst = cls(disco_main())
@@ -250,7 +249,7 @@ class Bot(LoggingClass):
                 else:
                     possible[current] = group
 
-        # Now, we want to compute the actual shortest abbreivation out of the
+        # Now, we want to compute the actual shortest abbreviation out of the
         #  possible ones
         result = {}
         for abbrev, group in six.iteritems(possible):
@@ -284,12 +283,12 @@ class Bot(LoggingClass):
         Parameters
         ---------
         msg : :class:`disco.types.message.Message`
-            The message object to parse and find matching commands for
+            The message object to parse and find matching commands for.
 
         Yields
         -------
         tuple(:class:`disco.bot.command.Command`, `re.MatchObject`)
-            All commands the message triggers
+            All commands the message triggers.
         """
         content = msg.content
 
@@ -382,7 +381,7 @@ class Bot(LoggingClass):
         Returns
         -------
         bool
-            whether any commands where successfully triggered by the message
+            Whether any commands where successfully triggered by the message.
         """
         commands = list(self.get_commands_for_message(
             self.config.commands_require_mention,
@@ -473,7 +472,7 @@ class Bot(LoggingClass):
             Plugin class to unload and remove.
         """
         if cls.__name__ not in self.plugins:
-            raise Exception('Cannot remove non-existant plugin: {}'.format(cls.__name__))
+            raise Exception('Cannot remove non-existent plugin: {}'.format(cls.__name__))
 
         ctx = {}
         self.plugins[cls.__name__].unload(ctx)

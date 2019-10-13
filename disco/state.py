@@ -19,11 +19,11 @@ class StackMessage(namedtuple('StackMessage', ['id', 'channel_id', 'author_id'])
     Attributes
     ---------
     id : snowflake
-        the id of the message
+        The id of the message.
     channel_id : snowflake
-        the id of the channel this message was sent in
+        The id of the channel this message was sent in.
     author_id : snowflake
-        the id of the author of this message
+        The id of the author of this message.
     """
 
 
@@ -40,8 +40,8 @@ class StateConfig(Config):
 
         Message tracking is implemented using a deque and a namedtuple, meaning
         it should generally not have a high impact on memory, however users who
-        find they do not need and may be experiencing memory pressure can disable
-        this feature entirely using this attribute.
+        find that they do not need and may be experiencing memory pressure can
+        disable this feature entirely using this attribute.
     track_messages_size : int
         The size of the messages deque for each channel. This value can be used
         to calculate the total number of possible `StackMessage` objects kept in
@@ -50,7 +50,7 @@ class StateConfig(Config):
     sync_guild_members : bool
         If true, guilds will be automatically synced when they are initially loaded
         or joined. Generally this setting is OK for smaller bots, however bots in over
-        50 guilds will notice this operation can take a while to complete and may want
+        50 guilds will notice this operation can take a while to complete, and may want
         to batch requests using the underlying `GatewayClient.request_guild_members`
         interface.
     """
@@ -69,27 +69,27 @@ class State(object):
     Attributes
     ----------
     EVENTS : list(str)
-        A list of all events the State object binds to
+        A list of all events the State object binds to.
     client : `disco.client.Client`
-        The Client instance this state is attached to
+        The Client instance this state is attached to.
     config : `StateConfig`
-        The configuration for this state instance
+        The configuration for this state instance.
     me : `User`
-        The currently logged in user
+        The currently logged in user.
     dms : dict(snowflake, `Channel`)
-        Mapping of all known DM Channels
+        Mapping of all known DM Channels.
     guilds : dict(snowflake, `Guild`)
-        Mapping of all known/loaded Guilds
+        Mapping of all known/loaded Guilds.
     channels : dict(snowflake, `Channel`)
-        Weak mapping of all known/loaded Channels
+        Weak mapping of all known/loaded Channels.
     users : dict(snowflake, `User`)
-        Weak mapping of all known/loaded Users
+        Weak mapping of all known/loaded Users.
     voice_clients : dict(str, 'VoiceClient')
-        Weak mapping of all known voice clients
+        Weak mapping of all known voice clients.
     voice_states : dict(str, `VoiceState`)
-        Weak mapping of all known/active Voice States
+        Weak mapping of all known/active Voice States.
     messages : Optional[dict(snowflake, deque)]
-        Mapping of channel ids to deques containing `StackMessage` objects
+        Mapping of channel ids to deques containing `StackMessage` objects.
     """
     EVENTS = [
         'Ready', 'GuildCreate', 'GuildUpdate', 'GuildDelete', 'GuildMemberAdd', 'GuildMemberRemove',

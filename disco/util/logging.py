@@ -21,7 +21,7 @@ def setup_logging(**kwargs):
     # Pass through our basic configuration
     logging.basicConfig(**kwargs)
 
-    # Override some noisey loggers
+    # Override some noisy loggers
     for logger, level in LEVEL_OVERRIDES.items():
         logging.getLogger(logger).setLevel(level)
 

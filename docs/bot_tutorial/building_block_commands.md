@@ -6,7 +6,7 @@ In the case of these examples, when you send `!help` or `!info` the bot will rep
 
 ## Basic commands
 
-Creating commands in Disco is really easy because of the [Plugins](https://b1naryth1ef.github.io/disco/bot_tutorial/building_block_plugins.html) that are a core fundamential of Disco. For more info on them, read back in the [Plugins](https://b1naryth1ef.github.io/disco/bot_tutorial/building_block_plugins.html) section of this tutorial. Creating a basic command is done as follows:
+Creating commands in Disco is really easy because of the [Plugins](https://b1naryth1ef.github.io/disco/bot_tutorial/building_block_plugins.html) that are a core fundamental of Disco. For more info on them, read back in the [Plugins](https://b1naryth1ef.github.io/disco/bot_tutorial/building_block_plugins.html) section of this tutorial. Creating a basic command is done as follows:
 First, create a Plugin class:
 ```py
 class myPlugin(Plugin):
@@ -48,7 +48,7 @@ Here, we added multiple arguments to our command. Namely, number a and number b,
 Lets create a tag system, that can either store a tag if you'd use it like this: `!tag name value` or retrieve a tag if you'd use it like this: `!tag name`
 
 We'll need 2 arguments. A name argument that's required, and an optional value argument. Inside the command we'll check if a `value` is provided. If there is, we'll store the tag. Otherwise, we'll try to retrieve the previously set value for that tag and return it.
-For the sake of this example, we'll asume that the `tags` dict gets stored somewhere so it doesn't get removed after a restart.
+For the sake of this example, we'll assume that the `tags` dict gets stored somewhere so it doesn't get removed after a restart.
 ```py
 tags = {}
 

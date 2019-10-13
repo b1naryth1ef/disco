@@ -16,12 +16,12 @@ class Priority(object):
     #  with the one difference being it executes after all the BEFORE listeners.
     AFTER = 2
 
-    # SEQUENTIAL guarentees that all events your handler recieves will be ordered
+    # SEQUENTIAL guarantees that all events your handler receives will be ordered
     #  when looked at in isolation. SEQUENTIAL handlers will not block other handlers,
     #  but do use a queue internally and thus can fall behind.
     SEQUENTIAL = 3
 
-    # NONE provides no guarentees around the ordering or execution of events, sans
+    # NONE provides no guarantees around the ordering or execution of events, sans
     #  that BEFORE handlers will always complete before any NONE handlers are called.
     NONE = 4
 

@@ -436,8 +436,8 @@ class Plugin(LoggingClass, PluginDeco):
         Registers a function to be called repeatedly, waiting for an interval
         duration.
 
-        Args
-        ----
+        Parameters
+        ----------
         func : function
             The function to be registered.
         interval : int
@@ -447,8 +447,8 @@ class Plugin(LoggingClass, PluginDeco):
         init : bool
             Whether to run this schedule once immediately, or wait for the first
             scheduled iteration.
-        kwargs: dict
-            kwargs which will be passed to executed `func`
+        kwargs : dict
+            kwargs which will be passed to executed `func`.
         """
         if kwargs is None:
             kwargs = {}

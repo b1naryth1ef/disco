@@ -158,7 +158,7 @@ class GuildMember(SlottedModel):
     roles : list(snowflake)
         Roles this member is part of.
     premium_since : datetime
-        When this user set their nitro boost to this server.
+        When this user set their Nitro boost to this server.
     """
     user = Field(User)
     guild_id = Field(snowflake)
@@ -199,8 +199,8 @@ class GuildMember(SlottedModel):
         """
         Bans the member from the guild.
 
-        Args
-        ----
+        Parameters
+        ----------
         delete_message_days : int
             The number of days to retroactively delete messages for.
         """
@@ -216,8 +216,8 @@ class GuildMember(SlottedModel):
         """
         Sets the member's nickname (or clears it if None).
 
-        Args
-        ----
+        Parameters
+        ----------
         nickname : Optional[str]
             The nickname (or none to reset) to set.
         """
@@ -315,8 +315,8 @@ class Guild(SlottedModel, Permissible):
         All of the guild's voice states.
     premium_tier : int
         Guild's premium tier.
-    premium_subscription_count: int
-        The amount of users using their nitro boost on this guild.
+    premium_subscription_count : int
+        The amount of users using their Nitro boost on this guild.
     """
     id = Field(snowflake)
     owner_id = Field(snowflake)

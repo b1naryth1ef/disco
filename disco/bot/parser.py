@@ -226,6 +226,6 @@ class ArgumentSet(object):
     @property
     def required_length(self):
         """
-        The number of required arguments to compile this set/specificaiton.
+        The number of required arguments to compile this set/specification.
         """
         return sum(i.true_count for i in self.args if i.required)

@@ -159,7 +159,7 @@ class VoiceConnection(object):
 
     def _event_reader(self, fd):
         if not make_nonblocking(fd):
-            raise Exception('failed to make event pipe nonblocking')
+            raise Exception('failed to make event pipe non-blocking')
 
         buff = ""
         while True:

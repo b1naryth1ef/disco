@@ -127,13 +127,13 @@ class Ready(GatewayEvent):
     for bootstrapping the client's states.
 
     Attributes
-    -----
+    ----------
     version : int
         The gateway version.
     session_id : str
         The session ID.
     user : :class:`disco.types.user.User`
-        The user object for the authed account.
+        The user object for the authenticated account.
     guilds : list[:class:`disco.types.guild.Guild`
         All guilds this account is a member of. These are shallow guild objects.
     private_channels list[:class:`disco.types.channel.Channel`]
@@ -158,9 +158,9 @@ class GuildCreate(GatewayEvent):
     Sent when a guild is joined, or becomes available.
 
     Attributes
-    -----
+    ----------
     guild : :class:`disco.types.guild.Guild`
-        The guild being created (e.g. joined)
+        The guild being created (e.g. joined).
     unavailable : bool
         If false, this guild is coming online from a previously unavailable state,
         and if UNSET, this is a normal guild join event.
@@ -182,7 +182,7 @@ class GuildUpdate(GatewayEvent):
     Sent when a guild is updated.
 
     Attributes
-    -----
+    ----------
     guild : :class:`disco.types.guild.Guild`
         The updated guild object.
     """
@@ -193,7 +193,7 @@ class GuildDelete(GatewayEvent):
     Sent when a guild is deleted, left, or becomes unavailable.
 
     Attributes
-    -----
+    ----------
     id : snowflake
         The ID of the guild being deleted.
     unavailable : bool
@@ -217,7 +217,7 @@ class ChannelCreate(GatewayEvent):
     Sent when a channel is created.
 
     Attributes
-    -----
+    ----------
     channel : :class:`disco.types.channel.Channel`
         The channel which was created.
     """
@@ -229,7 +229,7 @@ class ChannelUpdate(ChannelCreate):
     Sent when a channel is updated.
 
     Attributes
-    -----
+    ----------
     channel : :class:`disco.types.channel.Channel`
         The channel which was updated.
     """
@@ -242,7 +242,7 @@ class ChannelDelete(ChannelCreate):
     Sent when a channel is deleted.
 
     Attributes
-    -----
+    ----------
     channel : :class:`disco.types.channel.Channel`
         The channel being deleted.
     """
@@ -253,10 +253,10 @@ class ChannelPinsUpdate(GatewayEvent):
     Sent when a channel's pins are updated.
 
     Attributes
-    -----
+    ----------
     channel_id : snowflake
         ID of the channel where pins where updated.
-    last_pin_timestap : datetime
+    last_pin_timestamp : datetime
         The time the last message was pinned.
     """
     channel_id = Field(snowflake)
@@ -269,7 +269,7 @@ class GuildBanAdd(GatewayEvent):
     Sent when a user is banned from a guild.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild the user is being banned from.
     user : :class:`disco.types.user.User`
@@ -289,7 +289,7 @@ class GuildBanRemove(GuildBanAdd):
     Sent when a user is unbanned from a guild.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild the user is being unbanned from.
     user : :class:`disco.types.user.User`
@@ -306,11 +306,11 @@ class GuildEmojisUpdate(GatewayEvent):
     Sent when a guild's emojis are updated.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild the emojis are being updated in.
     emojis : list[:class:`disco.types.guild.Emoji`]
-        The new set of emojis for the guild
+        The new set of emojis for the guild.
     """
     guild_id = Field(snowflake)
     emojis = ListField(GuildEmoji)
@@ -321,7 +321,7 @@ class GuildIntegrationsUpdate(GatewayEvent):
     Sent when a guild's integrations are updated.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild integrations where updated in.
     """
@@ -333,7 +333,7 @@ class GuildMembersChunk(GatewayEvent):
     Sent in response to a member's chunk request.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild this member chunk is for.
     members : list[:class:`disco.types.guild.GuildMember`]
@@ -353,7 +353,7 @@ class GuildMemberAdd(GatewayEvent):
     Sent when a user joins a guild.
 
     Attributes
-    -----
+    ----------
     member : :class:`disco.types.guild.GuildMember`
         The member that has joined the guild.
     """
@@ -365,7 +365,7 @@ class GuildMemberRemove(GatewayEvent):
     Sent when a user leaves a guild (via leaving, kicking, or banning).
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild the member left from.
     user : :class:`disco.types.user.User`
@@ -385,7 +385,7 @@ class GuildMemberUpdate(GatewayEvent):
     Sent when a guilds member is updated.
 
     Attributes
-    -----
+    ----------
     member : :class:`disco.types.guild.GuildMember`
         The member being updated
     """
@@ -398,7 +398,7 @@ class GuildRoleCreate(GatewayEvent):
     Sent when a role is created.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild where the role was created.
     role : :class:`disco.types.guild.Role`
@@ -417,7 +417,7 @@ class GuildRoleUpdate(GuildRoleCreate):
     Sent when a role is updated.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild where the role was created.
     role : :class:`disco.types.guild.Role`
@@ -434,7 +434,7 @@ class GuildRoleDelete(GatewayEvent):
     Sent when a role is deleted.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild where the role is being deleted.
     role_id : snowflake
@@ -454,7 +454,7 @@ class MessageCreate(GatewayEvent):
     Sent when a message is created.
 
     Attributes
-    -----
+    ----------
     message : :class:`disco.types.message.Message`
         The message being created.
     guild_id : snowflake
@@ -469,7 +469,7 @@ class MessageUpdate(MessageCreate):
     Sent when a message is updated/edited.
 
     Attributes
-    -----
+    ----------
     message : :class:`disco.types.message.Message`
         The message being updated.
     guild_id : snowflake
@@ -483,7 +483,7 @@ class MessageDelete(GatewayEvent):
     Sent when a message is deleted.
 
     Attributes
-    -----
+    ----------
     id : snowflake
         The ID of message being deleted.
     channel_id : snowflake
@@ -509,7 +509,7 @@ class MessageDeleteBulk(GatewayEvent):
     Sent when multiple messages are deleted from a channel.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The guild the messages are being deleted in.
     channel_id : snowflake
@@ -536,7 +536,7 @@ class PresenceUpdate(GatewayEvent):
     Sent when a user's presence is updated.
 
     Attributes
-    -----
+    ----------
     presence : :class:`disco.types.user.Presence`
         The updated presence object.
     guild_id : snowflake
@@ -557,7 +557,7 @@ class TypingStart(GatewayEvent):
     Sent when a user begins typing in a channel.
 
     Attributes
-    -----
+    ----------
     guild_id : snowflake
         The ID of the guild where the user is typing.
     channel_id : snowflake
@@ -579,7 +579,7 @@ class VoiceStateUpdate(GatewayEvent):
     Sent when a users voice state changes.
 
     Attributes
-    -----
+    ----------
     state : :class:`disco.models.voice.VoiceState`
         The voice state which was updated.
     """
@@ -590,7 +590,7 @@ class VoiceServerUpdate(GatewayEvent):
     Sent when a voice server is updated.
 
     Attributes
-    -----
+    ----------
     token : str
         The token for the voice server.
     endpoint : str
@@ -608,7 +608,7 @@ class WebhooksUpdate(GatewayEvent):
     Sent when a channels webhooks are updated.
 
     Attributes
-    -----
+    ----------
     channel_id : snowflake
         The channel ID this webhooks update is for.
     guild_id : snowflake

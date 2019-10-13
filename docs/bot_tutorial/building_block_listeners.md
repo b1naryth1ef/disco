@@ -12,7 +12,7 @@ def on_message_create(self, event):
     self.log.debug('Got message: %s', event.message)
 ```
 
-Ok, but what if we want to make a listener which welcomes new users to our server? Well thats also easy:
+Ok, but what if we want to make a listener which welcomes new users to our server? Well that's also easy:
 
 ```py
 @Plugin.listen('GuildMemberAdd')

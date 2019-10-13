@@ -26,7 +26,7 @@ class RouteState(LoggingClass):
         The number of remaining requests to the route before the rate limit will
         be hit, triggering a 429 response.
     reset_time : int
-        A unix epoch timestamp (in seconds) after which this rate limit is reset
+        A UNIX epoch timestamp (in seconds) after which this rate limit is reset.
     event : :class:`gevent.event.Event`
         An event that is used to block all requests while a route is in the
         cooldown stage.
@@ -45,7 +45,7 @@ class RouteState(LoggingClass):
     @property
     def chilled(self):
         """
-        Whether this route is currently being cooldown (aka waiting until reset_time).
+        Whether this route is currently being cooled-down (aka waiting until reset_time).
         """
         return self.event is not None
 
@@ -63,8 +63,8 @@ class RouteState(LoggingClass):
 
     def update(self, response):
         """
-        Updates this route with a given Requests response object. Its expected
-        the response has the required headers, however in the case it doesn't
+        Updates this route with a given Requests response object. It's expected
+        the response has the required headers, however in the case that it doesn't
         this function has no effect.
         """
         if 'X-RateLimit-Remaining' not in response.headers:
@@ -108,7 +108,7 @@ class RouteState(LoggingClass):
 
 class RateLimiter(LoggingClass):
     """
-    A in-memory store of ratelimit states for all routes we've ever called.
+    An in-memory store of ratelimit states for all routes we've ever called.
 
     Attributes
     ----------
@@ -124,7 +124,7 @@ class RateLimiter(LoggingClass):
         Checks whether a given route can be called. This function will return
         immediately if no rate-limit cooldown is being imposed for the given
         route, or will wait indefinitely until the route is finished being
-        cooled down. This function should be called before making a request to
+        cooled-down. This function should be called before making a request to
         the specified route.
 
         Parameters
