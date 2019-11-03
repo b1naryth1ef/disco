@@ -137,6 +137,11 @@ class GuildBan(SlottedModel):
     reason = Field(text)
 
 
+class GuildEmbed(SlottedModel):
+    enabled = Field(bool)
+    channel_id = Field(snowflake)
+
+
 class GuildMember(SlottedModel):
     """
     A GuildMember object.
