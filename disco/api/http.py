@@ -34,6 +34,12 @@ class Routes(object):
     GATEWAY_GET = (HTTPMethod.GET, '/gateway')
     GATEWAY_BOT_GET = (HTTPMethod.GET, '/gateway/bot')
 
+    # OAUTH2
+    OAUTH2 = '/oauth2'
+    OAUTH2_TOKEN = (HTTPMethod.POST, OAUTH2 + '/token')
+    OAUTH2_TOKEN_REVOKE = (HTTPMethod.POST, OAUTH2 + '/token/revoke')
+    OAUTH2_APPLICATIONS_ME = (HTTPMethod.GET, OAUTH2 + '/applications/@me')
+
     # Channels
     CHANNELS = '/channels/{channel}'
     CHANNELS_GET = (HTTPMethod.GET, CHANNELS)
@@ -178,7 +184,9 @@ class APIException(Exception):
                 self.msg = '{} ({} - {})'.format(data['message'], self.code, self.errors)
             elif len(data) == 1:
                 key, value = list(data.items())[0]
-                self.msg = 'Request Failed: {}: {}'.format(key, ', '.join(value))
+                if not isinstance(value, str):
+                    value = ', '.join(value)
+                self.msg = 'Request Failed: {}: {}'.format(key, value)
         except ValueError:
             pass
 

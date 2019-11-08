@@ -608,6 +608,25 @@ class Guild(SlottedModel, Permissible):
         return self.client.api.guilds_auditlogs_list(self.id, *args, **kwargs)
 
 
+class IntegrationAccount(SlottedModel):
+    id = Field(text)
+    name = Field(text)
+
+
+class Integration(SlottedModel):
+    id = Field(snowflake)
+    name = Field(text)
+    type = Field(text)
+    enabled = Field(bool)
+    syncing = Field(bool)
+    role_id = Field(snowflake)
+    expire_behavior = Field(int)
+    expire_grace_period = Field(int)
+    user = Field(User)
+    account = Field(IntegrationAccount)
+    synced_at = Field(datetime)
+
+
 class AuditLogActionTypes(object):
     GUILD_UPDATE = 1
     CHANNEL_CREATE = 10
