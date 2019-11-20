@@ -28,7 +28,7 @@ setup(
     author='b1nzy',
     url='https://github.com/b1naryth1ef/disco',
     version=VERSION,
-    packages=find_packages(),
+    packages=find_packages(include=['disco*']),
     license='MIT',
     description='A Python library for Discord',
     long_description=readme,
