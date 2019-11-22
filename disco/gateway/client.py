@@ -2,6 +2,7 @@ import gevent
 import zlib
 import six
 import ssl
+import time
 
 import platform
 from websocket import ABNF
@@ -71,6 +72,10 @@ class GatewayClient(LoggingClass):
         self._heartbeat_task = None
         self._heartbeat_acknowledged = True
 
+        # Latency
+        self._last_heartbeat = 0
+        self.latency = -1
+
     def send(self, op, data):
         self.limiter.check()
         return self._send(op, data)
@@ -90,6 +95,7 @@ class GatewayClient(LoggingClass):
                 self._heartbeat_acknowledged = True
                 self.ws.close(status=4000)
                 return
+            self._last_heartbeat = time.time()
 
             self._send(OPCode.HEARTBEAT, self.seq)
             self._heartbeat_acknowledged = False
@@ -108,6 +114,7 @@ class GatewayClient(LoggingClass):
     def handle_heartbeat_acknowledge(self, _):
         self.log.debug('Received HEARTBEAT_ACK')
         self._heartbeat_acknowledged = True
+        self.latency = int((time.time() - self._last_heartbeat) * 1000)
 
     def handle_reconnect(self, _):
         self.log.warning('Received RECONNECT request, forcing a fresh reconnect')
