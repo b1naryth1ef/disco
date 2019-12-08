@@ -234,7 +234,7 @@ class UDPVoiceClient(LoggingClass):
                 if self.vc.mode == 'xsalsa20_poly1305_lite':
                     nonce[:4] = data[-4:]
                     data = data[:-4]
-                elif self.vc.mode == 'xsalsa20_poly1305_suffx':
+                elif self.vc.mode == 'xsalsa20_poly1305_suffix':
                     nonce[:24] = data[-24:]
                     data = data[:-24]
                 elif self.vc.mode == 'xsalsa20_poly1305':
