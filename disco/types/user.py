@@ -44,6 +44,10 @@ class User(SlottedModel, with_equality('id'), with_hash('id')):
     def mention(self):
         return '<@{}>'.format(self.id)
 
+    @property
+    def mention_nickname(self):
+        return '<@!{}>'.format(self.id)
+
     def open_dm(self):
         return self.client.api.users_me_dms_create(self.id)
 
