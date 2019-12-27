@@ -634,8 +634,8 @@ class APIClient(LoggingClass):
         r = self.http(Routes.USERS_ME_CONNECTIONS_LIST)
         return Connection.create_map(self.client, r.json())
 
-    def invites_get(self, invite):
-        r = self.http(Routes.INVITES_GET, dict(invite=invite))
+    def invites_get(self, invite, with_counts=None):
+        r = self.http(Routes.INVITES_GET, dict(invite=invite), params=optional(with_counts=with_counts))
         return Invite.create(self.client, r.json())
 
     def invites_delete(self, invite, reason=None):
