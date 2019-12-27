@@ -285,6 +285,10 @@ class State(object):
         if event.member.guild_id not in self.guilds:
             return
 
+        # Avoid adding duplicate events to member_count.
+        if event.member.id not in self.guilds[event.member.guild_id].members:
+            self.guilds[event.member.guild_id].member_count += 1
+
         self.guilds[event.member.guild_id].members[event.member.id] = event.member
 
     def on_guild_member_update(self, event):
@@ -302,6 +306,8 @@ class State(object):
 
         if event.user.id not in self.guilds[event.guild_id].members:
             return
+
+        self.guilds[event.guild_id].member_count -= 1
 
         del self.guilds[event.guild_id].members[event.user.id]
 
