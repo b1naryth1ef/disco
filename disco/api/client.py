@@ -1,4 +1,3 @@
-import six
 import json
 import warnings
 
@@ -7,6 +6,7 @@ from gevent.local import local
 from six.moves.urllib.parse import quote
 
 from disco.api.http import Routes, HTTPClient, to_bytes
+from disco.util.functional import optional
 from disco.util.logging import LoggingClass
 from disco.util.sanitize import S
 from disco.types.user import User
@@ -20,16 +20,6 @@ from disco.types.channel import Channel
 from disco.types.invite import Invite
 from disco.types.voice import VoiceRegion
 from disco.types.webhook import Webhook
-
-
-def optional(**kwargs):
-    """
-    Takes a set of keyword arguments, creating a dictionary with only the non-
-    null values.
-
-    :returns: dict
-    """
-    return {k: v for k, v in six.iteritems(kwargs) if v is not None}
 
 
 def _reason_header(value):

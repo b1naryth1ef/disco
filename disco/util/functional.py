@@ -1,4 +1,4 @@
-from six.moves import range
+import six
 
 NO_MORE_SENTINEL = object()
 
@@ -14,7 +14,7 @@ def take(seq, count):
     count : int
         The number of elements to take.
     """
-    for _ in range(count):
+    for _ in six.moves.range(count):
         i = next(seq, NO_MORE_SENTINEL)
         if i is NO_MORE_SENTINEL:
             return
@@ -32,7 +32,7 @@ def chunks(obj, size):
     size : int
         Size of chunks to split list into.
     """
-    for i in range(0, len(obj), size):
+    for i in six.moves.range(0, len(obj), size):
         yield obj[i:i + size]
 
 
@@ -66,3 +66,12 @@ def simple_cached_property(method):
         delattr(inst, key)
 
     return property(_getattr, _setattr, _delattr)
+
+
+def optional(**kwargs):
+    """
+    Takes a set of keyword arguments, creating a dictionary with only the non-
+    null values.
+    :returns: dict
+    """
+    return {k: v for k, v in six.iteritems(kwargs) if v is not None}

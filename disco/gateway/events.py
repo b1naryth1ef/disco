@@ -338,9 +338,15 @@ class GuildMembersChunk(GatewayEvent):
         The ID of the guild this member chunk is for.
     members : list[:class:`disco.types.guild.GuildMember`]
         The chunk of members.
+    not_found : list[snowflake]
+        An array of invalid requested guild members.
+    presences : list[:class:`disco.types.user.Presence`]
+        An array of requested member presence states.
     """
     guild_id = Field(snowflake)
     members = ListField(GuildMember)
+    not_found = ListField(snowflake)
+    presences = ListField(Presence)
 
     @property
     def guild(self):
