@@ -313,10 +313,9 @@ class Bot(LoggingClass):
                 if msg.guild:
                     member = msg.guild.get_member(self.client.state.me)
                     if member:
-                        # If nickname is set, filter both the normal and nick mentions
-                        if member.nick:
-                            content = content.replace(member.mention, '', 1)
+                        # Filter both the normal and nick mentions
                         content = content.replace(member.user.mention, '', 1)
+                        content = content.replace(member.user.mention_nickname, '', 1)
                 else:
                     content = content.replace(self.client.state.me.mention, '', 1)
             elif mention_everyone:

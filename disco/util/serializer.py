@@ -21,8 +21,8 @@ class Serializer(object):
 
     @staticmethod
     def yaml():
-        from yaml import load, dump
-        return (load, dump)
+        from yaml import full_load, dump
+        return (full_load, dump)
 
     @staticmethod
     def pickle():
