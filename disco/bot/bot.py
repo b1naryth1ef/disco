@@ -45,7 +45,13 @@ class BotConfig(Config):
         command parsing.
     commands_prefix : str
         A string prefix that is required for a message to be considered for
-        command parsing.
+        command parsing.  **DEPRECATED**
+    command_prefixes : list[string]
+        A list of string prefixes that are required for a message to be considered
+        for command parsing.
+    commands_prefix_getter : Optional[function]
+        A function which takes in a message object and returns an array of strings
+        (prefixes).
     commands_allow_edit : bool
         If true, the bot will re-parse an edited message if it was the last sent
         message in a channel, and did not previously trigger a command. This is
@@ -74,6 +80,8 @@ class BotConfig(Config):
     http_port : int
         The port for the HTTP Flask server (if enabled).
     """
+    deprecated = {'commands_prefix': 'command_prefixes'}
+
     levels = {}
     plugins = []
     plugin_config = {}
@@ -87,7 +95,9 @@ class BotConfig(Config):
         'role': True,
         'user': True,
     }
-    commands_prefix = ''
+    commands_prefix = ''  # now deprecated
+    command_prefixes = []
+    commands_prefix_getter = None
     commands_allow_edit = True
     commands_level_getter = None
     commands_group_abbrev = True
@@ -239,7 +249,7 @@ class Bot(LoggingClass):
         Computes all possible abbreviations for a command grouping.
         """
         # For the first pass, we just want to compute each groups possible
-        #  abbreviations that don't conflict with eachother.
+        #  abbreviations that don't conflict with each other.
         possible = {}
         for group in groups:
             for index in range(1, len(group)):
@@ -275,13 +285,20 @@ class Bot(LoggingClass):
         else:
             self.command_matches_re = None
 
-    def get_commands_for_message(self, require_mention, mention_rules, prefix, msg):
+    def get_commands_for_message(self, require_mention, mention_rules, prefixes, msg):
         """
         Generator of all commands that a given message object triggers, based on
         the bots plugins and configuration.
 
         Parameters
         ---------
+        require_mention : bool
+            Checks if the message starts with a mention (and then ignores the prefix(es))
+        mention_rules : dict(str, bool)
+            Whether `user`, `everyone`, and `role` mentions are allowed. Defaults to:
+            `{'user': True, 'everyone': False, 'role': False}`
+        prefixes : list[string]
+            A list of prefixes to check the message starts with.
         msg : :class:`disco.types.message.Message`
             The message object to parse and find matching commands for.
 
@@ -290,6 +307,8 @@ class Bot(LoggingClass):
         tuple(:class:`disco.bot.command.Command`, `re.MatchObject`)
             All commands the message triggers.
         """
+        # somebody better figure out what this yields...
+
         content = msg.content
 
         if require_mention:
@@ -326,10 +345,17 @@ class Bot(LoggingClass):
 
             content = content.lstrip()
 
-        if prefix and not content.startswith(prefix):
-            return []
+        # Scan through the prefixes to find the first one that matches.
+        # This may lead to unexpected results, but said unexpectedness
+        # should be easy to avoid. An example of the unexpected results
+        # that may occur would be if one prefix was `!` and one was `!a`.
+        for prefix in prefixes:
+            if prefix and content.startswith(prefix):
+                content = content[len(prefix):]
+                break
         else:
-            content = content[len(prefix):]
+            if not require_mention:  # don't want to prematurely return
+                return []
 
         if not self.command_matches_re or not self.command_matches_re.match(content):
             return []
@@ -339,6 +365,7 @@ class Bot(LoggingClass):
             match = command.compiled_regex.match(content)
             if match:
                 options.append((command, match))
+
         return sorted(options, key=lambda obj: obj[0].group is None)
 
     def get_level(self, actor):
@@ -382,10 +409,13 @@ class Bot(LoggingClass):
         bool
             Whether any commands where successfully triggered by the message.
         """
+        custom_message_prefixes = (self.config.commands_prefix_getter(msg)
+                                   if self.config.commands_prefix_getter else [])
+
         commands = list(self.get_commands_for_message(
             self.config.commands_require_mention,
             self.config.commands_mention_rules,
-            self.config.commands_prefix,
+            custom_message_prefixes or self.config.command_prefixes,
             msg,
         ))
 

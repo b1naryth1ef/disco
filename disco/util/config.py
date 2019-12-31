@@ -10,6 +10,16 @@ class Config(object):
             k: getattr(self, k) for k in dir(self.__class__)
         })
 
+        # issue `DeprecationWarning`s
+        if hasattr(self.__class__, 'deprecated') and obj:
+            for deprecated_key, replacement in self.__class__.deprecated.items():
+                if deprecated_key in obj.keys():
+                    warning_text = '"{0}" is deprecated.'.format(deprecated_key)
+                    warning_text += ('\nReplace "{0}" with "{1}".'.format(deprecated_key, replacement)
+                                     if replacement else '')
+
+                    raise DeprecationWarning(warning_text)
+
         if obj:
             self.__dict__.update(obj)
 

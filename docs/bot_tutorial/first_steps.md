@@ -34,6 +34,14 @@ Now let's setup the configuration file. To start off with we'll paste the follow
 }
 ```
 
+{% hint style='tip' %}
+If you want to use a prefix (or even multiple), you add something this into the `"bot"` dictionary:
+```json
+"requires_mentions": false,
+"command_prefixes": ["!", "?"] 
+```
+{% endhint %}
+
 
 Now we're ready to write our plugin. Plugins are used to isolate the functionality of your bot into components. Plugins can be dynamically loaded, unloaded and reloaded at runtime. Lets start off by writing a plugin with a "ping" command;
 

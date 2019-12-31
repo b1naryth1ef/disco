@@ -85,10 +85,19 @@ class TestBot(TestCase):
         msg = Object()
 
         msg.content = '!test a'
-        commands = list(self.bot.get_commands_for_message(False, None, '!', msg))
+        commands = list(self.bot.get_commands_for_message(False, None, ['!'], msg))
         self.assertEqual(commands[0][0], self.bot._commands[1])
         self.assertEqual(commands[1][0], self.bot._commands[0])
 
         msg.content = '!test'
-        commands = list(self.bot.get_commands_for_message(False, None, '!', msg))
+        commands = list(self.bot.get_commands_for_message(False, None, ['!'], msg))
+        self.assertEqual(commands[0][0], self.bot._commands[0])
+
+        msg.content = '?test a'
+        commands = list(self.bot.get_commands_for_message(False, None, ['!', '?', ';'], msg))
+        self.assertEqual(commands[0][0], self.bot._commands[1])
+        self.assertEqual(commands[1][0], self.bot._commands[0])
+
+        msg.content = '?test'
+        commands = list(self.bot.get_commands_for_message(False, None, ['!', '?', ';'], msg))
         self.assertEqual(commands[0][0], self.bot._commands[0])
