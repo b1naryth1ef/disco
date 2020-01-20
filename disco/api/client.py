@@ -230,6 +230,9 @@ class APIClient(LoggingClass):
 
         self.http(route, obj)
 
+    def channels_messages_reactions_delete_emoji(self, channel, message, emoji):
+        self.http(Routes.CHANNELS_MESSAGES_REACTIONS_DELETE_EMOJI, dict(channel=channel, message=message, emoji=emoji))
+
     def channels_permissions_modify(self, channel, permission, allow, deny, typ, reason=None):
         self.http(Routes.CHANNELS_PERMISSIONS_MODIFY, dict(channel=channel, permission=permission), json={
             'allow': allow,

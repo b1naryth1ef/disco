@@ -716,3 +716,31 @@ class MessageReactionRemoveAll(GatewayEvent):
     @property
     def guild(self):
         return self.channel.guild
+
+
+class MessageReactionRemoveEmoji(GatewayEvent):
+    """
+    Sent when all reactions of a single emoji are removed from a message.
+    Attributes
+    ----------
+    guild_id : Snowflake
+        The guild ID the message is in.
+    channel_id : Snowflake
+        The channel ID the message is in.
+    message_id : Snowflake
+        The ID of the message for which the reaction was removed from.
+    emoji : :class:`disco.types.message.MessageReactionEmoji`
+        The emoji that was removed.
+    """
+    guild_id = Field(snowflake)
+    channel_id = Field(snowflake)
+    message_id = Field(snowflake)
+    emoji = Field(MessageReactionEmoji)
+
+    @property
+    def channel(self):
+        return self.client.state.channels.get(self.channel_id)
+
+    @property
+    def guild(self):
+        return self.channel.guild

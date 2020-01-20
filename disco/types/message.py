@@ -512,6 +512,22 @@ class Message(SlottedModel):
             emoji,
             user)
 
+    def delete_single_reaction(self, emoji):
+        """
+        Deletes all reactions of a single emoji from a message.
+        Parameters
+        ----------
+        emoji : `Emoji`|str
+            An emoji or string representing an emoji
+        """
+        if isinstance(emoji, Emoji):
+            emoji = emoji.to_string()
+
+        self.client.api.channels_messages_reactions_delete_emoji(
+            self.channel_id,
+            self.id,
+            emoji)
+
     def is_mentioned(self, entity):
         """
         Returns
