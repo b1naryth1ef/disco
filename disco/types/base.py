@@ -421,3 +421,77 @@ class Model(six.with_metaclass(ModelMeta, Chainable)):
 
 class SlottedModel(Model):
     __slots__ = ['client']
+
+
+class BitsetMap(object):
+    @classmethod
+    def keys(cls):
+        for k, v in six.iteritems(cls.__dict__):
+            if k.isupper():
+                yield k
+
+
+class BitsetValue(object):
+    __slots__ = ['value', 'map']
+
+    def __init__(self, value=0):
+        if isinstance(value, self.__class__):
+            value = value.value
+
+        self.value = value
+
+    def check(self, *args):
+        for arg in args:
+            if not (self.value & arg) == arg:
+                return False
+        return True
+
+    def add(self, other):
+        if isinstance(other, self.__class__):
+            self.value |= other.value
+        elif isinstance(other, int):
+            self.value |= other
+        else:
+            raise TypeError('Cannot BitsetValue.add from type {}'.format(type(other)))
+        return self
+
+    def sub(self, other):
+        if isinstance(other, self.__class__):
+            self.value &= ~other.value
+        elif isinstance(other, int):
+            self.value &= ~other
+        else:
+            raise TypeError('Cannot BitsetValue.sub from type {}'.format(type(other)))
+        return self
+
+    def __iadd__(self, other):
+        return self.add(other)
+
+    def __isub__(self, other):
+        return self.sub(other)
+
+    def __getattribute__(self, name):
+        try:
+            perm_value = getattr(super(BitsetValue, self).__getattribute__('map'), name.upper())
+            return (self.value & perm_value) == perm_value
+        except AttributeError:
+            return super(BitsetValue, self).__getattribute__(name)
+
+    def __setattr__(self, name, value):
+        try:
+            perm_value = getattr(self.map, name.upper())
+        except AttributeError:
+            return super(BitsetValue, self).__setattr__(name, value)
+
+        if value:
+            self.value |= perm_value
+        else:
+            self.value &= ~perm_value
+
+    def __int__(self):
+        return self.value
+
+    def to_dict(self):
+        return {
+            k: getattr(self, k) for k in list(self.map.keys())
+        }

@@ -1,7 +1,7 @@
-import six
+from disco.types.base import BitsetMap, BitsetValue
 
 
-class Permissions(object):
+class Permissions(BitsetMap):
     CREATE_INSTANT_INVITE = 1 << 0
     KICK_MEMBERS = 1 << 1
     BAN_MEMBERS = 1 << 2
@@ -33,81 +33,15 @@ class Permissions(object):
     MANAGE_WEBHOOKS = 1 << 29
     MANAGE_EMOJIS = 1 << 30
 
-    @classmethod
-    def keys(cls):
-        for k, v in six.iteritems(cls.__dict__):
-            if k.isupper():
-                yield k
 
-
-class PermissionValue(object):
-    __slots__ = ['value']
-
-    def __init__(self, value=0):
-        if isinstance(value, PermissionValue):
-            value = value.value
-
-        self.value = value
+class PermissionValue(BitsetValue):
+    map = Permissions
 
     def can(self, *perms):
         # Administrator permission overwrites all others
         if self.administrator:
             return True
-
-        for perm in perms:
-            if not (self.value & perm) == perm:
-                return False
-        return True
-
-    def add(self, other):
-        if isinstance(other, PermissionValue):
-            self.value |= other.value
-        elif isinstance(other, int):
-            self.value |= other
-        else:
-            raise TypeError('Cannot PermissionValue.add from type {}'.format(type(other)))
-        return self
-
-    def sub(self, other):
-        if isinstance(other, PermissionValue):
-            self.value &= ~other.value
-        elif isinstance(other, int):
-            self.value &= ~other
-        else:
-            raise TypeError('Cannot PermissionValue.sub from type {}'.format(type(other)))
-        return self
-
-    def __iadd__(self, other):
-        return self.add(other)
-
-    def __isub__(self, other):
-        return self.sub(other)
-
-    def __getattribute__(self, name):
-        try:
-            perm_value = getattr(Permissions, name.upper())
-            return (self.value & perm_value) == perm_value
-        except AttributeError:
-            return object.__getattribute__(self, name)
-
-    def __setattr__(self, name, value):
-        try:
-            perm_value = getattr(Permissions, name.upper())
-        except AttributeError:
-            return super(PermissionValue, self).__setattr__(name, value)
-
-        if value:
-            self.value |= perm_value
-        else:
-            self.value &= ~perm_value
-
-    def __int__(self):
-        return self.value
-
-    def to_dict(self):
-        return {
-            k: getattr(self, k) for k in list(Permissions.keys())
-        }
+        return self.check(*perms)
 
     @classmethod
     def text(cls):
