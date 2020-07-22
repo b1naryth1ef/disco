@@ -1,13 +1,14 @@
 import struct
 import socket
 import gevent
+import warnings
 
 from collections import namedtuple
 
 try:
     import nacl.secret
 except ImportError:
-    print('WARNING: nacl is not installed, voice support is disabled')
+    warnings.warn('nacl is not installed, voice support is disabled')
 
 from holster.enum import Enum
 

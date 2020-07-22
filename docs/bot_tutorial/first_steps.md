@@ -4,7 +4,7 @@ Disco provides a built-in set of tools for building and running Discord bots whi
 
 ## Creating a Bot
 
-The first step to creating bots is to actually register them on Discord itself. To do this, you'll need to be logged into your Discord account on the browser and then navigate to [My Apps](https://discordapp.com/developers/applications/me). Here you'll have the option to create a new application, and once created you can add a bot user (by clicking "Create a Bot User") to your application. Finally, you'll want to keep track of the bot user token which can be shown by clicking the "click to reveal" link next to the token field.
+The first step to creating bots is to actually register them on Discord itself. To do this, you'll need to be logged into your Discord account on the browser and then navigate to [My Apps](https://discord.com/developers/applications). Here you'll have the option to create a new application, and once created you can add a bot user (by clicking "Create a Bot User") to your application. Finally, you'll want to keep track of the bot user token which can be shown by clicking the "click to reveal" link next to the token field.
 
 Once you have a Discord bot account, you can then setup your workspace. For now we'll just need a folder (perhaps called `disco-tutorial`) with a few files in it:
 
